@@ -30,4 +30,3 @@ This file recognizes contributors who have made significant contributions to the
 Ready to contribute? Check out our [Contributing Guidelines](CONTRIBUTING.md) and [Code of Conduct](CODE_OF_CONDUCT.md) to get started!
 
 **Happy Contributing! 🚀**
-git

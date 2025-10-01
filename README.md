@@ -1,7 +1,6 @@
 # MCP Database Console
 
 [![Hacktoberfest](https://img.shields.io/badge/Hacktoberfest-2025-orange?style=for-the-badge&logo=hacktoberfest)](https://hacktoberfest.com/)
-[![Open Source](https://img.shields.io/badge/Open%20Source-Yes-green?style=for-the-badge&logo=github)](https://github.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 [![Contributors Welcome](https://img.shields.io/badge/Contributors-Welcome-blue?style=for-the-badge)](CONTRIBUTING.md)
 
