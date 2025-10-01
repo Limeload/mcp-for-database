@@ -1,7 +1,7 @@
 {
   "name": "mcp-database-console",
-  "version": "0.1.0",
-  "description": "A Next.js application that provides a natural language interface for database queries through the MCP-DB Connector",
+  "version": "1.0.0",
+  "description": "A revolutionary Next.js application that provides a natural language interface for database queries through the MCP-DB Connector",
   "private": false,
   "keywords": [
     "hacktoberfest",
@@ -13,9 +13,17 @@
     "react",
     "natural-language",
     "sql",
-    "contributors-welcome"
+    "contributors-welcome",
+    "database-console",
+    "query-interface",
+    "sqlalchemy",
+    "snowflake"
   ],
-  "author": "Your Name <your.email@example.com>",
+  "author": {
+    "name": "Your Name",
+    "email": "your.email@example.com",
+    "url": "https://github.com/your-username"
+  },
   "license": "MIT",
   "homepage": "https://github.com/your-username/mcp-for-database#readme",
   "repository": {
@@ -25,12 +33,21 @@
   "bugs": {
     "url": "https://github.com/your-username/mcp-for-database/issues"
   },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "echo \"No tests specified\" && exit 0"
+    "lint:fix": "next lint --fix",
+    "type-check": "tsc --noEmit",
+    "test": "echo \"No tests specified\" && exit 0",
+    "test:watch": "echo \"No tests specified\" && exit 0",
+    "clean": "rm -rf .next out",
+    "prepare": "npm run type-check"
   },
   "dependencies": {
     "mcp-handler": "^1.0.1",
