@@ -1,16 +1,16 @@
 # Contributors
 
-This file recognizes contributors who have made significant contributions to the MCP Database Console project. Contributors are added to this list after having **5 or more approved pull requests** merged into the main branch.
+This file recognizes contributors who have made significant contributions to the MCP Database Console project. Contributors are added to this list after having **15 or more approved pull requests** merged into the main branch.
 
 ## 🏆 Contributors
 
-*Contributors will be added here after their 5th approved PR*
+*Contributors will be added here after their 15th approved PR*
 
 ### How to Become a Contributor
 
 1. **Fork** the repository
 2. **Create** pull requests with meaningful contributions
-3. **Get** 5 pull requests approved and merged
+3. **Get** 15 pull requests approved and merged
 4. **Get added** to this contributors list!
 
 ### Types of Contributions We Value
@@ -24,28 +24,10 @@ This file recognizes contributors who have made significant contributions to the
 - 🌐 **Internationalization**: Adding support for multiple languages
 - 📊 **Performance**: Optimizing performance and reducing load times
 
-### Recognition Benefits
-
-Contributors with 5+ approved PRs receive:
-- 🏆 **Recognition** in this contributors file
-- 🎉 **Hacktoberfest** completion eligibility
-- 🤝 **Community** membership and recognition
-- 📜 **Certificate** of contribution (upon request)
-
----
-
-## 🎯 Current Statistics
-
-- **Total Contributors**: 0
-- **Total Pull Requests**: 0
-- **Total Issues Resolved**: 0
-
-*Statistics will be updated as contributions are made*
-
----
 
 ## 🤝 Join Our Community
 
 Ready to contribute? Check out our [Contributing Guidelines](CONTRIBUTING.md) and [Code of Conduct](CODE_OF_CONDUCT.md) to get started!
 
 **Happy Contributing! 🚀**
+git

@@ -51,8 +51,8 @@ jobs:
             
             console.log(`Found ${mergedPRs.length} merged PRs by ${prAuthor}`);
             
-            // Check if they have 5 or more merged PRs
-            const isContributor = mergedPRs.length >= 5;
+            // Check if they have 15 or more merged PRs
+            const isContributor = mergedPRs.length >= 15;
             
             return {
               isContributor,

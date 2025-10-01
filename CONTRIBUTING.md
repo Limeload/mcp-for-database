@@ -12,7 +12,7 @@ This repository is participating in Hacktoberfest 2025! We're looking for contri
 2. **Star** the repository (optional but appreciated!)
 3. **Create** a pull request with your contribution
 4. **Wait** for review and approval
-5. **Get recognized** as a contributor after 5 approved PRs!
+5. **Get recognized** as a contributor after 15 approved PRs!
 
 ## 🚀 Getting Started
 
@@ -219,7 +219,7 @@ Add screenshots for UI changes
 
 ## 🏆 Contributor Recognition
 
-After **5 approved pull requests**, you'll be:
+After **15 approved pull requests**, you'll be:
 - Added to our `CONTRIBUTORS.md` file
 - Recognized as a project contributor
 - Eligible for Hacktoberfest completion
