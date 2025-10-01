@@ -1,11 +1,36 @@
 {
-  "name": "next.js-mcp-server",
+  "name": "mcp-database-console",
   "version": "0.1.0",
-  "private": true,
+  "description": "A Next.js application that provides a natural language interface for database queries through the MCP-DB Connector",
+  "private": false,
+  "keywords": [
+    "hacktoberfest",
+    "open-source",
+    "nextjs",
+    "database",
+    "mcp",
+    "typescript",
+    "react",
+    "natural-language",
+    "sql",
+    "contributors-welcome"
+  ],
+  "author": "Your Name <your.email@example.com>",
+  "license": "MIT",
+  "homepage": "https://github.com/your-username/mcp-for-database#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/your-username/mcp-for-database.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-username/mcp-for-database/issues"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "lint": "next lint",
+    "test": "echo \"No tests specified\" && exit 0"
   },
   "dependencies": {
     "mcp-handler": "^1.0.1",

@@ -1,0 +1,142 @@
+name: Update Contributors
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  update-contributors:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true
+    permissions:
+      contents: write
+      pull-requests: read
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          
+      - name: Install dependencies
+        run: npm install
+        
+      - name: Check contributor status
+        id: check-contributor
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { context } = require('@actions/github');
+            const { owner, repo } = context.repo;
+            const prAuthor = context.payload.pull_request.user.login;
+            
+            // Get all merged PRs by this author
+            const { data: prs } = await github.rest.pulls.list({
+              owner,
+              repo,
+              state: 'closed',
+              sort: 'updated',
+              direction: 'desc',
+              per_page: 100
+            });
+            
+            const mergedPRs = prs.filter(pr => 
+              pr.merged_at && pr.user.login === prAuthor
+            );
+            
+            console.log(`Found ${mergedPRs.length} merged PRs by ${prAuthor}`);
+            
+            // Check if they have 5 or more merged PRs
+            const isContributor = mergedPRs.length >= 5;
+            
+            return {
+              isContributor,
+              prCount: mergedPRs.length,
+              author: prAuthor
+            };
+            
+      - name: Update CONTRIBUTORS.md
+        if: steps.check-contributor.outputs.isContributor == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { context } = require('@actions/github');
+            const fs = require('fs');
+            const path = require('path');
+            
+            const contributorsFile = path.join(process.cwd(), 'CONTRIBUTORS.md');
+            const author = '${{ steps.check-contributor.outputs.author }}';
+            const prCount = '${{ steps.check-contributor.outputs.prCount }}';
+            
+            // Read current CONTRIBUTORS.md
+            let content = fs.readFileSync(contributorsFile, 'utf8');
+            
+            // Check if author is already in the contributors list
+            if (content.includes(`- **${author}**`)) {
+              console.log(`${author} is already in the contributors list`);
+              return;
+            }
+            
+            // Add new contributor
+            const contributorEntry = `- **${author}** - ${prCount} merged PRs\n`;
+            
+            // Find the contributors section and add the new contributor
+            const contributorsSection = content.match(/## 🏆 Contributors\n([\s\S]*?)(?=\n### |\n## |$)/);
+            if (contributorsSection) {
+              const newContributorsSection = contributorsSection[0] + contributorEntry;
+              content = content.replace(contributorsSection[0], newContributorsSection);
+            }
+            
+            // Update statistics
+            const currentStats = content.match(/## 🎯 Current Statistics\n([\s\S]*?)(?=\n---)/);
+            if (currentStats) {
+              const statsMatch = currentStats[1].match(/- \*\*Total Contributors\*\*: (\d+)/);
+              if (statsMatch) {
+                const currentCount = parseInt(statsMatch[1]);
+                const newCount = currentCount + 1;
+                content = content.replace(
+                  /- \*\*Total Contributors\*\*: \d+/,
+                  `- **Total Contributors**: ${newCount}`
+                );
+              }
+            }
+            
+            // Write updated content
+            fs.writeFileSync(contributorsFile, content);
+            
+            console.log(`Added ${author} to contributors list with ${prCount} PRs`);
+            
+      - name: Commit and push changes
+        if: steps.check-contributor.outputs.isContributor == 'true'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add CONTRIBUTORS.md
+          git commit -m "docs: add ${{ steps.check-contributor.outputs.author }} to contributors list"
+          git push
+          
+      - name: Create contributor recognition issue
+        if: steps.check-contributor.outputs.isContributor == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { context } = require('@actions/github');
+            const { owner, repo } = context.repo;
+            const author = '${{ steps.check-contributor.outputs.author }}';
+            const prCount = '${{ steps.check-contributor.outputs.prCount }}';
+            
+            // Create a congratulatory issue
+            await github.rest.issues.create({
+              owner,
+              repo,
+              title: `🎉 Congratulations ${author}! You're now a project contributor!`,
+              body: `## 🏆 Contributor Recognition\n\nCongratulations @${author}! You've successfully made **${prCount} approved pull requests** and are now recognized as a project contributor!\n\n### What this means:\n- ✅ You're now listed in our [CONTRIBUTORS.md](CONTRIBUTORS.md) file\n- ✅ You're eligible for Hacktoberfest completion\n- ✅ You're recognized as a valued community member\n- ✅ You can help review other contributors' PRs\n\n### Thank you for your contributions! 🚀\n\nKeep up the great work and continue contributing to make this project even better!\n\n---\n*This issue was automatically created to recognize your achievement.*`,
+              labels: ['hacktoberfest', 'contributor-recognition']
+            });
+            
+            console.log(`Created recognition issue for ${author}`);
