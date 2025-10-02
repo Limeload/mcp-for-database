@@ -1,9 +1,10 @@
-import type { Metadata } from 'next';
-import './globals.css';
+import type { Metadata } from "next";
+import "./globals.css";
 
 export const metadata: Metadata = {
-  title: 'MCP Database Console',
-  description: 'Natural language database query interface powered by MCP-DB Connector',
+  title: "MCP Database Console",
+  description:
+    "Natural language database query interface powered by MCP-DB Connector",
 };
 
 /**
