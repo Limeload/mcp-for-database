@@ -8,7 +8,7 @@ import { DatabaseTarget, DatabaseQueryResponse } from '@/app/types/database';
  * A reusable component for database query interface
  * Features:
  * - Natural language prompt input
- * - Database target selection (SQLAlchemy or Snowflake)
+ * - Database target selection (SQLAlchemy, Snowflake, or SQLite)
  * - Query submission with loading states
  * - Results display in a styled table
  * - Error handling and user feedback
@@ -198,6 +198,7 @@ export default function DbConsole() {
               >
                 <option value="sqlalchemy">SQLAlchemy</option>
                 <option value="snowflake">Snowflake</option>
+                <option value="sqlite">SQLite</option>
               </select>
             </div>
 
