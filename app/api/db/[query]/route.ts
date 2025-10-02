@@ -30,10 +30,10 @@ export async function POST(
     }
 
     // Validate target value
-    if (!['sqlalchemy', 'snowflake'].includes(body.target)) {
+    if (!['sqlalchemy', 'snowflake', 'sqlite'].includes(body.target)) {
       const errorResponse: DatabaseErrorResponse = {
         success: false,
-        error: 'Invalid target: must be either "sqlalchemy" or "snowflake"'
+        error: 'Invalid target: must be either "sqlalchemy", "snowflake", or "sqlite"'
       };
       return NextResponse.json(errorResponse, { status: 400 });
     }
