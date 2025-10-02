@@ -18,7 +18,7 @@ async function getConnectionStats() {
     }
 
     const stats = await response.json();
-    
+
     console.log('\n📊 Database Connection Pool Statistics');
     console.log('=====================================');
     console.log(`Total Connections: ${stats.totalConnections}`);
@@ -31,7 +31,6 @@ async function getConnectionStats() {
       console.log(`  ${target}: ${count}`);
     });
     console.log('');
-
   } catch (error) {
     console.error('❌ Error fetching connection stats:', error.message);
     process.exit(1);

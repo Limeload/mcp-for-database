@@ -14,6 +14,9 @@ export async function POST(
   { params }: { params: Promise<{ query: string }> }
 ) {
   try {
+    // Await params since it's a Promise in Next.js 15
+    await params;
+
     const body: DatabaseQueryRequest = await request.json();
     const { prompt, target, connectionId, maxExecutionTime } = body;
 
@@ -43,7 +46,7 @@ export async function POST(
     const mcpResponse = await fetch(`${request.nextUrl.origin}/mcp`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
         method: 'tools/call',
@@ -56,7 +59,7 @@ export async function POST(
             maxExecutionTime: maxExecutionTime || 30000
           }
         }
-      }),
+      })
     });
 
     if (!mcpResponse.ok) {
@@ -64,7 +67,7 @@ export async function POST(
     }
 
     const mcpResult = await mcpResponse.json();
-    
+
     if (mcpResult.error) {
       throw new Error(mcpResult.error);
     }
@@ -73,10 +76,10 @@ export async function POST(
     const result = JSON.parse(mcpResult.content[0].text);
 
     return NextResponse.json<DatabaseQueryResponse>(result);
-
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error('Database query error:', error);
-    
+
     return NextResponse.json<DatabaseErrorResponse>(
       {
         success: false,
@@ -96,7 +99,7 @@ export async function GET(request: NextRequest) {
     const mcpResponse = await fetch(`${request.nextUrl.origin}/mcp`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
         method: 'tools/call',
@@ -104,7 +107,7 @@ export async function GET(request: NextRequest) {
           name: 'get_connection_stats',
           arguments: {}
         }
-      }),
+      })
     });
 
     if (!mcpResponse.ok) {
@@ -115,10 +118,10 @@ export async function GET(request: NextRequest) {
     const stats = JSON.parse(mcpResult.content[0].text);
 
     return NextResponse.json(stats);
-
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error('Error getting connection stats:', error);
-    
+
     return NextResponse.json(
       {
         error: error instanceof Error ? error.message : 'Internal server error'

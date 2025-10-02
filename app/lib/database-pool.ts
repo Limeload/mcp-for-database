@@ -55,7 +55,7 @@ export class DatabaseConnectionPool {
 
   constructor(config: ConnectionPoolConfig) {
     this.config = config;
-    
+
     // Start cleanup timer
     this.cleanupTimer = setInterval(() => {
       this.cleanupIdleConnections();
@@ -64,16 +64,19 @@ export class DatabaseConnectionPool {
 
   async executeQuery(request: QueryRequest): Promise<QueryResult> {
     const startTime = Date.now();
-    
+
     // Get or create connection
-    const connection = await this.getConnection(request.target, request.connectionId);
-    
+    const connection = await this.getConnection(
+      request.target,
+      request.connectionId
+    );
+
     try {
       // Execute query through existing API
       const response = await fetch('http://localhost:8000/query', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           prompt: request.prompt,
@@ -88,19 +91,19 @@ export class DatabaseConnectionPool {
       }
 
       const result: DatabaseQueryResponse = await response.json();
-      
+
       if (!result.success) {
         throw new Error(result.error || 'Query execution failed');
       }
 
       const executionTime = Date.now() - startTime;
-      
+
       // Update connection stats
       connection.lastUsed = new Date();
       connection.queryCount++;
       connection.isActive = false;
       connection.isIdle = true;
-      
+
       // Update global stats
       this.queryStats.totalQueries++;
       this.queryStats.totalExecutionTime += executionTime;
@@ -111,18 +114,20 @@ export class DatabaseConnectionPool {
         executionTime,
         connectionId: connection.id
       };
-
     } catch (error) {
       // Mark connection as idle on error
       connection.isActive = false;
       connection.isIdle = true;
       connection.lastUsed = new Date();
-      
+
       throw error;
     }
   }
 
-  private async getConnection(target: DatabaseTarget, connectionId?: string): Promise<DatabaseConnection> {
+  private async getConnection(
+    target: DatabaseTarget,
+    connectionId?: string
+  ): Promise<DatabaseConnection> {
     // If specific connection requested, try to find it
     if (connectionId) {
       const existingConnection = this.connections.get(connectionId);
@@ -135,7 +140,11 @@ export class DatabaseConnectionPool {
 
     // Look for idle connection of the same target type
     for (const connection of this.connections.values()) {
-      if (connection.target === target && connection.isIdle && !connection.isActive) {
+      if (
+        connection.target === target &&
+        connection.isIdle &&
+        !connection.isActive
+      ) {
         connection.isActive = true;
         connection.isIdle = false;
         return connection;
@@ -146,10 +155,12 @@ export class DatabaseConnectionPool {
     if (this.connections.size >= this.config.maxConnections) {
       // Try to cleanup idle connections first
       await this.cleanupIdleConnections();
-      
+
       // If still at limit, throw error
       if (this.connections.size >= this.config.maxConnections) {
-        throw new Error(`Maximum connections (${this.config.maxConnections}) reached`);
+        throw new Error(
+          `Maximum connections (${this.config.maxConnections}) reached`
+        );
       }
     }
 
@@ -174,8 +185,11 @@ export class DatabaseConnectionPool {
     const connectionsToRemove: string[] = [];
 
     for (const [connectionId, connection] of this.connections.entries()) {
-      if (connection.isIdle && !connection.isActive && 
-          connection.lastUsed.getTime() < idleThreshold) {
+      if (
+        connection.isIdle &&
+        !connection.isActive &&
+        connection.lastUsed.getTime() < idleThreshold
+      ) {
         connectionsToRemove.push(connectionId);
       }
     }
@@ -201,31 +215,36 @@ export class DatabaseConnectionPool {
     for (const connectionId of this.connections.keys()) {
       await this.closeConnection(connectionId);
     }
-    
+
     if (this.cleanupTimer) {
       clearInterval(this.cleanupTimer);
     }
   }
 
   getActiveConnectionCount(): number {
-    return Array.from(this.connections.values()).filter(conn => conn.isActive).length;
+    return Array.from(this.connections.values()).filter(conn => conn.isActive)
+      .length;
   }
 
   getStats(): ConnectionStats {
     const connections = Array.from(this.connections.values());
-    const connectionsByTarget = connections.reduce((acc, conn) => {
-      acc[conn.target] = (acc[conn.target] || 0) + 1;
-      return acc;
-    }, {} as Record<DatabaseTarget, number>);
+    const connectionsByTarget = connections.reduce(
+      (acc, conn) => {
+        acc[conn.target] = (acc[conn.target] || 0) + 1;
+        return acc;
+      },
+      {} as Record<DatabaseTarget, number>
+    );
 
     return {
       totalConnections: connections.length,
       activeConnections: connections.filter(conn => conn.isActive).length,
       idleConnections: connections.filter(conn => conn.isIdle).length,
       connectionsByTarget,
-      averageQueryTime: this.queryStats.totalQueries > 0 
-        ? this.queryStats.totalExecutionTime / this.queryStats.totalQueries 
-        : 0,
+      averageQueryTime:
+        this.queryStats.totalQueries > 0
+          ? this.queryStats.totalExecutionTime / this.queryStats.totalQueries
+          : 0,
       totalQueries: this.queryStats.totalQueries
     };
   }

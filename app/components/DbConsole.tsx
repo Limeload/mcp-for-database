@@ -1,7 +1,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { DatabaseTarget, DatabaseQueryResponse, ConnectionPoolStats } from '@/app/types/database';
+import {
+  DatabaseTarget,
+  DatabaseQueryResponse,
+  ConnectionPoolStats
+} from '@/app/types/database';
 
 /**
  * Enhanced DbConsole Component with Connection Pool Management
@@ -25,7 +29,8 @@ export default function DbConsole() {
   const [result, setResult] = useState<DatabaseQueryResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isDarkMode, setIsDarkMode] = useState(false);
-  const [connectionStats, setConnectionStats] = useState<ConnectionPoolStats | null>(null);
+  const [connectionStats, setConnectionStats] =
+    useState<ConnectionPoolStats | null>(null);
   const [showStats, setShowStats] = useState(false);
 
   // Load dark mode preference on mount
@@ -64,6 +69,7 @@ export default function DbConsole() {
         setConnectionStats(stats);
       }
     } catch (err) {
+      // eslint-disable-next-line no-console
       console.error('Failed to load connection stats:', err);
     }
   };
@@ -121,7 +127,7 @@ export default function DbConsole() {
       const response = await fetch('/api/mcp', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           method: 'tools/call',
@@ -129,16 +135,19 @@ export default function DbConsole() {
             name: 'cleanup_idle_connections',
             arguments: {}
           }
-        }),
+        })
       });
 
       if (response.ok) {
         const result = await response.json();
         const cleanupResult = JSON.parse(result.content[0].text);
-        alert(`Cleaned up ${cleanupResult.cleanedConnections} idle connections`);
+        alert(
+          `Cleaned up ${cleanupResult.cleanedConnections} idle connections`
+        );
         loadConnectionStats();
       }
     } catch (err) {
+      // eslint-disable-next-line no-console
       console.error('Failed to cleanup connections:', err);
       alert('Failed to cleanup connections');
     }
@@ -202,7 +211,8 @@ export default function DbConsole() {
               Database Console
             </h1>
             <p className="text-gray-600 dark:text-gray-300">
-              Execute database queries using natural language with connection pooling
+              Execute database queries using natural language with connection
+              pooling
             </p>
           </div>
           <div className="flex items-center space-x-4">
@@ -240,29 +250,38 @@ export default function DbConsole() {
                 <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                   {connectionStats.totalConnections}
                 </div>
-                <div className="text-sm text-gray-600 dark:text-gray-300">Total</div>
+                <div className="text-sm text-gray-600 dark:text-gray-300">
+                  Total
+                </div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                   {connectionStats.activeConnections}
                 </div>
-                <div className="text-sm text-gray-600 dark:text-gray-300">Active</div>
+                <div className="text-sm text-gray-600 dark:text-gray-300">
+                  Active
+                </div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
                   {connectionStats.idleConnections}
                 </div>
-                <div className="text-sm text-gray-600 dark:text-gray-300">Idle</div>
+                <div className="text-sm text-gray-600 dark:text-gray-300">
+                  Idle
+                </div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
                   {connectionStats.totalQueries}
                 </div>
-                <div className="text-sm text-gray-600 dark:text-gray-300">Total Queries</div>
+                <div className="text-sm text-gray-600 dark:text-gray-300">
+                  Total Queries
+                </div>
               </div>
             </div>
             <div className="mt-4 text-sm text-gray-600 dark:text-gray-300">
-              Average Query Time: {connectionStats.averageQueryTime.toFixed(2)}ms
+              Average Query Time: {connectionStats.averageQueryTime.toFixed(2)}
+              ms
             </div>
           </div>
         )}
@@ -282,20 +301,28 @@ export default function DbConsole() {
                       type="radio"
                       value="sqlalchemy"
                       checked={target === 'sqlalchemy'}
-                      onChange={(e) => setTarget(e.target.value as DatabaseTarget)}
+                      onChange={e =>
+                        setTarget(e.target.value as DatabaseTarget)
+                      }
                       className="mr-2"
                     />
-                    <span className="text-gray-700 dark:text-gray-300">SQLAlchemy</span>
+                    <span className="text-gray-700 dark:text-gray-300">
+                      SQLAlchemy
+                    </span>
                   </label>
                   <label className="flex items-center">
                     <input
                       type="radio"
                       value="snowflake"
                       checked={target === 'snowflake'}
-                      onChange={(e) => setTarget(e.target.value as DatabaseTarget)}
+                      onChange={e =>
+                        setTarget(e.target.value as DatabaseTarget)
+                      }
                       className="mr-2"
                     />
-                    <span className="text-gray-700 dark:text-gray-300">Snowflake</span>
+                    <span className="text-gray-700 dark:text-gray-300">
+                      Snowflake
+                    </span>
                   </label>
                 </div>
               </div>
@@ -306,7 +333,7 @@ export default function DbConsole() {
                   <input
                     type="checkbox"
                     checked={reuseConnection}
-                    onChange={(e) => setReuseConnection(e.target.checked)}
+                    onChange={e => setReuseConnection(e.target.checked)}
                     className="mr-2"
                   />
                   <span className="text-sm text-gray-700 dark:text-gray-300">
@@ -317,7 +344,7 @@ export default function DbConsole() {
                   <input
                     type="text"
                     value={connectionId}
-                    onChange={(e) => setConnectionId(e.target.value)}
+                    onChange={e => setConnectionId(e.target.value)}
                     placeholder="Connection ID (leave empty for auto)"
                     className="mt-2 w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                   />
@@ -331,7 +358,7 @@ export default function DbConsole() {
                 </label>
                 <textarea
                   value={prompt}
-                  onChange={(e) => setPrompt(e.target.value)}
+                  onChange={e => setPrompt(e.target.value)}
                   placeholder="e.g., Show me all users from the database..."
                   rows={4}
                   className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
@@ -437,7 +464,9 @@ export default function DbConsole() {
                         <div>Connection ID: {result.connectionId}</div>
                       )}
                       {result.activeConnections !== undefined && (
-                        <div>Active connections: {result.activeConnections}</div>
+                        <div>
+                          Active connections: {result.activeConnections}
+                        </div>
                       )}
                     </div>
                   </div>
