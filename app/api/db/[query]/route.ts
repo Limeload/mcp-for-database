@@ -11,7 +11,7 @@ export async function POST(
 ) {
   try {
     // Await params since it's a Promise in Next.js 15
-    const { query } = await params;
+    await params;
     
     // Parse the request body
     const body: DatabaseQueryRequest = await request.json();
@@ -69,6 +69,7 @@ export async function POST(
     return NextResponse.json(response);
 
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error('Database query API error:', error);
     
     const errorResponse: DatabaseErrorResponse = {
