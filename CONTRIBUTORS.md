@@ -4,7 +4,7 @@ This file recognizes contributors who have made significant contributions to the
 
 ## 🏆 Contributors
 
-*Contributors will be added here after their 15th approved PR*
+_Contributors will be added here after their 15th approved PR_
 
 ### How to Become a Contributor
 
@@ -23,7 +23,6 @@ This file recognizes contributors who have made significant contributions to the
 - 🔧 **Refactoring**: Improving code quality and maintainability
 - 🌐 **Internationalization**: Adding support for multiple languages
 - 📊 **Performance**: Optimizing performance and reducing load times
-
 
 ## 🤝 Join Our Community
 

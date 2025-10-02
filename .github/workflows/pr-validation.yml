@@ -8,27 +8,27 @@ jobs:
   pr-validation:
     name: PR Validation
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
           cache: 'npm'
-          
+
       - name: Install dependencies
         run: npm ci
-        
+
       - name: Validate PR title
         run: |
           PR_TITLE="${{ github.event.pull_request.title }}"
           echo "PR Title: $PR_TITLE"
-          
+
           # Check if title follows conventional commits
           if [[ $PR_TITLE =~ ^(feat|fix|docs|style|refactor|test|chore)(\(.+\))?: .+ ]]; then
             echo "✅ PR title follows conventional commits format"
@@ -36,7 +36,7 @@ jobs:
             echo "⚠️ PR title should follow conventional commits format"
             echo "Examples: feat: add new feature, fix: resolve bug, docs: update readme"
           fi
-          
+
       - name: Check PR description
         run: |
           PR_BODY="${{ github.event.pull_request.body }}"
@@ -45,7 +45,7 @@ jobs:
           else
             echo "✅ PR has description"
           fi
-          
+
       - name: Check for breaking changes
         run: |
           PR_TITLE="${{ github.event.pull_request.title }}"
@@ -54,7 +54,7 @@ jobs:
           else
             echo "✅ No breaking changes detected"
           fi
-          
+
       - name: PR Validation Summary
         run: |
           echo "## Pull Request Validation Results" >> $GITHUB_STEP_SUMMARY

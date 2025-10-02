@@ -29,6 +29,7 @@ NEXT_PUBLIC_APP_URL=https://your-app.com
 ### MCP Server Configuration
 
 Ensure your MCP-DB Connector server is:
+
 - Running and accessible
 - Properly configured for your database
 - Has appropriate security measures
@@ -57,6 +58,7 @@ Vercel is the easiest way to deploy Next.js applications.
 #### Vercel Configuration
 
 Create `vercel.json`:
+
 ```json
 {
   "framework": "nextjs",
@@ -158,12 +160,14 @@ docker run -p 3000:3000 \
    - Configure security groups (port 3000)
 
 2. **Install dependencies**
+
    ```bash
    sudo apt update
    sudo apt install nodejs npm nginx
    ```
 
 3. **Deploy application**
+
    ```bash
    git clone https://github.com/your-username/mcp-for-database.git
    cd mcp-for-database
@@ -172,6 +176,7 @@ docker run -p 3000:3000 \
    ```
 
 4. **Configure PM2**
+
    ```bash
    npm install -g pm2
    pm2 start npm --name "mcp-console" -- start
@@ -180,6 +185,7 @@ docker run -p 3000:3000 \
    ```
 
 5. **Configure Nginx**
+
    ```nginx
    server {
        listen 80;
@@ -203,6 +209,7 @@ docker run -p 3000:3000 \
 1. **Create Dockerfile** (see Docker section above)
 
 2. **Build and push to Container Registry**
+
    ```bash
    gcloud builds submit --tag gcr.io/PROJECT-ID/mcp-database-console
    ```
@@ -250,18 +257,18 @@ export async function GET() {
   try {
     // Check MCP server connection
     const response = await fetch(process.env.MCP_SERVER_URL + '/health');
-    
+
     if (!response.ok) {
       throw new Error('MCP server not healthy');
     }
-    
-    return Response.json({ 
+
+    return Response.json({
       status: 'healthy',
       timestamp: new Date().toISOString()
     });
   } catch (error) {
     return Response.json(
-      { 
+      {
         status: 'unhealthy',
         error: error.message,
         timestamp: new Date().toISOString()
@@ -307,13 +314,16 @@ pm2 logs mcp-console
 ## Rollback Strategy
 
 ### Vercel
+
 - Use Vercel's deployment history to rollback
 
 ### Docker
+
 - Keep previous image versions
 - Use blue-green deployment
 
 ### Manual Deployments
+
 - Keep deployment scripts
 - Maintain deployment history
 - Test rollback procedures

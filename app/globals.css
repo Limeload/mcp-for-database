@@ -4,128 +4,133 @@
 
 /* Dark Mode Toggle Styles */
 body {
-    background-color: white;
-    color: black;
-    font-family: sans-serif;
-    transition: background-color 0.3s ease, color 0.3s ease;
+  background-color: white;
+  color: black;
+  font-family: sans-serif;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
 }
 
 .dark-mode-toggle {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    z-index: 1000;
-    padding: 10px 20px;
-    font-size: 16px;
-    cursor: pointer;
-    border: 1px solid black;
-    background-color: white;
-    color: black;
-    border-radius: 5px;
-    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  border: 1px solid black;
+  background-color: white;
+  color: black;
+  border-radius: 5px;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease,
+    border-color 0.3s ease;
 }
 
 .dark-mode-toggle:hover {
-    background-color: #f0f0f0;
+  background-color: #f0f0f0;
 }
 
 /* Dark Mode Styles */
 .dark-mode {
-    background-color: black;
-    color: white;
+  background-color: black;
+  color: white;
 }
 
 .dark-mode .dark-mode-toggle {
-    border-color: white;
-    background-color: #333;
-    color: white;
+  border-color: white;
+  background-color: #333;
+  color: white;
 }
 
 .dark-mode .dark-mode-toggle:hover {
-    background-color: #555;
+  background-color: #555;
 }
 
 /* Dark mode styles for components */
 .dark-mode .bg-gray-100 {
-    background-color: #111 !important;
+  background-color: #111 !important;
 }
 
 .dark-mode .bg-white {
-    background-color: #1f1f1f !important;
+  background-color: #1f1f1f !important;
 }
 
 .dark-mode .bg-gray-50 {
-    background-color: #2a2a2a !important;
+  background-color: #2a2a2a !important;
 }
 
 .dark-mode .text-gray-900 {
-    color: #f1f1f1 !important;
+  color: #f1f1f1 !important;
 }
 
 .dark-mode .text-gray-700 {
-    color: #d1d1d1 !important;
+  color: #d1d1d1 !important;
 }
 
 .dark-mode .text-gray-600 {
-    color: #b1b1b1 !important;
+  color: #b1b1b1 !important;
 }
 
 .dark-mode .text-gray-500 {
-    color: #9a9a9a !important;
+  color: #9a9a9a !important;
 }
 
 .dark-mode .border-gray-200 {
-    border-color: #404040 !important;
+  border-color: #404040 !important;
 }
 
 .dark-mode .border-gray-300 {
-    border-color: #505050 !important;
+  border-color: #505050 !important;
 }
 
 .dark-mode .divide-gray-200 > * + * {
-    border-color: #404040 !important;
+  border-color: #404040 !important;
 }
 
 .dark-mode .divide-gray-300 > * + * {
-    border-color: #505050 !important;
+  border-color: #505050 !important;
 }
 
 .dark-mode .bg-red-50 {
-    background-color: #2d1b1b !important;
+  background-color: #2d1b1b !important;
 }
 
 .dark-mode .border-red-200 {
-    border-color: #5a2d2d !important;
+  border-color: #5a2d2d !important;
 }
 
 .dark-mode .text-red-800 {
-    color: #ff9999 !important;
+  color: #ff9999 !important;
 }
 
 .dark-mode .text-red-700 {
-    color: #ffaaaa !important;
+  color: #ffaaaa !important;
 }
 
 .dark-mode .text-red-400 {
-    color: #ff6666 !important;
+  color: #ff6666 !important;
 }
 
 .dark-mode .bg-green-50 {
-    background-color: #1b2d1b !important;
+  background-color: #1b2d1b !important;
 }
 
 .dark-mode .border-green-200 {
-    border-color: #2d5a2d !important;
+  border-color: #2d5a2d !important;
 }
 
 .dark-mode .text-green-800 {
-    color: #99ff99 !important;
+  color: #99ff99 !important;
 }
 
 .dark-mode .text-green-700 {
-    color: #aaffaa !important;
+  color: #aaffaa !important;
 }
 
 .dark-mode .text-green-400 {
-    color: #66ff66 !important;
+  color: #66ff66 !important;
 }

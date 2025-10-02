@@ -4,7 +4,8 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: 'MCP Database Console',
-  description: 'Natural language database query interface powered by MCP-DB Connector',
+  description:
+    'Natural language database query interface powered by MCP-DB Connector'
 };
 
 /**
@@ -12,7 +13,7 @@ export const metadata: Metadata = {
  * Provides the base layout for all pages including TailwindCSS styles
  */
 export default function RootLayout({
-  children,
+  children
 }: {
   children: React.ReactNode;
 }) {

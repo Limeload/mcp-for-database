@@ -27,6 +27,7 @@ Execute a database query using natural language.
 **Content-Type:** `application/json`
 
 **Request Body:**
+
 ```json
 {
   "prompt": "string",
@@ -35,6 +36,7 @@ Execute a database query using natural language.
 ```
 
 **Parameters:**
+
 - `prompt` (string, required): Natural language description of the query
 - `target` (string, required): Database target type
   - `"sqlalchemy"`: For SQLAlchemy-based applications
@@ -43,6 +45,7 @@ Execute a database query using natural language.
 #### Response
 
 **Success Response (200):**
+
 ```json
 {
   "success": true,
@@ -58,6 +61,7 @@ Execute a database query using natural language.
 ```
 
 **Error Response (400/500):**
+
 ```json
 {
   "success": false,
@@ -68,6 +72,7 @@ Execute a database query using natural language.
 #### Example Requests
 
 **Basic Query:**
+
 ```bash
 curl -X POST http://localhost:3000/api/db/query \
   -H "Content-Type: application/json" \
@@ -78,6 +83,7 @@ curl -X POST http://localhost:3000/api/db/query \
 ```
 
 **Aggregation Query:**
+
 ```bash
 curl -X POST http://localhost:3000/api/db/query \
   -H "Content-Type: application/json" \
@@ -89,10 +95,10 @@ curl -X POST http://localhost:3000/api/db/query \
 
 ## Error Codes
 
-| Code | Description |
-|------|-------------|
-| 400 | Bad Request - Invalid request parameters |
-| 500 | Internal Server Error - Server-side error |
+| Code | Description                               |
+| ---- | ----------------------------------------- |
+| 400  | Bad Request - Invalid request parameters  |
+| 500  | Internal Server Error - Server-side error |
 
 ## Rate Limiting
 
@@ -106,7 +112,7 @@ Currently, there are no rate limits imposed. This may change in future versions.
 const response = await fetch('/api/db/query', {
   method: 'POST',
   headers: {
-    'Content-Type': 'application/json',
+    'Content-Type': 'application/json'
   },
   body: JSON.stringify({
     prompt: 'Show me all active users',
@@ -146,6 +152,7 @@ curl -X POST http://localhost:3000/api/db/query \
 ## Changelog
 
 ### v1.0.0
+
 - Initial API release
 - Support for SQLAlchemy and Snowflake databases
 - Natural language query processing

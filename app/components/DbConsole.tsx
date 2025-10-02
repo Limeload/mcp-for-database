@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect } from "react";
-import { DatabaseTarget, DatabaseQueryResponse } from "@/app/types/database";
+import React, { useState, useEffect } from 'react';
+import { DatabaseTarget, DatabaseQueryResponse } from '@/app/types/database';
 
 /**
  * DbConsole Component
@@ -15,8 +15,8 @@ import { DatabaseTarget, DatabaseQueryResponse } from "@/app/types/database";
  * - Dark mode toggle functionality
  */
 export default function DbConsole() {
-  const [prompt, setPrompt] = useState("");
-  const [target, setTarget] = useState<DatabaseTarget>("sqlalchemy");
+  const [prompt, setPrompt] = useState('');
+  const [target, setTarget] = useState<DatabaseTarget>('sqlalchemy');
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<DatabaseQueryResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -24,23 +24,23 @@ export default function DbConsole() {
 
   // Load dark mode preference on mount
   useEffect(() => {
-    const savedTheme = localStorage.getItem("darkMode");
+    const savedTheme = localStorage.getItem('darkMode');
     const prefersDark = window.matchMedia(
-      "(prefers-color-scheme: dark)"
+      '(prefers-color-scheme: dark)'
     ).matches;
     const shouldBeDark =
-      savedTheme === "true" || (savedTheme === null && prefersDark);
+      savedTheme === 'true' || (savedTheme === null && prefersDark);
 
     setIsDarkMode(shouldBeDark);
-    document.body.classList.toggle("dark-mode", shouldBeDark);
+    document.body.classList.toggle('dark-mode', shouldBeDark);
   }, []);
 
   // Toggle dark mode
   const toggleDarkMode = () => {
     const newDarkMode = !isDarkMode;
     setIsDarkMode(newDarkMode);
-    document.body.classList.toggle("dark-mode", newDarkMode);
-    localStorage.setItem("darkMode", newDarkMode.toString());
+    document.body.classList.toggle('dark-mode', newDarkMode);
+    localStorage.setItem('darkMode', newDarkMode.toString());
   };
 
   /**
@@ -51,7 +51,7 @@ export default function DbConsole() {
     e.preventDefault();
 
     if (!prompt.trim()) {
-      setError("Please enter a prompt");
+      setError('Please enter a prompt');
       return;
     }
 
@@ -60,15 +60,15 @@ export default function DbConsole() {
     setResult(null);
 
     try {
-      const response = await fetch("/api/db/query", {
-        method: "POST",
+      const response = await fetch('/api/db/query', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           prompt: prompt.trim(),
-          target,
-        }),
+          target
+        })
       });
 
       const data: DatabaseQueryResponse = await response.json();
@@ -76,10 +76,10 @@ export default function DbConsole() {
       if (data.success) {
         setResult(data);
       } else {
-        setError(data.error || "An error occurred");
+        setError(data.error || 'An error occurred');
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Network error occurred");
+      setError(err instanceof Error ? err.message : 'Network error occurred');
     } finally {
       setIsLoading(false);
     }
@@ -123,8 +123,8 @@ export default function DbConsole() {
             key={rowIndex}
             className={
               rowIndex % 2 === 0
-                ? "bg-white dark:bg-gray-800"
-                : "bg-gray-50 dark:bg-gray-700"
+                ? 'bg-white dark:bg-gray-800'
+                : 'bg-gray-50 dark:bg-gray-700'
             }
           >
             {Object.values(row).map((value, cellIndex) => (
@@ -145,7 +145,7 @@ export default function DbConsole() {
     <>
       {/* Dark Mode Toggle Button */}
       <button onClick={toggleDarkMode} className="dark-mode-toggle">
-        {isDarkMode ? "☀️ Light" : "🌙 Dark"}
+        {isDarkMode ? '☀️ Light' : '🌙 Dark'}
       </button>
 
       <div className="max-w-6xl mx-auto p-6">
@@ -173,7 +173,7 @@ export default function DbConsole() {
               <textarea
                 id="prompt"
                 value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
+                onChange={e => setPrompt(e.target.value)}
                 placeholder="e.g., Show me all users who registered in the last 30 days"
                 className=" w-4/5 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400"
                 rows={3}
@@ -192,7 +192,7 @@ export default function DbConsole() {
               <select
                 id="target"
                 value={target}
-                onChange={(e) => setTarget(e.target.value as DatabaseTarget)}
+                onChange={e => setTarget(e.target.value as DatabaseTarget)}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400"
                 disabled={isLoading}
               >
@@ -233,7 +233,7 @@ export default function DbConsole() {
                     Executing Query...
                   </div>
                 ) : (
-                  "Execute Query"
+                  'Execute Query'
                 )}
               </button>
             </div>

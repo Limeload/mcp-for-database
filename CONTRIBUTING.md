@@ -26,12 +26,14 @@ This repository is participating in Hacktoberfest 2025! We're looking for contri
 ### Setting Up Your Development Environment
 
 1. **Fork and Clone**
+
    ```bash
    git clone https://github.com/YOUR_USERNAME/mcp-for-database.git
    cd mcp-for-database
    ```
 
 2. **Install Dependencies**
+
    ```bash
    npm install
    # or
@@ -39,6 +41,7 @@ This repository is participating in Hacktoberfest 2025! We're looking for contri
    ```
 
 3. **Start Development Server**
+
    ```bash
    npm run dev
    ```
@@ -50,29 +53,34 @@ This repository is participating in Hacktoberfest 2025! We're looking for contri
 We welcome various types of contributions:
 
 ### 🐛 Bug Fixes
+
 - Fix existing bugs and issues
 - Improve error handling
 - Enhance user experience
 
 ### ✨ New Features
+
 - Add new database connectors
 - Implement additional query features
 - Enhance the UI/UX
 - Add new API endpoints
 
 ### 📚 Documentation
+
 - Improve README files
 - Add code comments
 - Create tutorials or guides
 - Update API documentation
 
 ### 🧪 Testing
+
 - Add unit tests
 - Improve test coverage
 - Add integration tests
 - Performance testing
 
 ### 🎨 UI/UX Improvements
+
 - Enhance the visual design
 - Improve accessibility
 - Add responsive design features
@@ -81,6 +89,7 @@ We welcome various types of contributions:
 ## 🏷️ Good First Issues
 
 Look for issues labeled with:
+
 - `good first issue` - Perfect for newcomers
 - `hacktoberfest` - Hacktoberfest specific issues
 - `help wanted` - Community help needed
@@ -89,6 +98,7 @@ Look for issues labeled with:
 ## 📝 Making Changes
 
 ### 1. Create a Branch
+
 ```bash
 git checkout -b feature/your-feature-name
 # or
@@ -96,12 +106,14 @@ git checkout -b fix/your-bug-fix
 ```
 
 ### 2. Make Your Changes
+
 - Write clean, readable code
 - Follow existing code style
 - Add comments for complex logic
 - Test your changes thoroughly
 
 ### 3. Commit Your Changes
+
 ```bash
 git add .
 git commit -m "feat: add new database connector"
@@ -110,6 +122,7 @@ git commit -m "fix: resolve query timeout issue"
 ```
 
 Use conventional commit messages:
+
 - `feat:` for new features
 - `fix:` for bug fixes
 - `docs:` for documentation
@@ -119,6 +132,7 @@ Use conventional commit messages:
 - `chore:` for maintenance
 
 ### 4. Push and Create PR
+
 ```bash
 git push origin feature/your-feature-name
 ```
@@ -136,21 +150,25 @@ Then create a pull request on GitHub.
 ## 📏 Code Standards
 
 ### TypeScript
+
 - Use TypeScript for all new code
 - Define proper types and interfaces
 - Avoid `any` types when possible
 
 ### React/Next.js
+
 - Use functional components with hooks
 - Follow Next.js best practices
 - Implement proper error boundaries
 
 ### Styling
+
 - Use TailwindCSS for styling
 - Follow responsive design principles
 - Maintain consistent spacing and colors
 
 ### API Design
+
 - Follow RESTful conventions
 - Implement proper error handling
 - Use appropriate HTTP status codes
@@ -158,6 +176,7 @@ Then create a pull request on GitHub.
 ## 🧪 Testing
 
 ### Running Tests
+
 ```bash
 npm test
 # or
@@ -165,6 +184,7 @@ pnpm test
 ```
 
 ### Writing Tests
+
 - Write tests for new features
 - Test edge cases and error conditions
 - Maintain good test coverage
@@ -172,11 +192,13 @@ pnpm test
 ## 📖 Documentation
 
 ### Code Comments
+
 - Comment complex algorithms
 - Explain business logic
 - Use JSDoc for functions
 
 ### README Updates
+
 - Update README when adding features
 - Include usage examples
 - Keep installation instructions current
@@ -184,6 +206,7 @@ pnpm test
 ## 🎯 Pull Request Guidelines
 
 ### Before Submitting
+
 - [ ] Code follows project style guidelines
 - [ ] Self-review of your code
 - [ ] Tests pass locally
@@ -191,11 +214,14 @@ pnpm test
 - [ ] No merge conflicts
 
 ### PR Description Template
+
 ```markdown
 ## Description
+
 Brief description of changes
 
 ## Type of Change
+
 - [ ] Bug fix
 - [ ] New feature
 - [ ] Documentation update
@@ -203,14 +229,17 @@ Brief description of changes
 - [ ] Code refactoring
 
 ## Testing
+
 - [ ] Tests pass locally
 - [ ] New tests added (if applicable)
 - [ ] Manual testing completed
 
 ## Screenshots (if applicable)
+
 Add screenshots for UI changes
 
 ## Checklist
+
 - [ ] Code follows style guidelines
 - [ ] Self-review completed
 - [ ] Documentation updated
@@ -220,6 +249,7 @@ Add screenshots for UI changes
 ## 🏆 Contributor Recognition
 
 After **15 approved pull requests**, you'll be:
+
 - Added to our `CONTRIBUTORS.md` file
 - Recognized as a project contributor
 - Eligible for Hacktoberfest completion
