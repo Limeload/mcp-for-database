@@ -3,39 +3,33 @@
 import React, { useState, useEffect } from 'react';
 import { DatabaseTarget, DatabaseQueryResponse } from '@/app/types/database';
 
+type EnhancedError = {
+  error: string;
+  details?: string;
+  suggestion?: string;
+};
+
 /**
  * DbConsole Component
- * A reusable component for database query interface
- * Features:
- * - Natural language prompt input
- * - Database target selection (SQLAlchemy or Snowflake)
- * - Query submission with loading states
- * - Results display in a styled table
- * - Error handling and user feedback
- * - Dark mode toggle functionality
  */
 export default function DbConsole() {
   const [prompt, setPrompt] = useState('');
   const [target, setTarget] = useState<DatabaseTarget>('sqlalchemy');
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<DatabaseQueryResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<EnhancedError | null>(null);
   const [isDarkMode, setIsDarkMode] = useState(false);
 
-  // Load dark mode preference on mount
+  // Load dark mode preference
   useEffect(() => {
     const savedTheme = localStorage.getItem('darkMode');
-    const prefersDark = window.matchMedia(
-      '(prefers-color-scheme: dark)'
-    ).matches;
-    const shouldBeDark =
-      savedTheme === 'true' || (savedTheme === null && prefersDark);
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const shouldBeDark = savedTheme === 'true' || (savedTheme === null && prefersDark);
 
     setIsDarkMode(shouldBeDark);
     document.body.classList.toggle('dark-mode', shouldBeDark);
   }, []);
 
-  // Toggle dark mode
   const toggleDarkMode = () => {
     const newDarkMode = !isDarkMode;
     setIsDarkMode(newDarkMode);
@@ -45,13 +39,12 @@ export default function DbConsole() {
 
   /**
    * Handle form submission
-   * Calls the API route to execute database query
    */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!prompt.trim()) {
-      setError('Please enter a prompt');
+      setError({ error: 'Please enter a prompt' });
       return;
     }
 
@@ -62,38 +55,33 @@ export default function DbConsole() {
     try {
       const response = await fetch('/api/db/query', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          prompt: prompt.trim(),
-          target
-        })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: prompt.trim(), target })
       });
 
-      const data: DatabaseQueryResponse = await response.json();
+      const data = await response.json();
 
       if (data.success) {
         setResult(data);
       } else {
-        setError(data.error || 'An error occurred');
+        setError({
+          error: data.error || 'An error occurred',
+          details: data.details,
+          suggestion: data.suggestion
+        });
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Network error occurred');
+      setError({
+        error: err instanceof Error ? err.message : 'Network error occurred'
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
-  /**
-   * Render table headers from the first row of data
-   */
   const renderTableHeaders = (data: any[]) => {
     if (!data || data.length === 0) return null;
-
-    const firstRow = data[0];
-    const headers = Object.keys(firstRow);
-
+    const headers = Object.keys(data[0]);
     return (
       <thead className="bg-gray-50 dark:bg-gray-700">
         <tr>
@@ -110,12 +98,8 @@ export default function DbConsole() {
     );
   };
 
-  /**
-   * Render table rows with data
-   */
   const renderTableRows = (data: any[]) => {
     if (!data || data.length === 0) return null;
-
     return (
       <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
         {data.map((row, rowIndex) => (
@@ -143,7 +127,7 @@ export default function DbConsole() {
 
   return (
     <>
-      {/* Dark Mode Toggle Button */}
+      {/* Dark Mode Toggle */}
       <button onClick={toggleDarkMode} className="dark-mode-toggle">
         {isDarkMode ? '☀️ Light' : '🌙 Dark'}
       </button>
@@ -162,7 +146,7 @@ export default function DbConsole() {
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="p-6 space-y-6">
-            {/* Prompt Input */}
+            {/* Prompt */}
             <div>
               <label
                 htmlFor="prompt"
@@ -175,7 +159,7 @@ export default function DbConsole() {
                 value={prompt}
                 onChange={e => setPrompt(e.target.value)}
                 placeholder="e.g., Show me all users who registered in the last 30 days"
-                className=" w-4/5 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400"
+                className="w-4/5 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400"
                 rows={3}
                 disabled={isLoading}
               />
@@ -260,18 +244,25 @@ export default function DbConsole() {
                   </div>
                   <div className="ml-3">
                     <h3 className="text-sm font-medium text-red-800 dark:text-red-200">
-                      Error
+                      {error.error}
                     </h3>
-                    <div className="mt-2 text-sm text-red-700 dark:text-red-300">
-                      {error}
-                    </div>
+                    {error.details && (
+                      <div className="mt-1 text-sm text-red-700 dark:text-red-300">
+                        Details: {error.details}
+                      </div>
+                    )}
+                    {error.suggestion && (
+                      <div className="mt-1 text-sm text-blue-700 dark:text-blue-300">
+                        💡 Suggestion: {error.suggestion}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Results Display */}
+          {/* Results */}
           {result && result.success && (
             <div className="px-6 pb-6">
               <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md p-4 mb-4">
@@ -302,7 +293,6 @@ export default function DbConsole() {
                 </div>
               </div>
 
-              {/* Query Display */}
               {result.query && (
                 <div className="mb-4">
                   <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -314,7 +304,6 @@ export default function DbConsole() {
                 </div>
               )}
 
-              {/* Results Table */}
               {result.data && result.data.length > 0 ? (
                 <div>
                   <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
