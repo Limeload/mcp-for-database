@@ -7,12 +7,10 @@ import {
 
 /**
  * API route handler for database queries with connection pooling
- * Now supports connection management and concurrent queries
+ * POST /api/db/query - Execute database query
+ * GET /api/db/query - Get connection pool statistics
  */
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ query: string }> }
-) {
+export async function POST(request: NextRequest) {
   try {
     const body: DatabaseQueryRequest = await request.json();
     const { prompt, target, connectionId, maxExecutionTime } = body;
@@ -39,8 +37,11 @@ export async function POST(
       );
     }
 
+    // Get the base URL from the request
+    const baseUrl = new URL(request.url).origin;
+
     // Call MCP server with connection pooling support
-    const mcpResponse = await fetch(`${request.nextUrl.origin}/mcp`, {
+    const mcpResponse = await fetch(`${baseUrl}/mcp`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -60,7 +61,7 @@ export async function POST(
     });
 
     if (!mcpResponse.ok) {
-      throw new Error(`MCP server error: ${mcpResponse.status}`);
+      throw new Error(`MCP server error: ${mcpResponse.status} ${mcpResponse.statusText}`);
     }
 
     const mcpResult = await mcpResponse.json();
@@ -88,12 +89,15 @@ export async function POST(
 }
 
 /**
- * GET endpoint for connection pool statistics
+ * GET /api/db/query - Get connection pool statistics
  */
 export async function GET(request: NextRequest) {
   try {
+    // Get the base URL from the request
+    const baseUrl = new URL(request.url).origin;
+
     // Call MCP server to get connection stats
-    const mcpResponse = await fetch(`${request.nextUrl.origin}/mcp`, {
+    const mcpResponse = await fetch(`${baseUrl}/mcp`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -108,12 +112,16 @@ export async function GET(request: NextRequest) {
     });
 
     if (!mcpResponse.ok) {
-      throw new Error(`MCP server error: ${mcpResponse.status}`);
+      throw new Error(`MCP server error: ${mcpResponse.status} ${mcpResponse.statusText}`);
     }
 
     const mcpResult = await mcpResponse.json();
-    const stats = JSON.parse(mcpResult.content[0].text);
+    
+    if (mcpResult.error) {
+      throw new Error(mcpResult.error);
+    }
 
+    const stats = JSON.parse(mcpResult.content[0].text);
     return NextResponse.json(stats);
 
   } catch (error) {
