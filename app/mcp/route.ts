@@ -1,3 +1,4 @@
+import { NextRequest, NextResponse } from 'next/server';
 import { createMcpHandler } from 'mcp-handler';
 import { z } from 'zod';
 import { DatabaseConnectionPool } from '../lib/database-pool';
@@ -11,8 +12,8 @@ const connectionPool = new DatabaseConnectionPool({
   cleanupInterval: 120000
 });
 
-// StreamableHttp server with database connection management
-const handler = createMcpHandler(
+// Create MCP handler
+const mcpHandler = createMcpHandler(
   async server => {
     // Database query tool with connection pooling
     server.tool(
@@ -163,13 +164,26 @@ const handler = createMcpHandler(
   }
 );
 
+// Handle different HTTP methods using Next.js 13+ App Router pattern
+export async function GET(request: NextRequest) {
+  return mcpHandler(request);
+}
+
+export async function POST(request: NextRequest) {
+  return mcpHandler(request);
+}
+
+export async function DELETE(request: NextRequest) {
+  return mcpHandler(request);
+}
+
 // Cleanup on process termination
-process.on('SIGTERM', async () => {
-  await connectionPool.closeAllConnections();
-});
+if (typeof process !== 'undefined') {
+  process.on('SIGTERM', async () => {
+    await connectionPool.closeAllConnections();
+  });
 
-process.on('SIGINT', async () => {
-  await connectionPool.closeAllConnections();
-});
-
-export { handler as GET, handler as POST, handler as DELETE };
+  process.on('SIGINT', async () => {
+    await connectionPool.closeAllConnections();
+  });
+}
