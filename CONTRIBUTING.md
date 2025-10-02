@@ -60,6 +60,7 @@ Before you begin, ensure you have the following installed:
 - **Code Editor** - VS Code recommended ([Download](https://code.visualstudio.com/))
 
 **Optional but Recommended:**
+
 - **MCP-DB Connector server** running on `http://localhost:8000` (for testing full functionality)
 - **GitHub CLI** for easier PR management ([Install](https://cli.github.com/))
 
@@ -88,6 +89,7 @@ git remote -v
 ```
 
 **Expected output:**
+
 ```
 origin    https://github.com/YOUR_USERNAME/mcp-for-database.git (fetch)
 origin    https://github.com/YOUR_USERNAME/mcp-for-database.git (push)
@@ -109,6 +111,7 @@ yarn install
 ```
 
 **Troubleshooting:** If you encounter permission errors:
+
 ```bash
 # On Linux/Mac
 sudo chown -R $USER ~/.npm
@@ -128,6 +131,7 @@ npm run dev
 ```
 
 **Expected output:**
+
 ```
 ▲ Next.js 15.5.4
 - Local:        http://localhost:3000
@@ -199,6 +203,7 @@ Look for issues labeled with:
 Let's fix a hypothetical bug where the dark mode toggle doesn't persist across page refreshes.
 
 **Step 1: Identify the Issue**
+
 ```bash
 # Find the component file
 find . -name "*Console*" -type f
@@ -207,6 +212,7 @@ find . -name "*Console*" -type f
 ```
 
 **Step 2: Reproduce the Bug**
+
 1. Start dev server: `pnpm dev`
 2. Navigate to database console
 3. Toggle dark mode
@@ -214,6 +220,7 @@ find . -name "*Console*" -type f
 5. Notice dark mode resets (bug confirmed!)
 
 **Step 3: Create a Branch**
+
 ```bash
 git checkout -b fix/dark-mode-persistence
 ```
@@ -242,12 +249,14 @@ useEffect(() => {
 ```
 
 **Step 6: Test the Fix**
+
 1. Refresh the page
 2. Toggle dark mode ON
 3. Refresh again
 4. Dark mode should persist ✅
 
 **Step 7: Commit and Push**
+
 ```bash
 git add app/components/DbConsole.tsx
 git commit -m "fix: persist dark mode setting across page refreshes
@@ -275,6 +284,7 @@ Let's add a "Clear Results" button to reset the query interface.
 - Button should be disabled when there's nothing to clear
 
 **Step 2: Create Feature Branch**
+
 ```bash
 git checkout main
 git pull upstream main
@@ -319,6 +329,7 @@ const handleClear = (): void => {
 **Step 5: Test Thoroughly**
 
 Test scenarios:
+
 - ✅ Button is disabled initially
 - ✅ Button becomes enabled after typing
 - ✅ Clicking clears the prompt
@@ -327,6 +338,7 @@ Test scenarios:
 - ✅ Button style changes on hover (when enabled)
 
 **Step 6: Run All Checks**
+
 ```bash
 pnpm type-check
 pnpm lint
@@ -334,6 +346,7 @@ pnpm format
 ```
 
 **Step 7: Commit with Good Message**
+
 ```bash
 git add .
 git commit -m "feat: add clear results button to database console
@@ -345,6 +358,7 @@ git commit -m "feat: add clear results button to database console
 ```
 
 **Step 8: Push and Create PR**
+
 ```bash
 git push origin feature/clear-results-button
 gh pr create --fill
@@ -361,6 +375,7 @@ Let's add an example to the API documentation.
 The API.md file might be missing practical examples.
 
 **Step 2: Create Branch**
+
 ```bash
 git checkout -b docs/add-api-examples
 ```
@@ -377,23 +392,23 @@ Edit `docs/API.md`:
 **Request:**
 \`\`\`bash
 curl -X POST http://localhost:3000/api/db/query \
-  -H "Content-Type: application/json" \
-  -d '{
-    "prompt": "Show me all users who registered in the last 30 days",
-    "target": "sqlalchemy"
-  }'
+ -H "Content-Type: application/json" \
+ -d '{
+"prompt": "Show me all users who registered in the last 30 days",
+"target": "sqlalchemy"
+}'
 \`\`\`
 
 **Response:**
 \`\`\`json
 {
-  "success": true,
-  "data": [
-    {"id": 1, "name": "John Doe", "registered": "2025-09-15"},
-    {"id": 2, "name": "Jane Smith", "registered": "2025-09-20"}
-  ],
-  "query": "SELECT * FROM users WHERE registered >= DATE_SUB(NOW(), INTERVAL 30 DAY)",
-  "executionTime": 45
+"success": true,
+"data": [
+{"id": 1, "name": "John Doe", "registered": "2025-09-15"},
+{"id": 2, "name": "Jane Smith", "registered": "2025-09-20"}
+],
+"query": "SELECT \* FROM users WHERE registered >= DATE_SUB(NOW(), INTERVAL 30 DAY)",
+"executionTime": 45
 }
 \`\`\`
 
@@ -402,22 +417,23 @@ curl -X POST http://localhost:3000/api/db/query \
 **Request with missing field:**
 \`\`\`bash
 curl -X POST http://localhost:3000/api/db/query \
-  -H "Content-Type: application/json" \
-  -d '{
-    "prompt": "Show users"
-  }'
+ -H "Content-Type: application/json" \
+ -d '{
+"prompt": "Show users"
+}'
 \`\`\`
 
 **Response:**
 \`\`\`json
 {
-  "success": false,
-  "error": "Missing required fields: prompt and target are required"
+"success": false,
+"error": "Missing required fields: prompt and target are required"
 }
 \`\`\`
 ```
 
 **Step 4: Commit Documentation**
+
 ```bash
 git add docs/API.md
 git commit -m "docs: add practical API examples with curl commands
@@ -440,6 +456,7 @@ Let's extract table rendering logic into a reusable component.
 Notice the table rendering functions in `DbConsole.tsx` could be reused.
 
 **Step 2: Create Branch**
+
 ```bash
 git checkout -b refactor/extract-results-table
 ```
@@ -510,12 +527,14 @@ import ResultsTable from './ResultsTable';
 **Step 5: Test Refactored Code**
 
 Ensure:
+
 - ✅ Results display correctly
 - ✅ Styling is maintained
 - ✅ Dark mode works
 - ✅ No TypeScript errors
 
 **Step 6: Commit**
+
 ```bash
 git add app/components/
 git commit -m "refactor: extract table rendering to ResultsTable component
@@ -535,6 +554,7 @@ git push origin refactor/extract-results-table
 ### Pattern 1: Adding a Database Connector
 
 **File Structure:**
+
 ```
 app/
   connectors/
@@ -544,6 +564,7 @@ app/
 ```
 
 **Steps:**
+
 1. Add connector type to `database.ts`
 2. Create connector implementation
 3. Update API route to handle new type
@@ -553,21 +574,20 @@ app/
 ### Pattern 2: Adding an Export Format
 
 **Files to Modify:**
+
 - `app/components/DbConsole.tsx` - Add export button
 - `app/utils/export.ts` - Create export utilities
 - `app/types/export.ts` - Define export types
 
 **Implementation:**
+
 ```typescript
 // app/utils/export.ts
 export const exportToCSV = (data: any[]): string => {
   const headers = Object.keys(data[0]);
   const rows = data.map(row => Object.values(row));
-  
-  return [
-    headers.join(','),
-    ...rows.map(row => row.join(','))
-  ].join('\n');
+
+  return [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
 };
 
 export const downloadFile = (content: string, filename: string) => {
@@ -584,6 +604,7 @@ export const downloadFile = (content: string, filename: string) => {
 ### Pattern 3: Adding UI Components
 
 **Component Checklist:**
+
 - [ ] Create component file in `app/components/`
 - [ ] Add TypeScript interfaces for props
 - [ ] Implement responsive design
@@ -593,6 +614,7 @@ export const downloadFile = (content: string, filename: string) => {
 - [ ] Document props with JSDoc
 
 **Example Component Structure:**
+
 ```typescript
 'use client';
 
@@ -607,13 +629,13 @@ interface ComponentNameProps {
 
 /**
  * ComponentName - Brief description
- * 
+ *
  * @example
  * <ComponentName propName="value" />
  */
-export default function ComponentName({ 
-  propName, 
-  optionalProp = false 
+export default function ComponentName({
+  propName,
+  optionalProp = false
 }: ComponentNameProps) {
   return (
     <div className="component-container">
@@ -632,11 +654,13 @@ export default function ComponentName({
 #### Issue 1: Port 3000 Already in Use
 
 **Error:**
+
 ```
 Error: listen EADDRINUSE: address already in use :::3000
 ```
 
 **Solution:**
+
 ```bash
 # Find and kill the process using port 3000
 # On Linux/Mac:
@@ -653,11 +677,13 @@ PORT=3001 pnpm dev
 #### Issue 2: Module Not Found Errors
 
 **Error:**
+
 ```
 Module not found: Can't resolve '@/app/components/Component'
 ```
 
 **Solutions:**
+
 ```bash
 # Clear Next.js cache
 rm -rf .next
@@ -673,11 +699,13 @@ pnpm install
 #### Issue 3: TypeScript Errors
 
 **Error:**
+
 ```
 Type 'string | undefined' is not assignable to type 'string'
 ```
 
 **Solution:**
+
 ```typescript
 // Bad
 const value: string = props.optionalProp;
@@ -694,12 +722,14 @@ if (props.optionalProp) {
 #### Issue 4: Dark Mode Not Working
 
 **Checklist:**
+
 - [ ] Check localStorage is accessible
 - [ ] Verify `dark-mode` class is in globals.css
 - [ ] Ensure body element has the class applied
 - [ ] Clear browser cache and localStorage
 
 **Debug:**
+
 ```typescript
 // Add console logs to debug
 useEffect(() => {
@@ -712,11 +742,13 @@ useEffect(() => {
 #### Issue 5: API Connection Issues
 
 **Error:**
+
 ```
 fetch failed: Connection refused to http://localhost:8000
 ```
 
 **Solutions:**
+
 1. Ensure MCP-DB Connector is running
 2. Check the port number is correct
 3. Verify firewall settings
@@ -733,6 +765,7 @@ netstat -an | grep 8000
 #### Issue 6: Git Merge Conflicts
 
 **When pulling upstream changes:**
+
 ```bash
 # Update your local main
 git checkout main
@@ -757,6 +790,7 @@ git rebase --abort
 #### Issue 7: Linting Errors
 
 **Auto-fix most issues:**
+
 ```bash
 # Fix ESLint errors
 pnpm lint:fix
@@ -771,11 +805,13 @@ pnpm prettier --write app/components/DbConsole.tsx
 #### Issue 8: Build Failures
 
 **Error:**
+
 ```
 Error: Build failed with errors
 ```
 
 **Solutions:**
+
 ```bash
 # Clean build
 pnpm clean
@@ -802,6 +838,7 @@ If you're still stuck:
 4. **Review documentation:** Check `docs/` folder
 
 **When asking for help, include:**
+
 - Your operating system and version
 - Node.js and npm/pnpm version
 - Exact error message
@@ -815,6 +852,7 @@ If you're still stuck:
 ### Coming Soon!
 
 We're creating video tutorials for:
+
 - 🎬 Setting up your development environment
 - 🎬 Making your first contribution
 - 🎬 Understanding the codebase architecture
@@ -847,6 +885,7 @@ git checkout -b docs/update-api-guide
 ```
 
 **Branch Naming Convention:**
+
 - `feature/` - for new features (e.g., `feature/export-to-csv`)
 - `fix/` - for bug fixes (e.g., `fix/dark-mode-toggle`)
 - `docs/` - for documentation (e.g., `docs/improve-readme`)
@@ -869,6 +908,7 @@ git checkout -b docs/update-api-guide
 Let's walk through adding a "Copy Query Results" feature:
 
 **Step 2.1: Understand the codebase**
+
 ```bash
 # Explore the component structure
 ls -la app/components/
@@ -885,11 +925,11 @@ Edit `app/components/DbConsole.tsx`:
 // Add a new function to copy results
 const copyToClipboard = () => {
   if (!result?.data) return;
-  
+
   const jsonData = JSON.stringify(result.data, null, 2);
   navigator.clipboard.writeText(jsonData);
   setError('Results copied to clipboard!');
-  
+
   // Clear success message after 3 seconds
   setTimeout(() => setError(null), 3000);
 };
@@ -912,6 +952,7 @@ const copyToClipboard = () => {
 5. Paste into a text editor to verify
 
 **Step 2.4: Run type checking and linting**
+
 ```bash
 # Check for TypeScript errors
 pnpm type-check
@@ -943,6 +984,7 @@ git commit -m "chore: update dependencies to latest versions"
 ```
 
 **Commit Message Format:**
+
 ```
 <type>: <short summary>
 
@@ -952,6 +994,7 @@ git commit -m "chore: update dependencies to latest versions"
 ```
 
 **Types:**
+
 - `feat:` - A new feature
 - `fix:` - A bug fix
 - `docs:` - Documentation only changes
@@ -963,6 +1006,7 @@ git commit -m "chore: update dependencies to latest versions"
 - `ci:` - CI/CD configuration changes
 
 **Examples with body:**
+
 ```bash
 git commit -m "feat: add export to CSV functionality
 
@@ -1087,6 +1131,7 @@ Any additional information or context
 ### What Reviewers Look For
 
 #### Code Quality
+
 - ✅ Clean, readable code with meaningful variable names
 - ✅ Proper error handling
 - ✅ No console.logs left in production code
@@ -1094,18 +1139,21 @@ Any additional information or context
 - ✅ Consistent code style
 
 #### Functionality
+
 - ✅ Code does what it's supposed to do
 - ✅ Edge cases are handled
 - ✅ No breaking changes (unless discussed)
 - ✅ Works across different browsers/devices
 
 #### Documentation
+
 - ✅ Code comments for complex logic
 - ✅ JSDoc for functions and components
 - ✅ README updated if needed
 - ✅ Commit messages are clear
 
 #### Testing
+
 - ✅ Tests pass
 - ✅ New tests added for new features
 - ✅ No reduction in test coverage
@@ -1113,6 +1161,7 @@ Any additional information or context
 ### Responding to Review Feedback
 
 **Good Response Example:**
+
 ```markdown
 Thanks for the feedback! I've made the following changes:
 
@@ -1125,6 +1174,7 @@ Let me know if there's anything else!
 ```
 
 **How to Update Your PR:**
+
 ```bash
 # Make the requested changes
 git add .
@@ -1141,6 +1191,7 @@ git push origin feature/your-feature
 If you're reviewing someone else's code:
 
 ✅ **Do:**
+
 - Be kind and constructive
 - Explain the "why" behind suggestions
 - Praise good patterns and solutions
@@ -1148,19 +1199,24 @@ If you're reviewing someone else's code:
 - Test the changes locally
 
 ❌ **Don't:**
+
 - Be dismissive or rude
 - Nitpick on style (let linters handle that)
 - Request changes without explanation
 - Assume the contributor has the same knowledge level
 
 **Good Review Comment:**
+
 > "Great work on this feature! One suggestion: consider extracting the validation logic into a separate function for reusability. Something like:
+>
 > ```typescript
 > const validateQuery = (prompt: string, target: string) => { ... }
 > ```
+>
 > This would make it easier to test and reuse in other components."
 
 **Poor Review Comment:**
+
 > "This is wrong. Fix it."
 
 ---
@@ -1170,6 +1226,7 @@ If you're reviewing someone else's code:
 ### Working with Multiple Issues
 
 **Managing multiple branches:**
+
 ```bash
 # List all branches
 git branch -a
@@ -1261,6 +1318,7 @@ git push origin feature/your-feature
 ### Creating Good Commit History
 
 **Before:**
+
 ```bash
 fix typo
 fix another typo
@@ -1270,6 +1328,7 @@ final fix
 ```
 
 **After (squashed):**
+
 ```bash
 feat: add query export functionality
 
@@ -1353,6 +1412,7 @@ Before creating a pull request:
 #### Type Definitions
 
 **✅ Good:**
+
 ```typescript
 // Explicit interface definitions
 interface QueryResult {
@@ -1362,7 +1422,10 @@ interface QueryResult {
 }
 
 // Proper type for function parameters
-function processQuery(prompt: string, target: DatabaseTarget): Promise<QueryResult> {
+function processQuery(
+  prompt: string,
+  target: DatabaseTarget
+): Promise<QueryResult> {
   // Implementation
 }
 
@@ -1371,6 +1434,7 @@ type Status = 'idle' | 'loading' | 'success' | 'error';
 ```
 
 **❌ Bad:**
+
 ```typescript
 // Avoid 'any' types
 function processQuery(prompt: any, target: any): any {
@@ -1378,7 +1442,8 @@ function processQuery(prompt: any, target: any): any {
 }
 
 // Avoid implicit any
-function handleData(data) {  // Missing type annotation
+function handleData(data) {
+  // Missing type annotation
   // Implementation
 }
 ```
@@ -1386,6 +1451,7 @@ function handleData(data) {  // Missing type annotation
 #### Null Safety
 
 **✅ Good:**
+
 ```typescript
 // Optional chaining
 const userName = user?.profile?.name ?? 'Anonymous';
@@ -1400,12 +1466,13 @@ const timeout = config.timeout ?? 5000;
 ```
 
 **❌ Bad:**
+
 ```typescript
 // Unsafe access
-const userName = user.profile.name;  // May throw error
+const userName = user.profile.name; // May throw error
 
 // Using || instead of ??
-const timeout = config.timeout || 5000;  // 0 would be falsy
+const timeout = config.timeout || 5000; // 0 would be falsy
 ```
 
 ### React/Next.js
@@ -1413,6 +1480,7 @@ const timeout = config.timeout || 5000;  // 0 would be falsy
 #### Component Structure
 
 **✅ Good:**
+
 ```typescript
 'use client';
 
@@ -1431,13 +1499,13 @@ interface ButtonProps {
 
 /**
  * Primary button component
- * 
+ *
  * @example
  * <Button label="Submit" onClick={handleSubmit} />
  */
-export default function Button({ 
-  label, 
-  onClick, 
+export default function Button({
+  label,
+  onClick,
   disabled = false,
   className = ''
 }: ButtonProps) {
@@ -1455,6 +1523,7 @@ export default function Button({
 ```
 
 **❌ Bad:**
+
 ```typescript
 // No types, no documentation
 export default function Button(props) {
@@ -1465,6 +1534,7 @@ export default function Button(props) {
 #### Hooks Best Practices
 
 **✅ Good:**
+
 ```typescript
 // Properly typed hooks
 const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -1476,16 +1546,17 @@ useEffect(() => {
     setIsLoading(false);
   }, 3000);
 
-  return () => clearTimeout(timer);  // Cleanup
+  return () => clearTimeout(timer); // Cleanup
 }, []);
 
 // Dependencies array is correct
 useEffect(() => {
   fetchData(queryId);
-}, [queryId]);  // Only re-run when queryId changes
+}, [queryId]); // Only re-run when queryId changes
 ```
 
 **❌ Bad:**
+
 ```typescript
 // Missing cleanup
 useEffect(() => {
@@ -1496,7 +1567,7 @@ useEffect(() => {
 // Missing dependencies
 useEffect(() => {
   fetchData(queryId);
-}, []);  // Should include queryId
+}, []); // Should include queryId
 ```
 
 ### Styling with TailwindCSS
@@ -1504,6 +1575,7 @@ useEffect(() => {
 #### Consistent Patterns
 
 **✅ Good:**
+
 ```typescript
 // Group related classes
 <div className="
@@ -1530,6 +1602,7 @@ const buttonClasses = `
 ```
 
 **❌ Bad:**
+
 ```typescript
 // Long, unorganized class strings
 <div className="flex items-center justify-between px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors">
@@ -1541,6 +1614,7 @@ const buttonClasses = `
 #### Responsive Design
 
 **✅ Good:**
+
 ```typescript
 <div className="
   grid grid-cols-1 gap-4
@@ -1556,6 +1630,7 @@ const buttonClasses = `
 #### Dark Mode Support
 
 **✅ Good:**
+
 ```typescript
 // Always include dark mode variants
 <div className="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
@@ -1568,6 +1643,7 @@ const buttonClasses = `
 #### Request/Response Structure
 
 **✅ Good:**
+
 ```typescript
 // Clear, typed API responses
 interface ApiResponse<T> {
@@ -1584,7 +1660,7 @@ interface ApiResponse<T> {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    
+
     // Validate input
     if (!body.prompt) {
       return NextResponse.json(
@@ -1592,10 +1668,10 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    
+
     // Process request
     const result = await processQuery(body);
-    
+
     return NextResponse.json({
       success: true,
       data: result,
@@ -1606,11 +1682,11 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('API Error:', error);
-    
+
     return NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Unknown error' 
+      {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
       },
       { status: 500 }
     );
@@ -1619,24 +1695,26 @@ export async function POST(request: NextRequest) {
 ```
 
 **❌ Bad:**
+
 ```typescript
 // No error handling, inconsistent responses
 export async function POST(request: NextRequest) {
   const body = await request.json();
   const result = await processQuery(body.prompt);
-  return NextResponse.json(result);  // What if it fails?
+  return NextResponse.json(result); // What if it fails?
 }
 ```
 
 ### Code Organization
 
 **✅ Good:**
+
 ```typescript
 // Group related functionality
 // app/utils/query.ts
-export function validateQuery(query: string): boolean { }
-export function sanitizeQuery(query: string): string { }
-export function formatQuery(query: string): string { }
+export function validateQuery(query: string): boolean {}
+export function sanitizeQuery(query: string): string {}
+export function formatQuery(query: string): string {}
 
 // Use barrel exports
 // app/utils/index.ts
@@ -1645,20 +1723,17 @@ export * from './export';
 export * from './validation';
 
 // Clear file structure
-app/
-  components/
-    ui/
-      Button.tsx
-      Input.tsx
-      Modal.tsx
-    features/
-      QueryForm.tsx
-      ResultsTable.tsx
+app / components / ui / Button.tsx;
+Input.tsx;
+Modal.tsx;
+features / QueryForm.tsx;
+ResultsTable.tsx;
 ```
 
 ### Accessibility
 
 **✅ Good:**
+
 ```typescript
 // Proper ARIA attributes
 <button
@@ -1694,6 +1769,7 @@ app/
 ### Performance
 
 **✅ Good:**
+
 ```typescript
 // Memoize expensive computations
 const processedData = useMemo(() => {
@@ -1714,6 +1790,7 @@ const HeavyComponent = dynamic(() => import('./HeavyComponent'), {
 ### Error Handling
 
 **✅ Good:**
+
 ```typescript
 // Comprehensive error handling
 try {
@@ -1740,39 +1817,41 @@ try {
 ### Comments and Documentation
 
 **✅ Good:**
-```typescript
+
+````typescript
 /**
  * Processes a database query and returns formatted results
- * 
+ *
  * @param query - The SQL query string to execute
  * @param options - Optional configuration for query execution
  * @returns Promise resolving to query results
  * @throws {QueryError} If the query syntax is invalid
  * @throws {ConnectionError} If database connection fails
- * 
+ *
  * @example
  * ```typescript
  * const results = await processQuery('SELECT * FROM users', { timeout: 5000 });
  * ```
  */
 async function processQuery(
-  query: string, 
+  query: string,
   options?: QueryOptions
 ): Promise<QueryResult> {
   // Validate query syntax before execution
   validateQuerySyntax(query);
-  
+
   // Execute with timeout protection
   return executeWithTimeout(query, options?.timeout ?? 30000);
 }
-```
+````
 
 **❌ Bad:**
+
 ```typescript
 // Obvious or redundant comments
 // This function adds two numbers
 function add(a, b) {
-  return a + b;  // return the sum
+  return a + b; // return the sum
 }
 
 // Commented-out code
@@ -1780,7 +1859,8 @@ function add(a, b) {
 
 // Misleading comments
 // Calculate user age
-function getUserName() {  // Actually gets name, not age!
+function getUserName() {
+  // Actually gets name, not age!
   return user.name;
 }
 ```
@@ -1827,9 +1907,9 @@ describe('DbConsole', () => {
   it('shows error when submitting empty prompt', async () => {
     render(<DbConsole />);
     const submitButton = screen.getByRole('button', { name: /submit/i });
-    
+
     fireEvent.click(submitButton);
-    
+
     await waitFor(() => {
       expect(screen.getByText('Please enter a prompt')).toBeInTheDocument();
     });
@@ -1839,10 +1919,10 @@ describe('DbConsole', () => {
     render(<DbConsole />);
     const input = screen.getByPlaceholderText(/enter your query/i);
     const submitButton = screen.getByRole('button', { name: /submit/i });
-    
+
     fireEvent.change(input, { target: { value: 'Show all users' } });
     fireEvent.click(submitButton);
-    
+
     await waitFor(() => {
       expect(screen.getByText('Query executed successfully')).toBeInTheDocument();
     });
@@ -1865,7 +1945,9 @@ describe('Database Query API', () => {
       body: JSON.stringify({ target: 'sqlalchemy' })
     });
 
-    const response = await POST(request, { params: Promise.resolve({ query: 'query' }) });
+    const response = await POST(request, {
+      params: Promise.resolve({ query: 'query' })
+    });
     const data = await response.json();
 
     expect(response.status).toBe(400);
@@ -1879,7 +1961,9 @@ describe('Database Query API', () => {
       body: JSON.stringify({ prompt: 'test', target: 'invalid' })
     });
 
-    const response = await POST(request, { params: Promise.resolve({ query: 'query' }) });
+    const response = await POST(request, {
+      params: Promise.resolve({ query: 'query' })
+    });
     const data = await response.json();
 
     expect(response.status).toBe(400);
@@ -1907,6 +1991,7 @@ Documentation is as important as code! Here's how to write effective documentati
 #### Code Comments
 
 **When to Comment:**
+
 - Complex algorithms or business logic
 - Non-obvious solutions or workarounds
 - Important decisions and trade-offs
@@ -1914,6 +1999,7 @@ Documentation is as important as code! Here's how to write effective documentati
 - Security implications
 
 **✅ Good Comments:**
+
 ```typescript
 // Using debounce to prevent excessive API calls during typing
 // Without this, we'd make 50+ requests for a 10-character search
@@ -1929,6 +2015,7 @@ const cachedResult = await cache.get(queryKey, { ttl: 300 });
 ```
 
 **❌ Bad Comments:**
+
 ```typescript
 // Set loading to true
 setLoading(true);
@@ -1943,10 +2030,11 @@ const userName = user.name;
 #### JSDoc for Functions
 
 **✅ Good:**
-```typescript
+
+````typescript
 /**
  * Exports query results to various formats
- * 
+ *
  * @param data - Array of query result objects
  * @param format - Export format ('csv', 'json', 'excel')
  * @param options - Optional export configuration
@@ -1954,12 +2042,12 @@ const userName = user.name;
  * @param options.filename - Custom filename without extension
  * @returns Promise resolving to download URL
  * @throws {ExportError} If format is unsupported or data is invalid
- * 
+ *
  * @example
  * ```typescript
  * // Export to CSV with custom filename
  * await exportData(results, 'csv', { filename: 'user-report' });
- * 
+ *
  * // Export to JSON without headers
  * await exportData(results, 'json', { includeHeaders: false });
  * ```
@@ -1971,38 +2059,41 @@ export async function exportData(
 ): Promise<string> {
   // Implementation
 }
-```
+````
 
 #### Component Documentation
 
 **✅ Good:**
-```typescript
+
+````typescript
 /**
  * Database query console component
- * 
+ *
  * Provides an interface for executing database queries using natural language.
  * Supports SQLAlchemy and Snowflake databases with real-time results display.
- * 
+ *
  * @component
- * 
+ *
  * @example
  * ```tsx
  * // Basic usage
  * <DbConsole />
- * 
+ *
  * // With custom initial target
  * <DbConsole defaultTarget="snowflake" />
  * ```
- * 
+ *
  * @remarks
  * Requires MCP-DB Connector to be running on http://localhost:8000
- * 
+ *
  * @see {@link https://docs.example.com/db-console | Documentation}
  */
-export default function DbConsole({ defaultTarget = 'sqlalchemy' }: DbConsoleProps) {
+export default function DbConsole({
+  defaultTarget = 'sqlalchemy'
+}: DbConsoleProps) {
   // Implementation
 }
-```
+````
 
 #### README Updates
 
@@ -2014,7 +2105,7 @@ When adding a feature, update the README:
 - ✅ Natural language query interface
 - ✅ SQLAlchemy and Snowflake support
 - ✅ Real-time query results
-- ✅ Export to CSV, JSON, Excel  // <-- Add your new feature
+- ✅ Export to CSV, JSON, Excel // <-- Add your new feature
 - 🚧 Query history
 ```
 
@@ -2030,20 +2121,20 @@ Export query results to various formats.
 **Request:**
 \`\`\`json
 {
-  "data": [...],
-  "format": "csv" | "json" | "excel",
-  "options": {
-    "includeHeaders": true,
-    "filename": "export"
-  }
+"data": [...],
+"format": "csv" | "json" | "excel",
+"options": {
+"includeHeaders": true,
+"filename": "export"
+}
 }
 \`\`\`
 
 **Response:**
 \`\`\`json
 {
-  "success": true,
-  "downloadUrl": "https://..."
+"success": true,
+"downloadUrl": "https://..."
 }
 \`\`\`
 ```
@@ -2051,6 +2142,7 @@ Export query results to various formats.
 #### Writing Guides and Tutorials
 
 **Structure for tutorials:**
+
 1. **Title** - Clear, descriptive
 2. **Prerequisites** - What users need to know/have
 3. **Learning Objectives** - What they'll accomplish
@@ -2060,15 +2152,18 @@ Export query results to various formats.
 7. **Next Steps** - Where to go from here
 
 **Example Tutorial Structure:**
+
 ```markdown
 # How to Add a New Database Connector
 
 ## Prerequisites
+
 - Familiarity with TypeScript
 - Understanding of database connections
 - MCP Database Console development environment set up
 
 ## What You'll Learn
+
 - Create a database connector interface
 - Implement connection logic
 - Add type definitions
@@ -2077,6 +2172,7 @@ Export query results to various formats.
 ## Steps
 
 ### Step 1: Create Connector File
+
 Create `app/connectors/postgresql.ts`...
 
 [Rest of tutorial]
@@ -2090,19 +2186,23 @@ When making significant changes, update the changelog:
 ## [Unreleased]
 
 ### Added
+
 - CSV export functionality for query results
 - Dark mode toggle with persistence
 - Query history sidebar
 
 ### Changed
+
 - Improved error messages for failed queries
 - Updated UI with better responsive design
 
 ### Fixed
+
 - Dark mode not persisting across page refreshes
 - Query timeout causing app crash
 
 ### Deprecated
+
 - Old export API endpoint (use /api/v2/export instead)
 ```
 
@@ -2117,20 +2217,17 @@ Run through this checklist before creating your PR:
   - [ ] No console.logs or debug code left in
   - [ ] Proper error handling implemented
   - [ ] No unnecessary comments or commented-out code
-  
 - [ ] **Testing**
   - [ ] All tests pass locally (`pnpm test`)
   - [ ] Type checking passes (`pnpm type-check`)
   - [ ] Linting passes (`pnpm lint`)
   - [ ] New tests added for new features
   - [ ] Manual testing completed
-  
 - [ ] **Documentation**
   - [ ] Code is properly commented
   - [ ] README updated (if applicable)
   - [ ] API documentation updated (if applicable)
   - [ ] JSDoc added for new functions
-  
 - [ ] **Git**
   - [ ] Branch is up to date with main
   - [ ] Commits follow conventional commit format
@@ -2159,12 +2256,15 @@ Use this comprehensive template when creating your PR:
 [Provide a clear and concise description of what this PR does]
 
 ### Problem
+
 [What problem does this solve? Why is this change needed?]
 
 ### Solution
+
 [How does this PR solve the problem? What approach did you take?]
 
 ### Alternative Approaches Considered
+
 [Did you consider other solutions? Why did you choose this one?]
 
 ---
@@ -2195,6 +2295,7 @@ Select all that apply:
 ## 🧪 Testing
 
 ### Test Coverage
+
 - [ ] Unit tests added/updated
 - [ ] Integration tests added/updated
 - [ ] All tests passing locally
@@ -2227,12 +2328,15 @@ Describe the manual testing you performed:
 ## 📸 Screenshots / Videos
 
 ### Before
+
 [Add screenshots showing the state before your changes]
 
 ### After
+
 [Add screenshots showing the state after your changes]
 
 ### Demo
+
 [Optional: Add GIF or video demonstrating the feature]
 
 ---
@@ -2240,6 +2344,7 @@ Describe the manual testing you performed:
 ## 🔍 Code Quality
 
 ### Self-Review Checklist
+
 - [ ] I have performed a self-review of my code
 - [ ] I have reviewed my code for security issues
 - [ ] I have checked for potential performance issues
@@ -2254,6 +2359,7 @@ Describe the manual testing you performed:
 **Lines Deleted:** -XXX
 
 **Key Changes:**
+
 - [File 1]: [What changed and why]
 - [File 2]: [What changed and why]
 
@@ -2273,6 +2379,7 @@ Describe the manual testing you performed:
 ## ⚠️ Breaking Changes
 
 **Does this PR introduce breaking changes?**
+
 - [ ] No
 - [ ] Yes (explain below)
 
@@ -2284,10 +2391,12 @@ Describe the manual testing you performed:
 ## 🔗 Dependencies
 
 ### New Dependencies Added
+
 - [ ] No new dependencies
 - [ ] New dependencies added (list below)
 
 **If new dependencies were added:**
+
 - Dependency name: `package-name`
 - Version: `x.x.x`
 - Reason: [Why is this dependency needed?]
@@ -2295,6 +2404,7 @@ Describe the manual testing you performed:
 - License: [Confirm it's compatible with MIT]
 
 ### Dependency Updates
+
 - [ ] Dependencies up to date
 - [ ] Dependencies need updating (listed in package.json)
 
@@ -2303,6 +2413,7 @@ Describe the manual testing you performed:
 ## 🚀 Deployment Notes
 
 **Deployment Considerations:**
+
 - [ ] No special deployment steps needed
 - [ ] Environment variables need to be added
 - [ ] Database migration required
@@ -2316,6 +2427,7 @@ Describe the manual testing you performed:
 ## 📋 Checklist
 
 ### Code Standards
+
 - [ ] My code follows the style guidelines of this project
 - [ ] I have removed all console.logs and debug code
 - [ ] I have handled errors appropriately
@@ -2323,18 +2435,21 @@ Describe the manual testing you performed:
 - [ ] I have followed React/Next.js best practices
 
 ### Testing Standards
+
 - [ ] I have added tests that prove my fix is effective or that my feature works
 - [ ] New and existing unit tests pass locally with my changes
 - [ ] I have tested edge cases and error conditions
 - [ ] I have tested on multiple browsers/devices
 
 ### Documentation Standards
+
 - [ ] I have made corresponding changes to the documentation
 - [ ] I have commented my code, particularly in hard-to-understand areas
 - [ ] My changes generate no new warnings
 - [ ] I have updated the README (if needed)
 
 ### Git Standards
+
 - [ ] My branch is up to date with the base branch
 - [ ] My commit messages follow the conventional commits format
 - [ ] I have squashed unnecessary commits
@@ -2347,13 +2462,16 @@ Describe the manual testing you performed:
 [Any additional information that reviewers should know]
 
 ### Questions for Reviewers
+
 - [Question 1]
 - [Question 2]
 
 ### Known Issues
+
 - [Any known issues or limitations with this PR]
 
 ### Future Improvements
+
 - [Ideas for future enhancements related to this PR]
 
 ---
@@ -2363,6 +2481,7 @@ Describe the manual testing you performed:
 @mention-reviewers-here
 
 **Requesting review from:**
+
 - [ ] Code owner
 - [ ] Specific team member (mention)
 - [ ] Anyone available
@@ -2378,12 +2497,15 @@ For small changes (typos, minor fixes), you can use a shortened version:
 
 ```markdown
 ## Description
+
 Fixed typo in README.md
 
 ## Type of Change
+
 - [x] Documentation update
 
 ## Checklist
+
 - [x] Self-review completed
 - [x] No breaking changes
 ```
@@ -2391,6 +2513,7 @@ Fixed typo in README.md
 ### PR Best Practices
 
 **Do:**
+
 - ✅ Keep PRs focused on a single feature/fix
 - ✅ Write clear, descriptive titles and descriptions
 - ✅ Link to related issues
@@ -2400,6 +2523,7 @@ Fixed typo in README.md
 - ✅ Update your PR description if scope changes
 
 **Don't:**
+
 - ❌ Mix multiple unrelated changes in one PR
 - ❌ Submit PRs with merge conflicts
 - ❌ Submit failing tests
@@ -2417,12 +2541,14 @@ gh pr create --draft --title "WIP: Add export feature" --body "Early draft for f
 ```
 
 **When to use draft PRs:**
+
 - You want early feedback on your approach
 - The feature is partially complete
 - You need help or collaboration
 - You're blocked on something
 
 **Converting draft to ready:**
+
 1. Complete all functionality
 2. Add tests and documentation
 3. Run all checks
@@ -2449,7 +2575,9 @@ After **15 approved pull requests**, you'll be:
 ### Where to Get Help
 
 #### 1. Documentation
+
 Start with our comprehensive documentation:
+
 - **[README.md](README.md)** - Project overview and quick start
 - **[docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)** - Development guide
 - **[docs/API.md](docs/API.md)** - API documentation
@@ -2457,21 +2585,27 @@ Start with our comprehensive documentation:
 - **[docs/ROADMAP.md](docs/ROADMAP.md)** - Future plans
 
 #### 2. GitHub Issues
+
 Search existing issues before creating new ones:
+
 - 🔍 **[Search Issues](https://github.com/sammyifelse/mcp-for-database/issues)** - Someone may have had the same problem
 - 🐛 **[Report a Bug](https://github.com/sammyifelse/mcp-for-database/issues/new?template=bug_report.md)** - Found a bug? Let us know!
 - 💡 **[Request a Feature](https://github.com/sammyifelse/mcp-for-database/issues/new?template=feature_request.md)** - Have an idea? Share it!
 - ❓ **[Ask a Question](https://github.com/sammyifelse/mcp-for-database/issues/new?template=question.md)** - Need help? Ask away!
 
 #### 3. GitHub Discussions
+
 For broader conversations:
+
 - 💬 **[Discussions](https://github.com/sammyifelse/mcp-for-database/discussions)** - Ask questions, share ideas
 - 🎯 **[Q&A](https://github.com/sammyifelse/mcp-for-database/discussions/categories/q-a)** - Get help from the community
 - 💡 **[Ideas](https://github.com/sammyifelse/mcp-for-database/discussions/categories/ideas)** - Share and discuss ideas
 - 📣 **[Show and Tell](https://github.com/sammyifelse/mcp-for-database/discussions/categories/show-and-tell)** - Share what you built!
 
 #### 4. Real-Time Chat
+
 Join our community (if available):
+
 - 💬 **Discord Server** - Chat with contributors
 - 🐦 **Twitter/X** - Follow for updates
 - 📧 **Email** - Contact maintainers directly
@@ -2482,12 +2616,14 @@ When asking for help, include:
 
 ```markdown
 ## Environment
+
 - OS: [e.g., Windows 11, macOS 14, Ubuntu 22.04]
 - Node.js version: [e.g., 18.17.0]
 - npm/pnpm version: [e.g., pnpm 8.15.7]
 - Browser: [e.g., Chrome 120]
 
 ## Steps to Reproduce
+
 1. Clone the repository
 2. Run `pnpm install`
 3. Start dev server
@@ -2496,15 +2632,19 @@ When asking for help, include:
 6. See error
 
 ## Expected Behavior
+
 The query should be submitted and results displayed.
 
 ## Actual Behavior
+
 Error message appears: "Connection refused"
 
 ## Error Messages
 ```
+
 Error: connect ECONNREFUSED 127.0.0.1:8000
-    at TCPConnectWrap.afterConnect
+at TCPConnectWrap.afterConnect
+
 ```
 
 ## What I've Tried
@@ -2523,38 +2663,44 @@ This started happening after updating dependencies.
 - **General questions**: Within 1-2 days
 - **Pull request reviews**: Within 3-7 days
 
-*Note: We're all volunteers, so response times may vary*
+_Note: We're all volunteers, so response times may vary_
 
 ---
 
 ## 📚 Learning Resources
 
 ### Next.js & React
+
 - **[Next.js Documentation](https://nextjs.org/docs)** - Official Next.js docs
 - **[React Documentation](https://react.dev)** - Learn React fundamentals
 - **[Next.js Examples](https://github.com/vercel/next.js/tree/canary/examples)** - Official examples
 
 ### TypeScript
+
 - **[TypeScript Handbook](https://www.typescriptlang.org/docs/handbook/intro.html)** - Official TypeScript guide
 - **[TypeScript Deep Dive](https://basarat.gitbook.io/typescript/)** - Comprehensive TypeScript book
 - **[Type Challenges](https://github.com/type-challenges/type-challenges)** - Practice TypeScript
 
 ### TailwindCSS
+
 - **[Tailwind Documentation](https://tailwindcss.com/docs)** - Official Tailwind docs
 - **[Tailwind UI](https://tailwindui.com/)** - Component examples
 - **[Tailwind Play](https://play.tailwindcss.com/)** - Online playground
 
 ### Git & GitHub
+
 - **[Git Handbook](https://guides.github.com/introduction/git-handbook/)** - Git basics
 - **[GitHub Docs](https://docs.github.com)** - GitHub features and workflows
 - **[Conventional Commits](https://www.conventionalcommits.org/)** - Commit message format
 
 ### Testing
+
 - **[Jest Documentation](https://jestjs.io/docs/getting-started)** - Testing framework
 - **[React Testing Library](https://testing-library.com/docs/react-testing-library/intro/)** - React component testing
 - **[Testing Best Practices](https://kentcdodds.com/blog/common-mistakes-with-react-testing-library)** - By Kent C. Dodds
 
 ### Open Source
+
 - **[How to Contribute to Open Source](https://opensource.guide/how-to-contribute/)** - GitHub guide
 - **[First Timers Only](https://www.firsttimersonly.com/)** - Resources for first-time contributors
 - **[Open Source Guides](https://opensource.guide/)** - Best practices for open source
@@ -2566,15 +2712,18 @@ This started happening after updating dependencies.
 ### Contributor Levels
 
 #### 🌱 Newcomer (1-4 PRs)
+
 - Listed in CONTRIBUTORS.md
 - Newcomer badge on Discord (if available)
 
 #### 🌿 Regular Contributor (5-14 PRs)
+
 - All Newcomer benefits
 - Invited to contributor meetings
 - Vote on feature priorities
 
 #### 🌳 Core Contributor (15+ PRs)
+
 - All previous benefits
 - Recognized in README.md
 - Eligible for Hacktoberfest completion
@@ -2583,6 +2732,7 @@ This started happening after updating dependencies.
 - Direct line to project maintainers
 
 #### 🏆 Maintainer (By invitation)
+
 - Trusted with merge rights
 - Participate in project decisions
 - Represent the project publicly
@@ -2598,6 +2748,7 @@ This started happening after updating dependencies.
 ### Hacktoberfest 2025 Specific
 
 Complete **15 approved pull requests** to:
+
 - ✅ Be recognized as a project contributor
 - ✅ Get added to CONTRIBUTORS.md with your contribution highlights
 - ✅ Qualify for Hacktoberfest completion
@@ -2610,12 +2761,14 @@ Complete **15 approved pull requests** to:
 By contributing to MCP Database Console, you agree that your contributions will be licensed under the [MIT License](LICENSE).
 
 This means:
+
 - ✅ Your code can be freely used, modified, and distributed
 - ✅ You retain copyright to your contributions
 - ✅ You grant the project rights to use your contributions
 - ✅ You warrant that you have the right to submit the code
 
 **Important:** Do not submit code that:
+
 - ❌ Violates someone else's copyright
 - ❌ Contains proprietary code from your employer (without permission)
 - ❌ Includes code from other projects with incompatible licenses
