@@ -1,14 +1,14 @@
 # API Documentation
 
 ## Overview
-
-The MCP Database Console provides a RESTful API for executing natural language database queries. The API is built with Next.js and provides endpoints for querying databases through natural language processing.
+The MCP Database Console provides a RESTful API for executing natural language database queries. 
+The API is built with Next.js and allows users to query multiple databases using natural language. 
+This documentation explains all available endpoints, request formats, response formats, and includes example code in JavaScript, Python, and cURL.
 
 ## Base URL
 
-```
-http://localhost:3000/api
-```
+- **Development:** `http://localhost:3000/api`  
+- **Production:** (to be updated when deployed)
 
 ## Authentication
 
@@ -34,7 +34,6 @@ Execute a database query using natural language.
   "target": "sqlalchemy" | "snowflake"
 }
 ```
-
 **Parameters:**
 
 - `prompt` (string, required): Natural language description of the query
