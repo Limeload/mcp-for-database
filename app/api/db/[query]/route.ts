@@ -6,80 +6,124 @@ import {
 } from '@/app/types/database';
 
 /**
- * API route handler for database queries
- * Forwards requests to the MCP server backend at http://localhost:8000/query
+ * API route handler for database queries with connection pooling
+ * Now supports connection management and concurrent queries
  */
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ query: string }> }
 ) {
   try {
-    // Await params since it's a Promise in Next.js 15
-    await params;
-
-    // Parse the request body
     const body: DatabaseQueryRequest = await request.json();
+    const { prompt, target, connectionId, maxExecutionTime } = body;
 
     // Validate required fields
-    if (!body.prompt || !body.target) {
-      const errorResponse: DatabaseErrorResponse = {
-        success: false,
-        error: 'Missing required fields: prompt and target are required'
-      };
-      return NextResponse.json(errorResponse, { status: 400 });
+    if (!prompt || !target) {
+      return NextResponse.json<DatabaseErrorResponse>(
+        {
+          success: false,
+          error: 'Missing required fields: prompt and target are required'
+        },
+        { status: 400 }
+      );
     }
 
-    // Validate target value
-    if (!['sqlalchemy', 'snowflake'].includes(body.target)) {
-      const errorResponse: DatabaseErrorResponse = {
-        success: false,
-        error: 'Invalid target: must be either "sqlalchemy" or "snowflake"'
-      };
-      return NextResponse.json(errorResponse, { status: 400 });
+    // Validate target type
+    if (!['sqlalchemy', 'snowflake'].includes(target)) {
+      return NextResponse.json<DatabaseErrorResponse>(
+        {
+          success: false,
+          error: 'Invalid target. Must be either "sqlalchemy" or "snowflake"'
+        },
+        { status: 400 }
+      );
     }
 
-    // Forward request to MCP server
-    const mcpResponse = await fetch('http://localhost:8000/query', {
+    // Call MCP server with connection pooling support
+    const mcpResponse = await fetch(`${request.nextUrl.origin}/mcp`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        prompt: body.prompt,
-        target: body.target
-      })
+        method: 'tools/call',
+        params: {
+          name: 'database_query',
+          arguments: {
+            prompt: prompt.trim(),
+            target,
+            connectionId,
+            maxExecutionTime: maxExecutionTime || 30000
+          }
+        }
+      }),
     });
 
-    // Check if MCP server responded successfully
     if (!mcpResponse.ok) {
-      const errorResponse: DatabaseErrorResponse = {
-        success: false,
-        error: `MCP server error: ${mcpResponse.status} ${mcpResponse.statusText}`
-      };
-      return NextResponse.json(errorResponse, { status: mcpResponse.status });
+      throw new Error(`MCP server error: ${mcpResponse.status}`);
     }
 
-    // Parse MCP server response
-    const mcpData = await mcpResponse.json();
+    const mcpResult = await mcpResponse.json();
+    
+    if (mcpResult.error) {
+      throw new Error(mcpResult.error);
+    }
 
-    // Format response for frontend
-    const response: DatabaseQueryResponse = {
-      success: true,
-      data: mcpData.data || [],
-      query: mcpData.query,
-      executionTime: mcpData.executionTime
-    };
+    // Parse the response from MCP server
+    const result = JSON.parse(mcpResult.content[0].text);
 
-    return NextResponse.json(response);
+    return NextResponse.json<DatabaseQueryResponse>(result);
+
   } catch (error) {
-    // eslint-disable-next-line no-console
-    console.error('Database query API error:', error);
+    console.error('Database query error:', error);
+    
+    return NextResponse.json<DatabaseErrorResponse>(
+      {
+        success: false,
+        error: error instanceof Error ? error.message : 'Internal server error'
+      },
+      { status: 500 }
+    );
+  }
+}
 
-    const errorResponse: DatabaseErrorResponse = {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error occurred'
-    };
+/**
+ * GET endpoint for connection pool statistics
+ */
+export async function GET(request: NextRequest) {
+  try {
+    // Call MCP server to get connection stats
+    const mcpResponse = await fetch(`${request.nextUrl.origin}/mcp`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        method: 'tools/call',
+        params: {
+          name: 'get_connection_stats',
+          arguments: {}
+        }
+      }),
+    });
 
-    return NextResponse.json(errorResponse, { status: 500 });
+    if (!mcpResponse.ok) {
+      throw new Error(`MCP server error: ${mcpResponse.status}`);
+    }
+
+    const mcpResult = await mcpResponse.json();
+    const stats = JSON.parse(mcpResult.content[0].text);
+
+    return NextResponse.json(stats);
+
+  } catch (error) {
+    console.error('Error getting connection stats:', error);
+    
+    return NextResponse.json(
+      {
+        error: error instanceof Error ? error.message : 'Internal server error'
+      },
+      { status: 500 }
+    );
   }
 }
