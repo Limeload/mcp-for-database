@@ -1,7 +1,7 @@
 {
   "name": "mcp-database-console",
   "version": "1.0.0",
-  "description": "A revolutionary Next.js application that provides a natural language interface for database queries through the MCP-DB Connector",
+  "description": "A revolutionary Next.js application that provides a natural language interface for database queries through the MCP-DB Connector with multiple concurrent connections support",
   "private": false,
   "keywords": [
     "hacktoberfest",
@@ -17,7 +17,10 @@
     "database-console",
     "query-interface",
     "sqlalchemy",
-    "snowflake"
+    "snowflake",
+    "connection-pooling",
+    "concurrent-connections",
+    "database-management"
   ],
   "author": {
     "name": "Limeload",
@@ -46,10 +49,13 @@
     "type-check": "tsc --noEmit",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "echo \"No tests specified\" && exit 0",
-    "test:watch": "echo \"No tests specified\" && exit 0",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
     "clean": "rm -rf .next out",
-    "prepare": "npm run type-check"
+    "prepare": "npm run type-check",
+    "db:pool:stats": "node scripts/connection-pool-stats.js",
+    "db:pool:cleanup": "node scripts/cleanup-connections.js"
   },
   "dependencies": {
     "mcp-handler": "^1.0.1",
@@ -57,12 +63,20 @@
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "redis": "^4.7.0",
-    "zod": "^3.24.2"
+    "zod": "^3.24.2",
+    "uuid": "^9.0.1",
+    "node-cron": "^3.0.3",
+    "async-mutex": "^0.4.0",
+    "eventemitter3": "^5.0.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.13",
     "@types/node": "^20",
     "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@types/uuid": "^9.0.7",
+    "@types/node-cron": "^3.0.11",
+    "@types/jest": "^29.5.8",
     "@typescript-eslint/eslint-plugin": "^8.45.0",
     "@typescript-eslint/parser": "^8.45.0",
     "autoprefixer": "^10.4.21",
@@ -72,7 +86,25 @@
     "postcss": "^8.5.6",
     "prettier": "^3.6.2",
     "tailwindcss": "^4.1.13",
-    "typescript": "^5"
+    "typescript": "^5",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
+    "@testing-library/react": "^14.1.2",
+    "@testing-library/jest-dom": "^6.1.5",
+    "@testing-library/user-event": "^14.5.1",
+    "ts-jest": "^29.1.1"
   },
-  "packageManager": "pnpm@8.15.7+sha512.c85cd21b6da10332156b1ca2aa79c0a61ee7ad2eb0453b88ab299289e9e8ca93e6091232b25c07cbf61f6df77128d9c849e5c9ac6e44854dbd211c49f3a67adc"
+  "packageManager": "pnpm@8.15.7+sha512.c85cd21b6da10332156b1ca2aa79c0a61ee7ad2eb0453b88ab299289e9e8ca93e6091232b25c07cbf61f6df77128d9c849e5c9ac6e44854dbd211c49f3a67adc",
+  "browserslist": {
+    "production": [
+      ">0.3%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
 }
