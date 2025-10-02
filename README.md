@@ -5,7 +5,6 @@
 [![Hacktoberfest](https://img.shields.io/badge/Hacktoberfest-2025-orange?style=for-the-badge&logo=hacktoberfest)](https://hacktoberfest.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 [![Contributors Welcome](https://img.shields.io/badge/Contributors-Welcome-blue?style=for-the-badge)](CONTRIBUTING.md)
-[![Contributors](https://img.shields.io/github/contributors?style=for-the-badge)](CONTRIBUTORS.md)
 
 **A revolutionary web application that bridges the gap between natural language and database queries**
 
