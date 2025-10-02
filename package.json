@@ -59,6 +59,15 @@
     "db:pool:cleanup": "node scripts/cleanup-connections.js"
   
   },
+
+"jest": {
+"setupFilesAfterEnv": ["/jest.setup.js"],
+"testEnvironment": "jsdom",
+"transform": {
+"^.+\.(ts|tsx)$": "ts-jest"
+},
+"moduleFileExtensions": ["ts", "tsx", "js", "jsx", "json", "node"]
+},
   "dependencies": {
     "mcp-handler": "^1.0.1",
     "next": "^15.5.4",
