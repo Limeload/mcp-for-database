@@ -30,7 +30,7 @@ jobs:
           echo "PR Title: $PR_TITLE"
 
           # Check if title follows conventional commits
-          if [[ $PR_TITLE =~ ^(feat|fix|docs|style|refactor|test|chore)(\(.+\))?: .+ ]]; then
+          if echo "$PR_TITLE" | grep -E "^(feat|fix|docs|style|refactor|test|chore)(\(.+\))?: .+" > /dev/null; then
             echo "✅ PR title follows conventional commits format"
           else
             echo "⚠️ PR title should follow conventional commits format"
@@ -49,7 +49,7 @@ jobs:
       - name: Check for breaking changes
         run: |
           PR_TITLE="${{ github.event.pull_request.title }}"
-          if [[ $PR_TITLE =~ BREAKING CHANGE|! ]]; then
+          if echo "$PR_TITLE" | grep -E "BREAKING CHANGE|!" > /dev/null; then
             echo "⚠️ Breaking change detected - ensure PR description explains the changes"
           else
             echo "✅ No breaking changes detected"
