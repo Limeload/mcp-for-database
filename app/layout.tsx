@@ -12,7 +12,7 @@ export const metadata: Metadata = {
  * Provides the base layout for all pages including TailwindCSS styles
  */
 export default function RootLayout({
-  children,
+  children
 }: {
   children: React.ReactNode;
 }) {

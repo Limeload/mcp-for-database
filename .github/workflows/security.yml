@@ -1,0 +1,45 @@
+name: Security Audit
+
+on:
+  push:
+    branches: [main, Limeload-patch-1]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 0 * * 1' # Weekly on Monday
+
+jobs:
+  security:
+    name: Security Audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run security audit
+        run: npm audit --audit-level=moderate
+
+      - name: Security Summary
+        if: always()
+        run: |
+          echo "## Security Audit Results" >> $GITHUB_STEP_SUMMARY
+          if [ $? -eq 0 ]; then
+            echo "✅ **Security Audit Passed** - No vulnerabilities found" >> $GITHUB_STEP_SUMMARY
+            echo "🔒 Your dependencies are secure!" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ **Security Issues Found** - Vulnerabilities detected" >> $GITHUB_STEP_SUMMARY
+            echo "🔧 **How to fix:**" >> $GITHUB_STEP_SUMMARY
+            echo "1. Run \`npm audit fix\` to automatically fix issues" >> $GITHUB_STEP_SUMMARY
+            echo "2. Update vulnerable dependencies manually" >> $GITHUB_STEP_SUMMARY
+            echo "3. Commit and push your changes" >> $GITHUB_STEP_SUMMARY
+          fi

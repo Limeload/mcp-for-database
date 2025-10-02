@@ -5,7 +5,6 @@
 [![Hacktoberfest](https://img.shields.io/badge/Hacktoberfest-2025-orange?style=for-the-badge&logo=hacktoberfest)](https://hacktoberfest.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 [![Contributors Welcome](https://img.shields.io/badge/Contributors-Welcome-blue?style=for-the-badge)](CONTRIBUTING.md)
-[![Contributors](https://img.shields.io/github/contributors?style=for-the-badge)](CONTRIBUTORS.md)
 
 **A revolutionary web application that bridges the gap between natural language and database queries**
 
@@ -29,8 +28,9 @@
 ### 💡 Our Solution
 
 Transform natural language into powerful database queries through an intuitive web interface that:
+
 - **Understands Context**: Interprets user intent from conversational prompts
-- **Supports Multiple Databases**: Works with SQLAlchemy and Snowflake databases
+- **Supports Multiple Databases**: Works with SQLAlchemy, Snowflake, and SQLite databases (backend implementation required)
 - **Provides Real-time Results**: Shows query results instantly in formatted tables
 - **Handles Errors Gracefully**: Offers helpful error messages and suggestions
 
@@ -48,6 +48,7 @@ Transform natural language into powerful database queries through an intuitive w
 This repository is participating in **Hacktoberfest 2025**! We welcome contributions from developers of all skill levels. After **15 approved pull requests**, you'll be recognized as a project contributor!
 
 ### Quick Start for Contributors
+
 1. **Fork** this repository
 2. **Star** the repository (optional but appreciated!)
 3. **Check** our [Contributing Guidelines](CONTRIBUTING.md)
@@ -60,26 +61,31 @@ This repository is participating in **Hacktoberfest 2025**! We welcome contribut
 ## 👥 Use Cases
 
 ### 🏢 Business Analysts
+
 - **Quick Data Insights**: Get answers to business questions without waiting for developers
 - **Ad-hoc Reporting**: Create reports on-demand using natural language
 - **Data Exploration**: Discover patterns and trends in company data
 
 ### 👨‍💼 Product Managers
+
 - **User Analytics**: Understand user behavior and product metrics
 - **Feature Analysis**: Analyze feature adoption and performance
 - **Competitive Intelligence**: Gather insights from market data
 
 ### 🎓 Data Scientists
+
 - **Rapid Prototyping**: Quickly test hypotheses with natural language queries
 - **Data Validation**: Verify data quality and consistency
 - **Exploratory Analysis**: Initial data exploration before deep analysis
 
 ### 🏭 Operations Teams
+
 - **System Monitoring**: Query system logs and performance metrics
 - **Incident Analysis**: Investigate issues using natural language
 - **Capacity Planning**: Analyze resource usage patterns
 
 ### 🎓 Students & Researchers
+
 - **Learning SQL**: Understand database concepts through natural language
 - **Research Data**: Query academic databases and research datasets
 - **Project Analysis**: Analyze project data for academic research
@@ -89,6 +95,7 @@ This repository is participating in **Hacktoberfest 2025**! We welcome contribut
 ## 🎯 MVP (Minimum Viable Product)
 
 ### Core Features ✅
+
 - **Natural Language Query Interface**: Basic English-to-SQL conversion
 - **Database Support**: SQLAlchemy and Snowflake connectors
 - **Results Display**: Formatted table output with query execution time
@@ -99,24 +106,25 @@ This repository is participating in **Hacktoberfest 2025**! We welcome contribut
 
 ---
 
-
 ## 🚀 Quick Start
 
 ### Prerequisites
 
-- **Node.js** 18+ 
+- **Node.js** 18+
 - **npm** or **pnpm**
 - **MCP-DB Connector** server running on `http://localhost:8000`
 
 ### Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/Limeload/mcp-for-database.git
    cd mcp-for-database
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm install
    # or
@@ -124,12 +132,64 @@ This repository is participating in **Hacktoberfest 2025**! We welcome contribut
    ```
 
 3. **Start the development server**
+
    ```bash
    npm run dev
    ```
 
 4. **Open your browser**
    Navigate to [http://localhost:3000](http://localhost:3000)
+
+### SQLite Local Development Setup
+
+For local development with SQLite, follow these additional steps:
+
+1. **Set up environment variables** for SQLite:
+
+    ```bash
+    # Create .env.local file
+    DATABASE_TYPE=sqlite
+    DATABASE_URL=sqlite:///local_dev.db
+    ```
+
+2. **Initialize the SQLite database** (requires Python and SQLAlchemy):
+
+    ```bash
+    # Install Python dependencies (if not already installed)
+    pip install sqlalchemy
+
+    # Initialize database
+    python scripts/init_sqlite.py
+
+    # Optional: Add sample data
+    python scripts/seed_data.py
+    ```
+
+3. **Configure your MCP server** to use SQLite backend
+
+    **⚠️ Important**: The MCP-DB Connector server must be updated to support SQLite queries. The frontend now accepts SQLite as a target, but the backend server needs corresponding SQLite support.
+
+4. **Start both servers**:
+
+    ```bash
+    # Terminal 1: Start MCP server (with SQLite support)
+    # Your MCP server command here
+
+    # Terminal 2: Start Next.js development server
+    npm run dev
+    ```
+
+**SQLite Benefits for Development:**
+- No external database server required
+- File-based storage (`local_dev.db`)
+- Easy to reset and recreate
+- Perfect for testing and development
+
+**SQLite Limitations:**
+- Single-writer concurrency (not suitable for high-traffic production)
+- No built-in user authentication or permissions
+- Limited data types compared to PostgreSQL/MySQL
+- File-based (backup and replication require manual processes)
 
 ### Usage
 
@@ -142,8 +202,9 @@ Navigate to `/db-console` to access the database query interface:
    - Example: "Find the top 10 products by sales"
 
 2. **Select Database Target**: Choose between:
-   - **SQLAlchemy**: For SQLAlchemy-based applications
-   - **Snowflake**: For Snowflake data warehouse
+    - **SQLAlchemy**: For SQLAlchemy-based applications
+    - **Snowflake**: For Snowflake data warehouse
+    - **SQLite**: For local development with SQLite database
 
 3. **Execute Query**: Click "Execute Query" to run your prompt
 
@@ -174,14 +235,16 @@ Navigate to `/db-console` to access the database query interface:
 Execute a database query using natural language.
 
 **Request Body:**
+
 ```json
 {
   "prompt": "string",
-  "target": "sqlalchemy" | "snowflake"
+  "target": "sqlalchemy" | "snowflake" | "sqlite"
 }
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -192,6 +255,7 @@ Execute a database query using natural language.
 ```
 
 **Error Response:**
+
 ```json
 {
   "success": false,
@@ -222,6 +286,7 @@ DATABASE_URL=your_database_url
 ### TailwindCSS
 
 The project uses TailwindCSS for styling. Configuration files:
+
 - `tailwind.config.js` - TailwindCSS configuration
 - `postcss.config.js` - PostCSS configuration
 - `app/globals.css` - Global styles
@@ -274,12 +339,14 @@ All errors are displayed to the user with clear, actionable messages.
 We welcome contributions from the community! This project is participating in Hacktoberfest 2025.
 
 ### For Contributors
+
 - 📖 Read our [Contributing Guidelines](CONTRIBUTING.md)
 - 📋 Check our [Code of Conduct](CODE_OF_CONDUCT.md)
 - 🏆 See our [Contributors](CONTRIBUTORS.md) page
 - 🎯 Look for issues labeled `hacktoberfest` or `good first issue`
 
 ### Quick Contribution Steps
+
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
 3. Make your changes
@@ -289,7 +356,9 @@ We welcome contributions from the community! This project is participating in Ha
 7. Open a Pull Request
 
 ### Recognition
+
 After **15 approved pull requests**, you'll be:
+
 - Added to our [Contributors](CONTRIBUTORS.md) list
 - Recognized as a project contributor
 - Eligible for Hacktoberfest completion

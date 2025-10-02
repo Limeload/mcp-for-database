@@ -14,12 +14,14 @@ This guide will help you set up the development environment for the MCP Database
 ## Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/your-username/mcp-for-database.git
    cd mcp-for-database
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm install
    # or
@@ -27,12 +29,14 @@ This guide will help you set up the development environment for the MCP Database
    ```
 
 3. **Set up environment variables**
+
    ```bash
    cp .env.example .env.local
    # Edit .env.local with your configuration
    ```
 
 4. **Start the development server**
+
    ```bash
    npm run dev
    ```
@@ -72,6 +76,7 @@ mcp-for-database/
 ## Development Workflow
 
 1. **Create a feature branch**
+
    ```bash
    git checkout -b feature/your-feature-name
    ```
@@ -82,12 +87,14 @@ mcp-for-database/
    - Update documentation
 
 3. **Test your changes**
+
    ```bash
    npm run type-check
    npm run lint
    ```
 
 4. **Commit your changes**
+
    ```bash
    git add .
    git commit -m "feat: add your feature"
@@ -101,24 +108,28 @@ mcp-for-database/
 ## Coding Standards
 
 ### TypeScript
+
 - Use TypeScript for all new code
 - Define proper types and interfaces
 - Avoid `any` types when possible
 - Use strict type checking
 
 ### React/Next.js
+
 - Use functional components with hooks
 - Follow Next.js best practices
 - Implement proper error boundaries
 - Use proper component naming conventions
 
 ### Styling
+
 - Use TailwindCSS for styling
 - Follow responsive design principles
 - Maintain consistent spacing and colors
 - Use semantic class names
 
 ### API Design
+
 - Follow RESTful conventions
 - Implement proper error handling
 - Use appropriate HTTP status codes
@@ -127,11 +138,13 @@ mcp-for-database/
 ## Testing
 
 ### Running Tests
+
 ```bash
 npm test
 ```
 
 ### Writing Tests
+
 - Write tests for new features
 - Test edge cases and error conditions
 - Maintain good test coverage
@@ -145,12 +158,60 @@ Create a `.env.local` file with the following variables:
 # MCP Server Configuration
 MCP_SERVER_URL=http://localhost:8000
 
-# Database Configuration (if needed)
-DATABASE_URL=your_database_url
+# Database Configuration
+# For SQLite local development (recommended)
+DATABASE_TYPE=sqlite
+DATABASE_URL=sqlite:///local_dev.db
+
+# For production databases (uncomment as needed)
+# DATABASE_TYPE=sqlalchemy
+# DATABASE_URL=postgresql://user:password@localhost:5432/dbname
 
 # Development Configuration
 NODE_ENV=development
 ```
+
+## SQLite Development Setup
+
+For local development with SQLite, additional setup is required:
+
+### Prerequisites
+
+- **Python** 3.8+ (for database scripts)
+- **SQLAlchemy** (install with `pip install sqlalchemy`)
+- **MCP-DB Connector server** with SQLite support
+
+### Database Initialization
+
+1. **Initialize SQLite database**:
+
+    ```bash
+    python scripts/init_sqlite.py
+    ```
+
+2. **Optional: Add sample data**:
+
+    ```bash
+    python scripts/seed_data.py
+    ```
+
+3. **Configure MCP server** to connect to SQLite database
+
+    **⚠️ Backend Requirement**: The MCP-DB Connector server must be updated separately to handle SQLite queries. The frontend changes allow selecting SQLite as a target, but the backend server needs corresponding implementation.
+
+### SQLite Benefits
+
+- **No external dependencies**: File-based database
+- **Easy reset**: Delete `local_dev.db` to start fresh
+- **Fast setup**: No server installation required
+- **Development focused**: Perfect for testing and prototyping
+
+### Database Scripts
+
+- `scripts/init_sqlite.py`: Creates database schema
+- `scripts/seed_data.py`: Populates with sample data
+
+Both scripts are idempotent and can be run multiple times safely.
 
 ## Debugging
 
@@ -215,12 +276,14 @@ npm start
 ### Common Problems
 
 1. **Port Already in Use**
+
    ```bash
    # Kill process using port 3000
    lsof -ti:3000 | xargs kill -9
    ```
 
 2. **Dependencies Issues**
+
    ```bash
    # Clear node_modules and reinstall
    rm -rf node_modules package-lock.json

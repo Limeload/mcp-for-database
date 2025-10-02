@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { DatabaseQueryRequest, DatabaseQueryResponse, DatabaseErrorResponse } from '@/app/types/database';
+import {
+  DatabaseQueryRequest,
+  DatabaseQueryResponse,
+  DatabaseErrorResponse
+} from '@/app/types/database';
 
 /**
  * API route handler for database queries
@@ -11,11 +15,11 @@ export async function POST(
 ) {
   try {
     // Await params since it's a Promise in Next.js 15
-    const { query } = await params;
-    
+    await params;
+
     // Parse the request body
     const body: DatabaseQueryRequest = await request.json();
-    
+
     // Validate required fields
     if (!body.prompt || !body.target) {
       const errorResponse: DatabaseErrorResponse = {
@@ -26,10 +30,10 @@ export async function POST(
     }
 
     // Validate target value
-    if (!['sqlalchemy', 'snowflake'].includes(body.target)) {
+    if (!['sqlalchemy', 'snowflake', 'sqlite'].includes(body.target)) {
       const errorResponse: DatabaseErrorResponse = {
         success: false,
-        error: 'Invalid target: must be either "sqlalchemy" or "snowflake"'
+        error: 'Invalid target: must be either "sqlalchemy", "snowflake", or "sqlite"'
       };
       return NextResponse.json(errorResponse, { status: 400 });
     }
@@ -38,12 +42,12 @@ export async function POST(
     const mcpResponse = await fetch('http://localhost:8000/query', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
         prompt: body.prompt,
         target: body.target
-      }),
+      })
     });
 
     // Check if MCP server responded successfully
@@ -57,7 +61,7 @@ export async function POST(
 
     // Parse MCP server response
     const mcpData = await mcpResponse.json();
-    
+
     // Format response for frontend
     const response: DatabaseQueryResponse = {
       success: true,
@@ -67,15 +71,15 @@ export async function POST(
     };
 
     return NextResponse.json(response);
-
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error('Database query API error:', error);
-    
+
     const errorResponse: DatabaseErrorResponse = {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error occurred'
     };
-    
+
     return NextResponse.json(errorResponse, { status: 500 });
   }
 }
