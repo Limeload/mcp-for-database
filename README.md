@@ -29,6 +29,7 @@
 ### 💡 Our Solution
 
 Transform natural language into powerful database queries through an intuitive web interface that:
+
 - **Understands Context**: Interprets user intent from conversational prompts
 - **Supports Multiple Databases**: Works with SQLAlchemy and Snowflake databases
 - **Provides Real-time Results**: Shows query results instantly in formatted tables
@@ -48,6 +49,7 @@ Transform natural language into powerful database queries through an intuitive w
 This repository is participating in **Hacktoberfest 2025**! We welcome contributions from developers of all skill levels. After **15 approved pull requests**, you'll be recognized as a project contributor!
 
 ### Quick Start for Contributors
+
 1. **Fork** this repository
 2. **Star** the repository (optional but appreciated!)
 3. **Check** our [Contributing Guidelines](CONTRIBUTING.md)
@@ -60,26 +62,31 @@ This repository is participating in **Hacktoberfest 2025**! We welcome contribut
 ## 👥 Use Cases
 
 ### 🏢 Business Analysts
+
 - **Quick Data Insights**: Get answers to business questions without waiting for developers
 - **Ad-hoc Reporting**: Create reports on-demand using natural language
 - **Data Exploration**: Discover patterns and trends in company data
 
 ### 👨‍💼 Product Managers
+
 - **User Analytics**: Understand user behavior and product metrics
 - **Feature Analysis**: Analyze feature adoption and performance
 - **Competitive Intelligence**: Gather insights from market data
 
 ### 🎓 Data Scientists
+
 - **Rapid Prototyping**: Quickly test hypotheses with natural language queries
 - **Data Validation**: Verify data quality and consistency
 - **Exploratory Analysis**: Initial data exploration before deep analysis
 
 ### 🏭 Operations Teams
+
 - **System Monitoring**: Query system logs and performance metrics
 - **Incident Analysis**: Investigate issues using natural language
 - **Capacity Planning**: Analyze resource usage patterns
 
 ### 🎓 Students & Researchers
+
 - **Learning SQL**: Understand database concepts through natural language
 - **Research Data**: Query academic databases and research datasets
 - **Project Analysis**: Analyze project data for academic research
@@ -89,6 +96,7 @@ This repository is participating in **Hacktoberfest 2025**! We welcome contribut
 ## 🎯 MVP (Minimum Viable Product)
 
 ### Core Features ✅
+
 - **Natural Language Query Interface**: Basic English-to-SQL conversion
 - **Database Support**: SQLAlchemy and Snowflake connectors
 - **Results Display**: Formatted table output with query execution time
@@ -99,24 +107,25 @@ This repository is participating in **Hacktoberfest 2025**! We welcome contribut
 
 ---
 
-
 ## 🚀 Quick Start
 
 ### Prerequisites
 
-- **Node.js** 18+ 
+- **Node.js** 18+
 - **npm** or **pnpm**
 - **MCP-DB Connector** server running on `http://localhost:8000`
 
 ### Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/Limeload/mcp-for-database.git
    cd mcp-for-database
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm install
    # or
@@ -124,6 +133,7 @@ This repository is participating in **Hacktoberfest 2025**! We welcome contribut
    ```
 
 3. **Start the development server**
+
    ```bash
    npm run dev
    ```
@@ -174,6 +184,7 @@ Navigate to `/db-console` to access the database query interface:
 Execute a database query using natural language.
 
 **Request Body:**
+
 ```json
 {
   "prompt": "string",
@@ -182,6 +193,7 @@ Execute a database query using natural language.
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -192,6 +204,7 @@ Execute a database query using natural language.
 ```
 
 **Error Response:**
+
 ```json
 {
   "success": false,
@@ -222,6 +235,7 @@ DATABASE_URL=your_database_url
 ### TailwindCSS
 
 The project uses TailwindCSS for styling. Configuration files:
+
 - `tailwind.config.js` - TailwindCSS configuration
 - `postcss.config.js` - PostCSS configuration
 - `app/globals.css` - Global styles
@@ -274,12 +288,14 @@ All errors are displayed to the user with clear, actionable messages.
 We welcome contributions from the community! This project is participating in Hacktoberfest 2025.
 
 ### For Contributors
+
 - 📖 Read our [Contributing Guidelines](CONTRIBUTING.md)
 - 📋 Check our [Code of Conduct](CODE_OF_CONDUCT.md)
 - 🏆 See our [Contributors](CONTRIBUTORS.md) page
 - 🎯 Look for issues labeled `hacktoberfest` or `good first issue`
 
 ### Quick Contribution Steps
+
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
 3. Make your changes
@@ -289,7 +305,9 @@ We welcome contributions from the community! This project is participating in Ha
 7. Open a Pull Request
 
 ### Recognition
+
 After **15 approved pull requests**, you'll be:
+
 - Added to our [Contributors](CONTRIBUTORS.md) list
 - Recognized as a project contributor
 - Eligible for Hacktoberfest completion

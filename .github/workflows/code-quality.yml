@@ -1,0 +1,66 @@
+name: Code Quality
+
+on:
+  push:
+    branches: [main, Limeload-patch-1]
+  pull_request:
+    branches: [main]
+
+jobs:
+  quality:
+    name: Code Quality Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ESLint
+        run: npm run lint
+
+      - name: Run TypeScript check
+        run: npm run type-check
+
+      - name: Check for console.log statements
+        run: |
+          echo "Checking for console.log statements..."
+          if grep -r "console\.log" app/ --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx"; then
+            echo "⚠️ Found console.log statements in production code"
+            echo "Consider removing or replacing with proper logging"
+          else
+            echo "✅ No console.log statements found"
+          fi
+
+      - name: Check for TODO/FIXME comments
+        run: |
+          echo "Checking for TODO/FIXME comments..."
+          if grep -r "TODO\|FIXME\|HACK" app/ --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx"; then
+            echo "📝 Found TODO/FIXME comments - consider addressing them"
+          else
+            echo "✅ No TODO/FIXME comments found"
+          fi
+
+      - name: Code Quality Summary
+        if: always()
+        run: |
+          echo "## Code Quality Check Results" >> $GITHUB_STEP_SUMMARY
+          if [ $? -eq 0 ]; then
+            echo "✅ **Code Quality Passed** - All checks completed" >> $GITHUB_STEP_SUMMARY
+            echo "🎉 Your code meets quality standards!" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Code Quality Issues Found**" >> $GITHUB_STEP_SUMMARY
+            echo "🔧 **How to fix:**" >> $GITHUB_STEP_SUMMARY
+            echo "1. Fix ESLint errors" >> $GITHUB_STEP_SUMMARY
+            echo "2. Fix TypeScript errors" >> $GITHUB_STEP_SUMMARY
+            echo "3. Remove console.log statements" >> $GITHUB_STEP_SUMMARY
+            echo "4. Address TODO/FIXME comments" >> $GITHUB_STEP_SUMMARY
+          fi

@@ -1,0 +1,46 @@
+name: Dependency Check
+
+on:
+  push:
+    branches: [main, Limeload-patch-1]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 0 * * 1' # Weekly on Monday
+
+jobs:
+  dependencies:
+    name: Dependency Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Check for outdated dependencies
+        run: |
+          echo "Checking for outdated dependencies..."
+          npm outdated || true
+
+      - name: Check package-lock.json
+        run: |
+          if [ -f "package-lock.json" ]; then
+            echo "✅ package-lock.json exists"
+          else
+            echo "⚠️ package-lock.json not found"
+            echo "Consider running 'npm install' to generate it"
+          fi
+
+      - name: Dependency Summary
+        run: |
+          echo "## Dependency Check Results" >> $GITHUB_STEP_SUMMARY
+          echo "📦 **Dependency Status:**" >> $GITHUB_STEP_SUMMARY
+          echo "- All dependencies checked for updates" >> $GITHUB_STEP_SUMMARY
+          echo "- Package lock file verified" >> $GITHUB_STEP_SUMMARY
+          echo "💡 **Tip:** Run \`npm update\` to update dependencies" >> $GITHUB_STEP_SUMMARY

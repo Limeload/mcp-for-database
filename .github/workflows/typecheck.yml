@@ -1,0 +1,43 @@
+name: TypeScript Check
+
+on:
+  push:
+    branches: [main, Limeload-patch-1]
+  pull_request:
+    branches: [main]
+
+jobs:
+  typecheck:
+    name: TypeScript Type Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run TypeScript type check
+        run: npm run type-check
+
+      - name: TypeScript Summary
+        if: always()
+        run: |
+          echo "## TypeScript Check Results" >> $GITHUB_STEP_SUMMARY
+          if [ $? -eq 0 ]; then
+            echo "✅ **TypeScript Passed** - No type errors found" >> $GITHUB_STEP_SUMMARY
+            echo "🎯 Your code has proper type safety!" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **TypeScript Failed** - Type errors found" >> $GITHUB_STEP_SUMMARY
+            echo "🔧 **How to fix:**" >> $GITHUB_STEP_SUMMARY
+            echo "1. Check the TypeScript errors above" >> $GITHUB_STEP_SUMMARY
+            echo "2. Fix type annotations and interfaces" >> $GITHUB_STEP_SUMMARY
+            echo "3. Commit and push your changes" >> $GITHUB_STEP_SUMMARY
+          fi

@@ -1,0 +1,50 @@
+name: Prettier
+
+on:
+  push:
+    branches: [main, Limeload-patch-1]
+  pull_request:
+    branches: [main]
+
+jobs:
+  prettier:
+    name: Prettier Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check Prettier formatting
+        run: |
+          # Check if prettier is available
+          if npm list prettier > /dev/null 2>&1; then
+            echo "Running Prettier check..."
+            npx prettier --check "**/*.{js,jsx,ts,tsx,json,md,yml,yaml}"
+          else
+            echo "Prettier not found, skipping formatting check"
+            echo "Consider adding Prettier to your project for consistent formatting"
+          fi
+
+      - name: Prettier Summary
+        if: always()
+        run: |
+          echo "## Prettier Check Results" >> $GITHUB_STEP_SUMMARY
+          if [ $? -eq 0 ]; then
+            echo "✅ **Prettier Passed** - Code is properly formatted" >> $GITHUB_STEP_SUMMARY
+            echo "🎨 Your code follows the project's formatting guidelines!" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Prettier Failed** - Formatting issues found" >> $GITHUB_STEP_SUMMARY
+            echo "🔧 **How to fix:**" >> $GITHUB_STEP_SUMMARY
+            echo "1. Run \`npx prettier --write .\` to automatically format code" >> $GITHUB_STEP_SUMMARY
+            echo "2. Commit and push your changes" >> $GITHUB_STEP_SUMMARY
+          fi

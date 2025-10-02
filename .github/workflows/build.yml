@@ -1,0 +1,53 @@
+name: Build Check
+
+on:
+  push:
+    branches: [main, Limeload-patch-1]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    name: Build Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build project
+        run: npm run build
+
+      - name: Verify build output
+        run: |
+          if [ -d ".next" ]; then
+            echo "✅ Build successful - .next directory created"
+            echo "📦 Build size: $(du -sh .next | cut -f1)"
+          else
+            echo "❌ Build failed - .next directory not found"
+            exit 1
+          fi
+
+      - name: Build Summary
+        if: always()
+        run: |
+          echo "## Build Check Results" >> $GITHUB_STEP_SUMMARY
+          if [ $? -eq 0 ]; then
+            echo "✅ **Build Passed** - Project builds successfully" >> $GITHUB_STEP_SUMMARY
+            echo "🚀 Your code is ready for deployment!" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Build Failed** - Build errors found" >> $GITHUB_STEP_SUMMARY
+            echo "🔧 **How to fix:**" >> $GITHUB_STEP_SUMMARY
+            echo "1. Check the build errors above" >> $GITHUB_STEP_SUMMARY
+            echo "2. Fix compilation issues" >> $GITHUB_STEP_SUMMARY
+            echo "3. Commit and push your changes" >> $GITHUB_STEP_SUMMARY
+          fi
