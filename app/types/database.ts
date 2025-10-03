@@ -1,5 +1,5 @@
 // Database target types
-export type DatabaseTarget = "sqlalchemy" | "snowflake";
+export type DatabaseTarget = 'sqlalchemy' | 'snowflake' | 'sqlite';
 
 // API request types
 export interface DatabaseQueryRequest {

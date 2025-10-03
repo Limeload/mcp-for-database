@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import { useState, useEffect } from "react";
+import Link from 'next/link';
+import { useState, useEffect } from 'react';
 
 /**
  * Home Page
@@ -13,30 +13,30 @@ export default function HomePage() {
 
   // Load dark mode preference on mount
   useEffect(() => {
-    const savedTheme = localStorage.getItem("darkMode");
+    const savedTheme = localStorage.getItem('darkMode');
     const prefersDark = window.matchMedia(
-      "(prefers-color-scheme: dark)"
+      '(prefers-color-scheme: dark)'
     ).matches;
     const shouldBeDark =
-      savedTheme === "true" || (savedTheme === null && prefersDark);
+      savedTheme === 'true' || (savedTheme === null && prefersDark);
 
     setIsDarkMode(shouldBeDark);
-    document.body.classList.toggle("dark-mode", shouldBeDark);
+    document.body.classList.toggle('dark-mode', shouldBeDark);
   }, []);
 
   // Toggle dark mode
   const toggleDarkMode = () => {
     const newDarkMode = !isDarkMode;
     setIsDarkMode(newDarkMode);
-    document.body.classList.toggle("dark-mode", newDarkMode);
-    localStorage.setItem("darkMode", newDarkMode.toString());
+    document.body.classList.toggle('dark-mode', newDarkMode);
+    localStorage.setItem('darkMode', newDarkMode.toString());
   };
 
   return (
     <>
       {/* Dark Mode Toggle Button */}
       <button onClick={toggleDarkMode} className="dark-mode-toggle">
-        {isDarkMode ? "☀️ Light" : "🌙 Dark"}
+        {isDarkMode ? '☀️ Light' : '🌙 Dark'}
       </button>
 
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">

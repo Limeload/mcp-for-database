@@ -11,17 +11,20 @@ Democratize database access by enabling users to interact with databases using n
 ## 🏗️ Architecture
 
 ### Frontend
+
 - **Framework**: Next.js 15.2.4
 - **Language**: TypeScript
 - **Styling**: TailwindCSS
 - **UI Components**: React 19.1.0
 
 ### Backend
+
 - **API**: Next.js API Routes
 - **Database Connector**: MCP-DB Connector
 - **Supported Databases**: SQLAlchemy, Snowflake
 
 ### Infrastructure
+
 - **Deployment**: Vercel (recommended)
 - **Version Control**: Git
 - **CI/CD**: GitHub Actions
@@ -70,6 +73,7 @@ mcp-for-database/
 ## 🚀 Key Features
 
 ### Current (MVP)
+
 - ✅ Natural language query interface
 - ✅ SQLAlchemy and Snowflake support
 - ✅ Real-time query results
@@ -77,6 +81,7 @@ mcp-for-database/
 - ✅ Responsive UI with TailwindCSS
 
 ### Planned
+
 - 🔄 Query history and templates
 - 🔄 Export functionality (CSV, JSON, Excel)
 - 🔄 Dark mode and mobile optimization
@@ -94,18 +99,21 @@ mcp-for-database/
 ## 🛠️ Technology Stack
 
 ### Core Technologies
+
 - **Next.js**: React framework for production
 - **TypeScript**: Type-safe JavaScript
 - **TailwindCSS**: Utility-first CSS framework
 - **MCP-DB Connector**: Database integration layer
 
 ### Development Tools
+
 - **ESLint**: Code linting
 - **Prettier**: Code formatting
 - **GitHub Actions**: CI/CD pipeline
 - **Vercel**: Deployment platform
 
 ### Database Support
+
 - **SQLAlchemy**: Python ORM support
 - **Snowflake**: Cloud data warehouse
 - **Extensible**: Plugin system for additional databases
@@ -121,6 +129,7 @@ mcp-for-database/
 ## 🎉 Hacktoberfest 2025
 
 This project is participating in Hacktoberfest 2025 with:
+
 - 20+ ready-to-contribute issues
 - Clear contribution guidelines
 - Automatic contributor recognition
@@ -131,6 +140,7 @@ This project is participating in Hacktoberfest 2025 with:
 For detailed roadmap information, see [ROADMAP.md](ROADMAP.md).
 
 ### Quick Overview
+
 - **Q1 2025** ✅: MVP completion, open-source setup
 - **Q2 2025** 🚧: Query history, templates, export functionality
 - **Q3 2025** 📋: Advanced features, performance optimization

@@ -44,12 +44,14 @@ When contributing to this project, please:
 ### 🔍 Security Considerations
 
 This project handles:
+
 - Database connections and queries
 - Natural language processing
 - User input validation
 - API endpoints
 
 Please be extra careful when:
+
 - Handling user input
 - Connecting to databases
 - Processing natural language queries
@@ -58,6 +60,7 @@ Please be extra careful when:
 ### 📋 Security Checklist
 
 Before submitting a PR, ensure:
+
 - [ ] No hardcoded credentials
 - [ ] Input validation implemented
 - [ ] Error handling doesn't expose sensitive information
