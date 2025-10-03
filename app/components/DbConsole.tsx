@@ -26,6 +26,10 @@ export default function DbConsole() {
   const [isLoadingSchema, setIsLoadingSchema] = useState(false);
   const [showSchema, setShowSchema] = useState(false);
 
+  // Schema view state for expand/collapse functionality
+  const [expandedTables, setExpandedTables] = useState<Set<number>>(new Set());
+  const [schemaSearchTerm, setSchemaSearchTerm] = useState('');
+
   // Load dark mode preference on mount
   useEffect(() => {
     const savedTheme = localStorage.getItem('darkMode');
@@ -110,6 +114,8 @@ export default function DbConsole() {
       if (data.success) {
         setSchema(data.data);
         setShowSchema(true);
+        // Expand all tables by default
+        setExpandedTables(new Set(data.data.tables.map((_: any, index: number) => index)));
       } else {
         setError(data.error || "Failed to fetch schema");
       }
@@ -121,157 +127,353 @@ export default function DbConsole() {
   };
 
   /**
-   * Render schema tables in a structured format
+   * Toggle table expansion
+   */
+  const toggleTableExpansion = (tableIndex: number) => {
+    const newExpanded = new Set(expandedTables);
+    if (newExpanded.has(tableIndex)) {
+      newExpanded.delete(tableIndex);
+    } else {
+      newExpanded.add(tableIndex);
+    }
+    setExpandedTables(newExpanded);
+  };
+
+  /**
+   * Toggle all tables expansion
+   */
+  const toggleAllTablesExpansion = () => {
+    if (expandedTables.size === schema?.tables.length) {
+      setExpandedTables(new Set());
+    } else {
+      setExpandedTables(new Set(schema?.tables.map((_, index) => index) || []));
+    }
+  };
+
+  /**
+   * Filter tables based on search term
+   */
+  const getFilteredTables = () => {
+    if (!schema || !schemaSearchTerm.trim()) return schema?.tables || [];
+    
+    const searchLower = schemaSearchTerm.toLowerCase();
+    return schema.tables.filter(table => 
+      table.name.toLowerCase().includes(searchLower) ||
+      table.schema.toLowerCase().includes(searchLower) ||
+      table.description?.toLowerCase().includes(searchLower) ||
+      table.columns.some(col => col.name.toLowerCase().includes(searchLower))
+    );
+  };
+
+  /**
+   * Render schema tables in a modern, structured format with hide/show functionality
    */
   const renderSchema = () => {
     if (!schema) return null;
 
+    const filteredTables = getFilteredTables();
+    const allExpanded = expandedTables.size === filteredTables.length;
+    const noneExpanded = expandedTables.size === 0;
+
     return (
-      <div className="mt-6 p-6 bg-gray-50 dark:bg-gray-800 rounded-lg">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-            Database Schema ({target})
-          </h3>
-          <button
-            onClick={() => setShowSchema(false)}
-            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-          <div className="bg-blue-100 dark:bg-blue-900 p-3 rounded">
-            <div className="text-sm text-blue-800 dark:text-blue-200">Total Tables</div>
-            <div className="text-xl font-bold text-blue-900 dark:text-blue-100">{schema.totalTables}</div>
+      <div className="mt-8 space-y-6">
+        {/* Schema Header */}
+          <div className="bg-gradient-to-r from-indigo-50 via-purple-50 to-blue-50 dark:from-gray-800 dark:via-gray-700 dark:to-gray-800 rounded-2xl p-6 border border-indigo-200 dark:border-gray-600 shadow-lg">
+          <div className="mb-6">
+            <div className="flex items-center space-x-3">
+              <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 1.79 4 4 4h8c2.21 0 4-1.79 4-4V7c0-2.21-1.79-4-4-4H8c-2.21 0-4 1.79-4 4z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 9h6v6H9z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  Database Schema
+                </h3>
+                <p className="text-lg text-indigo-700 dark:text-indigo-300 font-medium">
+                  {target.toUpperCase()}
+                </p>
+              </div>
+            </div>
           </div>
-          <div className="bg-green-100 dark:bg-green-900 p-3 rounded">
-            <div className="text-sm text-green-800 dark:text-green-200">Total Columns</div>
-            <div className="text-xl font-bold text-green-900 dark:text-green-100">{schema.totalColumns}</div>
+
+          {/* Schema Stats */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+            <div className="bg-gradient-to-br from-blue-500 to-blue-600 p-4 rounded-xl text-white shadow-lg">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-sm opacity-90">Total Tables</div>
+                  <div className="text-2xl font-bold">{schema.totalTables}</div>
+                </div>
+                <svg className="w-8 h-8 opacity-80" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
+                </svg>
+              </div>
+            </div>
+            <div className="bg-gradient-to-br from-green-500 to-green-600 p-4 rounded-xl text-white shadow-lg">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-sm opacity-90">Total Columns</div>
+                  <div className="text-2xl font-bold">{schema.totalColumns}</div>
+                </div>
+                <svg className="w-8 h-8 opacity-80" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm0 4a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1V8zm8 0a1 1 0 011-1h4a1 1 0 011 1v2a1 1 0 01-1 1h-4a1 1 0 01-1-1V8zm0 4a1 1 0 011-1h4a1 1 0 011 1v2a1 1 0 01-1 1h-4a1 1 0 01-1-1v-2z" clipRule="evenodd" />
+                </svg>
+              </div>
+            </div>
+            <div className="bg-gradient-to-br from-purple-500 to-purple-600 p-4 rounded-xl text-white shadow-lg">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-sm opacity-90">Schemas</div>
+                  <div className="text-2xl font-bold">{schema.schemas.length}</div>
+                </div>
+                <svg className="w-8 h-8 opacity-80" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M3 6a3 3 0 013-3h10a1 1 0 01.8 1.6L14.25 8l2.55 3.4A1 1 0 0116 13H6a1 1 0 00-1 1v3a1 1 0 11-2 0V6z" clipRule="evenodd" />
+                </svg>
+              </div>
+            </div>
           </div>
-          <div className="bg-purple-100 dark:bg-purple-900 p-3 rounded">
-            <div className="text-sm text-purple-800 dark:text-purple-200">Schemas</div>
-            <div className="text-xl font-bold text-purple-900 dark:text-purple-100">{schema.schemas.length}</div>
+
+          {/* Search and Control Bar */}
+          <div className="bg-white dark:bg-gray-700 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+            <div className="flex flex-col sm:flex-row gap-4 items-center">
+              <div className="relative flex-1">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <svg className="h-5 w-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+                <input
+                  type="text"
+                  placeholder="Search tables, columns, schemas..."
+                  value={schemaSearchTerm}
+                  onChange={(e) => setSchemaSearchTerm(e.target.value)}
+                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg leading-5 bg-white dark:bg-gray-600 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200"
+                />
+              </div>
+              <div className="flex space-x-2">
+                <button
+                  onClick={toggleAllTablesExpansion}
+                  className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-500 transition-colors duration-200"
+                >
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={allExpanded ? "M19 9l-7 7-7-7" : "M5 15l7-7 7 7"} />
+                  </svg>
+                  {allExpanded ? 'Collapse All' : 'Expand All'}
+                </button>
+                <div className="flex items-center px-3 py-2 text-sm text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-600 rounded-lg">
+                  {filteredTables.length} {filteredTables.length === 1 ? 'table' : 'tables'}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
+        {/* Tables List */}
         <div className="space-y-4">
-          {schema.tables.map((table, index) => (
-            <div key={index} className="bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
-              <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-600">
-                <div className="flex justify-between items-center">
-                  <h4 className="text-md font-semibold text-gray-900 dark:text-gray-100">
-                    {table.schema}.{table.name}
-                  </h4>
-                  <div className="flex space-x-2 text-xs">
-                    <span className="bg-gray-100 dark:bg-gray-600 px-2 py-1 rounded text-gray-700 dark:text-gray-300">
-                      {table.type}
-                    </span>
-                    {table.rowCount && (
-                      <span className="bg-blue-100 dark:bg-blue-900 px-2 py-1 rounded text-blue-700 dark:text-blue-300">
-                        {table.rowCount.toLocaleString()} rows
-                      </span>
-                    )}
-                  </div>
-                </div>
-                {table.description && (
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{table.description}</p>
-                )}
-              </div>
+          {filteredTables.length === 0 ? (
+            <div className="text-center py-12 bg-white dark:bg-gray-700 rounded-2xl border-2 border-dashed border-gray-300 dark:border-gray-600">
+              <svg className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">No Tables Found</h3>
+              <p className="text-gray-500 dark:text-gray-400">Try adjusting your search criteria</p>
+            </div>
+          ) : (
+            filteredTables.map((table, index) => {
+              const originalIndex = schema.tables.findIndex(t => t.name === table.name && t.schema === table.schema);
+              const isExpanded = expandedTables.has(originalIndex);
               
-              <div className="px-4 py-3">
-                <div className="overflow-x-auto">
-                  <table className="min-w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-gray-200 dark:border-gray-600">
-                        <th className="text-left py-2 px-3 font-medium text-gray-700 dark:text-gray-300">Column</th>
-                        <th className="text-left py-2 px-3 font-medium text-gray-700 dark:text-gray-300">Type</th>
-                        <th className="text-left py-2 px-3 font-medium text-gray-700 dark:text-gray-300">Constraints</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {table.columns.map((column, colIndex) => (
-                        <tr key={colIndex} className="border-b border-gray-100 dark:border-gray-700">
-                          <td className="py-2 px-3">
-                            <div className="flex items-center space-x-2">
-                              <span className="text-gray-900 dark:text-gray-100 font-mono">{column.name}</span>
-                              {column.isPrimaryKey && (
-                                <span className="bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 px-1 py-0.5 rounded text-xs">PK</span>
-                              )}
-                              {column.isForeignKey && (
-                                <span className="bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 px-1 py-0.5 rounded text-xs">FK</span>
-                              )}
-                            </div>
-                          </td>
-                          <td className="py-2 px-3 text-gray-700 dark:text-gray-300 font-mono text-xs">
-                            {column.dataType}
-                            {column.maxLength && `(${column.maxLength})`}
-                            {column.precision && column.scale !== undefined && `(${column.precision},${column.scale})`}
-                          </td>
-                          <td className="py-2 px-3">
-                            <div className="flex flex-wrap gap-1">
-                              {!column.isNullable && (
-                                <span className="bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 px-1 py-0.5 rounded text-xs">NOT NULL</span>
-                              )}
-                              {column.defaultValue && (
-                                <span className="bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 px-1 py-0.5 rounded text-xs">DEFAULT</span>
-                              )}
-                              {column.constraints.map((constraint, constraintIndex) => (
-                                <span key={constraintIndex} className="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-1 py-0.5 rounded text-xs">
-                                  {constraint}
-                                </span>
-                              ))}
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-                
-                {table.indexes.length > 0 && (
-                  <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
-                    <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Indexes:</h5>
-                    <div className="flex flex-wrap gap-2">
-                      {table.indexes.map((index, indexIndex) => (
-                        <span key={indexIndex} className="bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 px-2 py-1 rounded text-xs">
-                          {index.name} ({index.columns.join(', ')}) {index.isUnique && '- UNIQUE'}
+              return (
+                <div key={originalIndex} className="bg-white dark:bg-gray-700 rounded-2xl border border-gray-200 dark:border-gray-600 shadow-lg overflow-hidden transition-all duration-200 hover:shadow-xl">
+                  {/* Table Header */}
+                  <div className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-600 dark:to-gray-700 px-6 py-4 border-b border-gray-200 dark:border-gray-600">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <button
+                          onClick={() => toggleTableExpansion(originalIndex)}
+                          className="group p-2 rounded-lg bg-white dark:bg-gray-600 hover:bg-gray-50 dark:hover:bg-gray-500 transition-all duration-200 hover:scale-105 shadow-sm"
+                        >
+                          <svg className={`w-5 h-5 text-gray-600 dark:text-gray-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-transform duration-200 ${isExpanded ? 'rotate-180' : 'rotate-0'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </button>
+                        <div>
+                          <h4 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                            {table.schema}.{table.name}
+                          </h4>
+                          {table.description && (
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{table.description}</p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${table.type === 'table' ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' : 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200'}`}>
+                          {table.type.toUpperCase()}
                         </span>
-                      ))}
+                        {table.rowCount && (
+                          <span className="bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 px-3 py-1 rounded-full text-xs font-medium">
+                            {table.rowCount.toLocaleString()} rows
+                          </span>
+                        )}
+                        <span className="bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 px-3 py-1 rounded-full text-xs font-medium">
+                          {table.columns.length} columns
+                        </span>
+                      </div>
                     </div>
                   </div>
-                )}
-              </div>
-            </div>
-          ))}
+
+                  {/* Table Content */}
+                  {isExpanded && (
+                    <div className="animate-fade-in">
+                      <div className="px-6 py-4">
+                        <div className="overflow-x-auto">
+                          <table className="min-w-full">
+                            <thead>
+                              <tr className="border-b border-gray-200 dark:border-gray-600">
+                                <th className="text-left py-3 px-4 font-semibold text-gray-800 dark:text-gray-200">Column</th>
+                                <th className="text-left py-3 px-4 font-semibold text-gray-800 dark:text-gray-200">Type</th>
+                                <th className="text-left py-3 px-4 font-semibold text-gray-800 dark:text-gray-200">Constraints</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                              {table.columns.map((column, colIndex) => (
+                                <tr key={colIndex} className="hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors duration-150">
+                                  <td className="py-3 px-4">
+                                    <div className="flex items-center space-x-3">
+                                      <span className="font-mono text-gray-900 dark:text-gray-100 font-medium">{column.name}</span>
+                                      {column.isPrimaryKey && (
+                                        <span className="bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 px-2 py-1 rounded-md text-xs font-semibold">PK</span>
+                                      )}
+                                      {column.isForeignKey && (
+                                        <span className="bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 px-2 py-1 rounded-md text-xs font-semibold">FK</span>
+                                      )}
+                                    </div>
+                                  </td>
+                                  <td className="py-3 px-4">
+                                    <span className="font-mono text-sm text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded-md">
+                                      {column.dataType}
+                                      {column.maxLength && `(${column.maxLength})`}
+                                      {column.precision && column.scale !== undefined && `(${column.precision},${column.scale})`}
+                                    </span>
+                                  </td>
+                                  <td className="py-3 px-4">
+                                    <div className="flex flex-wrap gap-1">
+                                      {!column.isNullable && (
+                                        <span className="bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 px-2 py-1 rounded-md text-xs font-medium">NOT NULL</span>
+                                      )}
+                                      {column.defaultValue && (
+                                        <span className="bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 px-2 py-1 rounded-md text-xs font-medium">DEFAULT</span>
+                                      )}
+                                      {column.constraints.map((constraint, constraintIndex) => (
+                                        <span key={constraintIndex} className="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 px-2 py-1 rounded-md text-xs font-medium">
+                                          {constraint}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+
+                        {/* Indexes */}
+                        {table.indexes.length > 0 && (
+                          <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-600">
+                            <h5 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center">
+                              <svg className="w-5 h-5 mr-2 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v 6a2 2 0 002 2h6a2 2 0 002 2v6m0 0V9a2 2 0 012 2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002 2-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                              </svg>
+                              Indexes ({table.indexes.length})
+                            </h5>
+                            <div className="space-y-2">
+                              {table.indexes.map((index, indexIndex) => (
+                                <div key={indexIndex} className="bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-700 rounded-lg p-3">
+                                  <div className="flex items-center justify-between">
+                                    <span className="font-mono text-sm font-medium text-indigo-800 dark:text-indigo-200">{index.name}</span>
+                                    <div className="flex items-center space-x-2">
+                                      <span className="text-xs text-indigo-600 dark:text-indigo-400">
+                                        {index.columns.join(', ')}
+                                      </span>
+                                      {index.isUnique && (
+                                        <span className="bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 px-2 py-1 rounded-md text-xs font-semibold">UNIQUE</span>
+                                      )}
+                                      <span className="bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 px-2 py-1 rounded-md text-xs">
+                                        {index.type}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })
+          )}
         </div>
-        
+
+        {/* Relationships */}
         {schema.relationships.length > 0 && (
-          <div className="mt-6">
-            <h4 className="text-md font-semibold text-gray-900 dark:text-gray-100 mb-3">Relationships:</h4>
-            <div className="space-y-2">
+          <div className="bg-white dark:bg-gray-700 rounded-2xl border border-gray-200 dark:border-gray-600 shadow-lg p-6">
+            <h4 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4 flex items-center">
+              <svg className="w-6 h-6 mr-3 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.102m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+              </svg>
+              Database Relationships ({schema.relationships.length})
+            </h4>
+            <div className="space-y-3">
               {schema.relationships.map((rel, index) => (
-                <div key={index} className="bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded p-3">
-                  <div className="flex items-center space-x-2 text-sm">
-                    <span className="font-mono text-gray-900 dark:text-gray-100">{rel.fromTable}</span>
-                    <span className="text-gray-500 dark:text-gray-400">({rel.fromColumns.join(', ')})</span>
-                    <span className="text-gray-500 dark:text-gray-400">→</span>
-                    <span className="font-mono text-gray-900 dark:text-gray-100">{rel.toTable}</span>
-                    <span className="text-gray-500 dark:text-gray-400">({rel.toColumns.join(', ')})</span>
-                    <span className="bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 px-2 py-1 rounded text-xs">
-                      {rel.type.toUpperCase()}
+                <div key={index} className="bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 border border-purple-200 dark:border-purple-700 rounded-xl p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4">
+                      <div className="text-center">
+                        <div className="font-mono text-sm font-semibold text-purple-800 dark:text-purple-200">
+                          {rel.fromTable}
+                        </div>
+                        <div className="text-xs text-purple-600 dark:text-purple-400">
+                          {rel.fromColumns.join(', ')}
+                        </div>
+                      </div>
+                      <svg className="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                      </svg>
+                      <div className="text-center">
+                        <div className="font-mono text-sm font-semibold text-purple-800 dark:text-purple-200">
+                          {rel.toTable}
+                        </div>
+                        <div className="text-xs text-purple-600 dark:text-purple-400">
+                          {rel.toColumns.join(', ')}
+                        </div>
+                      </div>
+                    </div>
+                    <span className="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 px-3 py-1 rounded-lg text-sm font-semibold">
+                      {rel.type.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
                     </span>
                   </div>
+                  {rel.constraintName && (
+                    <div className="mt-2 text-xs text-purple-600 dark:text-purple-400 font-mono bg-purple-100/50 dark:bg-purple-900/30 px-2 py-1 rounded">
+                      Constraint: {rel.constraintName}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
           </div>
         )}
-        
-        <div className="mt-4 text-xs text-gray-500 dark:text-gray-400">
-          Schema version: {schema.version} | Last updated: {new Date(schema.lastUpdated).toLocaleString()}
+
+        {/* Schema Footer */}
+        <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-4 border border-gray-200 dark:border-gray-600">
+          <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
+            <div>Schema version: <span className="font-mono font-semibold">{schema.version}</span></div>
+            <div>Last updated: <span className="font-mono">{new Date(schema.lastUpdated).toLocaleString()}</span></div>
+          </div>
         </div>
       </div>
     );
@@ -336,167 +538,201 @@ export default function DbConsole() {
   return (
     <>
       {/* Dark Mode Toggle Button */}
-      <button onClick={toggleDarkMode} className="dark-mode-toggle">
-        {isDarkMode ? '☀️ Light' : '🌙 Dark'}
+      <button 
+        onClick={toggleDarkMode} 
+        className="fixed top-6 right-6 z-50 p-3 rounded-full bg-white dark:bg-gray-800 shadow-lg border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-all duration-300 hover:scale-105"
+        aria-label="Toggle dark mode"
+      >
+        {isDarkMode ? (
+          <svg className="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clipRule="evenodd" />
+          </svg>
+        ) : (
+          <svg className="w-5 h-5 text-gray-700 dark:text-gray-300" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
+          </svg>
+        )}
       </button>
 
-      <div className="max-w-6xl mx-auto p-6">
-        <div className="bg-white shadow-lg rounded-lg">
+      <div className="max-w-7xl mx-auto p-8">
+        <div className="bg-white dark:bg-gray-800 shadow-2xl rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden">
           {/* Header */}
-          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-              Database Console
-            </h1>
-            <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-              Enter a natural language prompt to query your database
-            </p>
+          <div className="px-8 py-6 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-700 border-b border-gray-200 dark:border-gray-600">
+            <div className="flex items-center mb-4">
+              <div className="flex-shrink-0">
+                <svg className="h-8 w-8 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <div className="ml-4">
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+                  Database Console
+                </h1>
+                <p className="mt-2 text-base text-gray-600 dark:text-gray-400">
+                  Query your database using natural language prompts powered by the Model Context Protocol
+                </p>
+              </div>
+            </div>
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="p-6 space-y-6">
-            {/* Prompt Input */}
-            <div>
-              <label
-                htmlFor="prompt"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-              >
-                Natural Language Prompt
-              </label>
-              <textarea
-                id="prompt"
-                value={prompt}
-                onChange={e => setPrompt(e.target.value)}
-                placeholder="e.g., Show me all users who registered in the last 30 days"
-                className=" w-4/5 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400"
-                rows={3}
-                disabled={isLoading}
-              />
-            </div>
+          <form onSubmit={handleSubmit} className="px-8 py-8 space-y-8">
+            <div className="grid md:grid-cols-2 gap-8">
+              {/* Prompt Input */}
+              <div className="md:col-span-2">
+                <label
+                  htmlFor="prompt"
+                  className="block text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center"
+                >
+                  <svg className="w-5 h-5 mr-2 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  </svg>
+                  Natural Language Prompt
+                </label>
+                <textarea
+                  id="prompt"
+                  value={prompt}
+                  onChange={e => setPrompt(e.target.value)}
+                  placeholder="e.g., Show me all users who registered in the last 30 days, or Get the total sales for this month..."
+                  className="w-full px-4 py-4 border-2 border-gray-200 dark:border-gray-600 rounded-xl shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 transition-all duration-200 resize-none"
+                  rows={4}
+                  disabled={isLoading}
+                />
+                <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                  Describe what you want to know in plain English
+                </p>
+              </div>
 
-            {/* Target Selection */}
-            <div>
-              <label
-                htmlFor="target"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-              >
-                Database Target
-              </label>
-              <select
-                id="target"
-                value={target}
-                onChange={e => setTarget(e.target.value as DatabaseTarget)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400"
-                disabled={isLoading}
-              >
-                <option value="sqlalchemy">SQLAlchemy</option>
-                <option value="snowflake">Snowflake</option>
-                <option value="sqlite">SQLite</option>
-              </select>
+              {/* Target Selection */}
+              <div>
+                <label
+                  htmlFor="target"
+                  className="block text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center"
+                >
+                  <svg className="w-5 h-5 mr-2 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 1.79 4 4 4h8c2.21 0 4-1.79 4-4V7c0-2.21-1.79-4-4-4H8c-2.21 0-4 1.79-4 4z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 9h6v6H9z" />
+                  </svg>
+                  Database Target
+                </label>
+                <select
+                  id="target"
+                  value={target}
+                  onChange={e => setTarget(e.target.value as DatabaseTarget)}
+                  className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 transition-all duration-200"
+                  disabled={isLoading}
+                >
+                  <option value="sqlalchemy">SQLAlchemy (Python ORM)</option>
+                  <option value="snowflake">Snowflake (Data Warehouse)</option>
+                  <option value="sqlite">SQLite (Local Database)</option>
+                </select>
+                <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                  Choose your database connection type
+                </p>
+              </div>
             </div>
 
             {/* Action Buttons */}
-            <div className="flex space-x-4">
+            <div className="flex flex-col sm:flex-row gap-4 pt-4">
               <button
                 type="submit"
                 disabled={isLoading || !prompt.trim()}
-                className="flex-1 flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 flex justify-center items-center px-8 py-4 border border-transparent rounded-xl shadow-lg text-lg font-semibold text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 transition-all duration-200"
               >
                 {isLoading ? (
-                  <div className="flex items-center">
+                  <>
                     <svg
-                      className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                      className="animate-spin -ml-1 mr-3 h-6 w-6 text-white"
                       xmlns="http://www.w3.org/2000/svg"
                       fill="none"
                       viewBox="0 0 24 24"
                     >
                       <circle
                         className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
+                        cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"
+                      />
                       <path
                         className="opacity-75"
                         fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.972 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      />
                     </svg>
                     Executing Query...
-                  </div>
+                  </>
                 ) : (
-                  'Execute Query'
+                  <>
+                    <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    Execute Query
+                  </>
                 )}
               </button>
               
               <button
                 type="button"
-                onClick={handleFetchSchema}
+                onClick={showSchema ? () => setShowSchema(false) : handleFetchSchema}
                 disabled={isLoadingSchema}
-                className="flex justify-center py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex justify-center items-center px-8 py-4 border-2 border-gray-300 dark:border-gray-600 rounded-xl shadow-lg text-lg font-semibold text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 hover:border-purple-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 dark:focus:ring-offset-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 transition-all duration-200"
               >
                 {isLoadingSchema ? (
-                  <div className="flex items-center">
+                  <>
                     <svg
                       className="animate-spin -ml-1 mr-3 h-5 w-5 text-gray-500"
                       xmlns="http://www.w3.org/2000/svg"
                       fill="none"
                       viewBox="0 0 24 24"
                     >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                     </svg>
                     Loading Schema...
-                  </div>
-                ) : (
-                  <div className="flex items-center">
-                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 1.79 4 4 4h8c2.21 0 4-1.79 4-4V7c0-2.21-1.79-4-4-4H8c-2.21 0-4 1.79-4 4z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 9h6v6H9z" />
+                  </>
+                ) : showSchema ? (
+                  <>
+                    <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 10.125A3.375 3.375 0 1120.25 6.75a3.375 3.375 0 01-6.375 2.25zM9.879 12.121L7.5 14.5m8.379-8.379l2.121 2.121M9.879 9.879l-2.16 2.16M14.121 14.121l2.16-2.16M9.879 14.121l1.515-1.515M14.121 9.879l-1.515 1.515" />
                     </svg>
-                    View Schema
-                  </div>
-                )}
+                    Hide Schema
+                  </>
+                ) : (
+                    <>
+                      <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      View Schema
+                    </>
+                  )}
               </button>
             </div>
           </form>
 
           {/* Error Display */}
           {error && (
-            <div className="px-6 pb-6">
-              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-4">
-                <div className="flex">
+            <div className="px-8 pb-6">
+              <div className="bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 border-2 border-red-200 dark:border-red-800 rounded-2xl p-6 shadow-lg">
+                <div className="flex items-start">
                   <div className="flex-shrink-0">
-                    <svg
-                      className="h-5 w-5 text-red-400 dark:text-red-300"
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
+                    <div className="w-10 h-10 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
+                      <svg
+                        className="h-6 w-6 text-red-600 dark:text-red-400"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </div>
                   </div>
-                  <div className="ml-3">
-                    <h3 className="text-sm font-medium text-red-800 dark:text-red-200">
-                      Error
+                  <div className="ml-8">
+                    <h3 className="text-lg font-semibold text-red-800 dark:text-red-200 mb-2">
+                      Query Error
                     </h3>
-                    <div className="mt-2 text-sm text-red-700 dark:text-red-300">
+                    <div className="text-base text-red-700 dark:text-red-300 leading-relaxed">
                       {error}
                     </div>
                   </div>
@@ -507,30 +743,34 @@ export default function DbConsole() {
 
           {/* Results Display */}
           {result && result.success && (
-            <div className="px-6 pb-6">
-              <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md p-4 mb-4">
-                <div className="flex">
+            <div className="px-8 pb-8">
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-800/20 border-2 border-green-200 dark:border-green-800 rounded-2xl p-6 shadow-lg mb-6">
+                <div className="flex items-center">
                   <div className="flex-shrink-0">
-                    <svg
-                      className="h-5 w-5 text-green-400 dark:text-green-300"
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
+                 <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
+                      <svg
+                        className="h-6 w-6 text-green-600 dark:text-green-400"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </div>
                   </div>
-                  <div className="ml-3">
-                    <h3 className="text-sm font-medium text-green-800 dark:text-green-200">
+                  <div className="ml-6">
+                    <h3 className="text-lg font-semibold text-green-800 dark:text-green-200">
                       Query Executed Successfully
                     </h3>
-                    <div className="mt-2 text-sm text-green-700 dark:text-green-300">
-                      {result.executionTime &&
-                        `Execution time: ${result.executionTime}ms`}
+                    <div className="mt-1 text-base text-green-700 dark:text-green-300">
+                      {result.executionTime ?
+                        `⚡ Executed in ${result.executionTime}ms` :
+                        '✨ Query completed successfully'
+                      }
                     </div>
                   </div>
                 </div>
@@ -538,32 +778,53 @@ export default function DbConsole() {
 
               {/* Query Display */}
               {result.query && (
-                <div className="mb-4">
-                  <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Generated Query:
-                  </h4>
-                  <pre className="bg-gray-100 dark:bg-gray-800 p-3 rounded-md text-sm overflow-x-auto text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700">
-                    <code>{result.query}</code>
-                  </pre>
+                <div className="mb-8">
+                  <div className="bg-gray-50 dark:bg-gray-700/50 p-1 rounded-2xl">
+                    <h4 className="flex items-center text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4 px-4 pt-4">
+                      <svg className="w-5 h-5 mr-2 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      Generated SQL Query
+                    </h4>
+                    <div className="bg-gray-900 dark:bg-gray-800 mx-4 mb-4 p-4 rounded-xl overflow-x-auto border border-gray-700 dark:border-gray-600">
+                      <pre className="text-green-400 dark:text-green-300 text-sm font-mono leading-relaxed">
+                        <code>{result.query}</code>
+                      </pre>
+                    </div>
+                  </div>
                 </div>
               )}
 
               {/* Results Table */}
               {result.data && result.data.length > 0 ? (
                 <div>
-                  <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Results ({result.data.length} rows):
-                  </h4>
-                  <div className="overflow-x-auto shadow ring-1 ring-black dark:ring-white ring-opacity-5 dark:ring-opacity-10 rounded-md">
-                    <table className="min-w-full divide-y divide-gray-300 dark:divide-gray-600">
-                      {renderTableHeaders(result.data)}
-                      {renderTableRows(result.data)}
-                    </table>
+                  <div className="bg-gray-50 dark:bg-gray-700/50 p-1 rounded-2xl">
+                    <h4 className="flex items-center text-lg font-semibold text-gray-800 dark:text-gray-200 mb-6 px-4 pt-4">
+                      <svg className="w-5 h-5 mr-2 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                      </svg>
+                      Query Results
+                      <span className="ml-3 text-sm font-normal bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-3 py-1 rounded-full">
+                        {result.data.length} rows
+                      </span>
+                    </h4>
+                    <div className="mx-4 mb-4 overflow-hidden shadow-2xl border border-gray-200 dark:border-gray-600 rounded-xl">
+                      <div className="overflow-x-auto bg-white dark:bg-gray-800">
+                        <table className="min-w-full divide-y divide-gray-300 dark:divide-gray-600">
+                          {renderTableHeaders(result.data)}
+                          {renderTableRows(result.data)}
+                        </table>
+                      </div>
+                    </div>
                   </div>
                 </div>
               ) : (
-                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                  No data returned from query
+                <div className="text-center py-12 bg-gray-50 dark:bg-gray-700/50 rounded-2xl border border-gray-200 dark:border-gray-600">
+                  <svg className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                  </svg>
+                  <p className="text-lg font-medium text-gray-500 dark:text-gray-400 mb-2">No Results Found</p>
+                  <p className="text-sm text-gray-400 dark:text-gray-500">This query didn't return any data</p>
                 </div>
               )}
             </div>
