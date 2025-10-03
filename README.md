@@ -98,9 +98,11 @@ This repository is participating in **Hacktoberfest 2025**! We welcome contribut
 ### Core Features ✅
 
 - **Natural Language Query Interface**: Basic English-to-SQL conversion
+- **Real-time Query Validation**: Client-side validation with instant feedback ⭐ NEW
 - **Database Support**: SQLAlchemy and Snowflake connectors
 - **Results Display**: Formatted table output with query execution time
 - **Error Handling**: User-friendly error messages and validation
+- **Smart Suggestions**: Contextual recommendations for query improvement ⭐ NEW
 - **Responsive UI**: Clean, modern interface built with TailwindCSS
 
 ### Current Status: **MVP Complete** 🚀

@@ -1,13 +1,20 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { DatabaseTarget, DatabaseQueryResponse } from '@/app/types/database';
+import {
+  validateQuery,
+  quickValidate,
+  getExampleQueries,
+  ValidationResult
+} from '@/app/utils/queryValidation';
 
 /**
  * DbConsole Component
  * A reusable component for database query interface
  * Features:
  * - Natural language prompt input
+ * - Real-time query validation with suggestions
  * - Database target selection (SQLAlchemy or Snowflake)
  * - Query submission with loading states
  * - Results display in a styled table
@@ -21,6 +28,11 @@ export default function DbConsole() {
   const [result, setResult] = useState<DatabaseQueryResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isDarkMode, setIsDarkMode] = useState(false);
+
+  // Validation states
+  const [validation, setValidation] = useState<ValidationResult | null>(null);
+  const [showValidation, setShowValidation] = useState(false);
+  const [showExamples, setShowExamples] = useState(false);
 
   // Load dark mode preference on mount
   useEffect(() => {
@@ -44,6 +56,32 @@ export default function DbConsole() {
   };
 
   /**
+   * Validate query in real-time
+   * Debounced to avoid excessive validation calls
+   */
+  const validatePrompt = useCallback((value: string) => {
+    if (!value.trim()) {
+      setValidation(null);
+      setShowValidation(false);
+      return;
+    }
+
+    const validationResult = validateQuery(value);
+    setValidation(validationResult);
+    setShowValidation(true);
+  }, []);
+
+  /**
+   * Handle prompt change with real-time validation
+   */
+  const handlePromptChange = (value: string) => {
+    setPrompt(value);
+    // Validate after a short delay (debounce)
+    const timeoutId = setTimeout(() => validatePrompt(value), 300);
+    return () => clearTimeout(timeoutId);
+  };
+
+  /**
    * Handle form submission
    * Calls the API route to execute database query
    */
@@ -55,9 +93,26 @@ export default function DbConsole() {
       return;
     }
 
+    // Perform quick validation before submission
+    const quickCheck = quickValidate(prompt);
+    if (!quickCheck.isValid) {
+      setError(quickCheck.error || 'Query validation failed');
+      return;
+    }
+
+    // Perform full validation
+    const fullValidation = validateQuery(prompt);
+    if (!fullValidation.isValid) {
+      setError(fullValidation.errors[0]?.message || 'Query validation failed');
+      setValidation(fullValidation);
+      setShowValidation(true);
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
     setResult(null);
+    setShowValidation(false);
 
     try {
       const response = await fetch('/api/db/query', {
@@ -164,21 +219,164 @@ export default function DbConsole() {
           <form onSubmit={handleSubmit} className="p-6 space-y-6">
             {/* Prompt Input */}
             <div>
-              <label
-                htmlFor="prompt"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-              >
-                Natural Language Prompt
-              </label>
+              <div className="flex justify-between items-center mb-2">
+                <label
+                  htmlFor="prompt"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
+                  Natural Language Prompt
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setShowExamples(!showExamples)}
+                  className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
+                >
+                  {showExamples ? 'Hide' : 'Show'} Examples
+                </button>
+              </div>
+              
               <textarea
                 id="prompt"
                 value={prompt}
-                onChange={e => setPrompt(e.target.value)}
+                onChange={e => handlePromptChange(e.target.value)}
                 placeholder="e.g., Show me all users who registered in the last 30 days"
-                className=" w-4/5 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400"
+                className="w-4/5 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400"
                 rows={3}
                 disabled={isLoading}
               />
+
+              {/* Example Queries Dropdown */}
+              {showExamples && (
+                <div className="mt-2 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md">
+                  <p className="text-sm font-medium text-blue-900 dark:text-blue-200 mb-2">
+                    Example Queries:
+                  </p>
+                  <ul className="space-y-1">
+                    {getExampleQueries().slice(0, 5).map((example, index) => (
+                      <li key={index}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setPrompt(example);
+                            handlePromptChange(example);
+                            setShowExamples(false);
+                          }}
+                          className="text-sm text-left text-blue-700 dark:text-blue-300 hover:underline w-full"
+                        >
+                          • {example}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Real-time Validation Feedback */}
+              {showValidation && validation && prompt.trim() && (
+                <div className="mt-3 space-y-2">
+                  {/* Validation Status Indicator */}
+                  <div className="flex items-center gap-2">
+                    {validation.isValid ? (
+                      <>
+                        <svg
+                          className="h-5 w-5 text-green-500"
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                        <span className="text-sm font-medium text-green-700 dark:text-green-300">
+                          Query looks good!
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <svg
+                          className="h-5 w-5 text-red-500"
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                        <span className="text-sm font-medium text-red-700 dark:text-red-300">
+                          Query needs improvement
+                        </span>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Validation Errors */}
+                  {validation.errors.length > 0 && (
+                    <div className="p-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded">
+                      <p className="text-xs font-medium text-red-800 dark:text-red-200 mb-1">
+                        Errors:
+                      </p>
+                      <ul className="space-y-1">
+                        {validation.errors.map((error, index) => (
+                          <li
+                            key={index}
+                            className="text-xs text-red-700 dark:text-red-300"
+                          >
+                            • {error.message}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Validation Warnings */}
+                  {validation.warnings.length > 0 && (
+                    <div className="p-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded">
+                      <p className="text-xs font-medium text-yellow-800 dark:text-yellow-200 mb-1">
+                        Warnings:
+                      </p>
+                      <ul className="space-y-1">
+                        {validation.warnings.map((warning, index) => (
+                          <li
+                            key={index}
+                            className="text-xs text-yellow-700 dark:text-yellow-300"
+                          >
+                            • {warning.message}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Suggestions */}
+                  {validation.suggestions.length > 0 && (
+                    <div className="p-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded">
+                      <p className="text-xs font-medium text-blue-800 dark:text-blue-200 mb-1">
+                        💡 Suggestions:
+                      </p>
+                      <ul className="space-y-1">
+                        {validation.suggestions.slice(0, 3).map((suggestion, index) => (
+                          <li key={index} className="text-xs">
+                            <p className="text-blue-700 dark:text-blue-300">
+                              • {suggestion.message}
+                            </p>
+                            {suggestion.example && (
+                              <p className="text-blue-600 dark:text-blue-400 ml-3 mt-0.5 italic">
+                                Example: "{suggestion.example}"
+                              </p>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Target Selection */}
@@ -205,7 +403,11 @@ export default function DbConsole() {
             <div>
               <button
                 type="submit"
-                disabled={isLoading || !prompt.trim()}
+                disabled={
+                  isLoading ||
+                  !prompt.trim() ||
+                  (validation !== null && !validation.isValid)
+                }
                 className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? (
@@ -232,10 +434,17 @@ export default function DbConsole() {
                     </svg>
                     Executing Query...
                   </div>
+                ) : validation && !validation.isValid ? (
+                  'Fix errors to execute'
                 ) : (
                   'Execute Query'
                 )}
               </button>
+              {validation && !validation.isValid && prompt.trim() && (
+                <p className="mt-2 text-xs text-center text-red-600 dark:text-red-400">
+                  Please fix validation errors before executing the query
+                </p>
+              )}
             </div>
           </form>
 

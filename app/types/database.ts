@@ -21,3 +21,12 @@ export interface DatabaseErrorResponse {
   success: false;
   error: string;
 }
+
+// Query validation types
+export interface QueryValidationStatus {
+  isValidating: boolean;
+  isValid: boolean;
+  errors: string[];
+  warnings: string[];
+  suggestions: string[];
+}
