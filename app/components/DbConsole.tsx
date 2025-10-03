@@ -673,7 +673,7 @@ export default function DbConsole() {
                             // Replace placeholders in prompt
                             let builtPrompt = selectedTemplate.defaultPrompt;
                             selectedTemplate.placeholders.forEach(ph => {
-                              const re = new RegExp(`{{\\s*${ph}\\s*}}`, 'g');
+                              const re = new RegExp('{{\\s*' + ph + '\\s*}}', 'g');
                               builtPrompt = builtPrompt.replace(re, placeholderValues[ph]);
                             });
                             setPrompt(builtPrompt);
