@@ -14,6 +14,8 @@ export interface DatabaseQueryResponse {
   error?: string;
   query?: string;
   executionTime?: number;
+  // Indicates that the response was generated from local mock data (MCP server unreachable)
+  mocked?: boolean;
 }
 
 // Error response type

@@ -25,10 +25,26 @@ export default function DbConsole() {
   const [schema, setSchema] = useState<SchemaMetadata | null>(null);
   const [isLoadingSchema, setIsLoadingSchema] = useState(false);
   const [showSchema, setShowSchema] = useState(false);
+  const [isTestingConnection, setIsTestingConnection] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState<
+    | null
+    | {
+        success: boolean;
+        message?: string;
+        error?: string;
+        diagnostics?: { [k: string]: unknown } | null;
+      }
+  >(null);
 
   // Schema view state for expand/collapse functionality
   const [expandedTables, setExpandedTables] = useState<Set<number>>(new Set());
   const [schemaSearchTerm, setSchemaSearchTerm] = useState('');
+
+  // Typed diagnostics helper to safely render unknown diagnostics
+  const currentDiag: Record<string, unknown> | undefined =
+    connectionStatus && connectionStatus.diagnostics && typeof connectionStatus.diagnostics === 'object'
+      ? (connectionStatus.diagnostics as Record<string, unknown>)
+      : undefined;
 
   // Load dark mode preference on mount
   useEffect(() => {
@@ -252,6 +268,7 @@ export default function DbConsole() {
                 />
               </div>
               <div className="flex space-x-2">
+                    
                 <button
                   onClick={toggleAllTablesExpansion}
                   className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-500 transition-colors duration-200"
@@ -581,7 +598,7 @@ export default function DbConsole() {
               <div className="md:col-span-2">
                 <label
                   htmlFor="prompt"
-                  className="block text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center"
+                  className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center"
                 >
                   <svg className="w-5 h-5 mr-2 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
@@ -606,7 +623,7 @@ export default function DbConsole() {
               <div>
                 <label
                   htmlFor="target"
-                  className="block text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center"
+                  className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center"
                 >
                   <svg className="w-5 h-5 mr-2 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 1.79 4 4 4h8c2.21 0 4-1.79 4-4V7c0-2.21-1.79-4-4-4H8c-2.21 0-4 1.79-4 4z" />
@@ -628,6 +645,63 @@ export default function DbConsole() {
                 <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
                   Choose your database connection type
                 </p>
+                {/* Test Connection button placed below the target select for visibility */}
+                <div className="mt-3">
+                  <button
+                    onClick={async () => {
+                      setIsTestingConnection(true);
+                      setConnectionStatus(null);
+
+                      try {
+                        const resp = await fetch('/api/db/test-connection', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ target })
+                        });
+
+                        interface ConnectionApiResponse {
+                          success: boolean;
+                          message?: string;
+                          error?: string;
+                          diagnostics?: { [k: string]: unknown } | null;
+                        }
+
+                        const data = (await resp.json()) as ConnectionApiResponse;
+                        setConnectionStatus(data);
+                      } catch (err) {
+                        setConnectionStatus({ success: false, error: err instanceof Error ? err.message : 'Network error' });
+                      } finally {
+                        setIsTestingConnection(false);
+                      }
+                    }}
+                    className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm"
+                  >
+                    {isTestingConnection ? 'Testing...' : 'Test Connection'}
+                  </button>
+                  {connectionStatus && (
+                    <div className={`inline-flex items-center px-3 py-2 text-sm rounded-lg ml-3 shadow-sm ${connectionStatus.success ? 'bg-green-600 text-white' : 'bg-red-600 text-white'}`} role="status" aria-live="polite">
+                      <div className="flex flex-col">
+                        <div className="flex items-center">
+                          <span className="font-semibold mr-3">{connectionStatus.success ? 'Connected' : 'Failed'}</span>
+                          <span className="opacity-90">{connectionStatus.message ?? connectionStatus.error ?? ''}</span>
+                        </div>
+                        {currentDiag && (
+                          <div className="flex flex-wrap gap-2 mt-2 text-xs">
+                            {currentDiag.latencyMs !== undefined && currentDiag.latencyMs !== null && (
+                              <span className="bg-white/10 text-white px-2 py-0.5 rounded-md">Latency: {String(currentDiag.latencyMs)}ms</span>
+                            )}
+                            {currentDiag.ping !== undefined && (
+                              <span className="bg-white/10 text-white px-2 py-0.5 rounded-md">Ping: {String(currentDiag.ping)}ms</span>
+                            )}
+                            {currentDiag.details !== undefined && (
+                              <span className="bg-white/10 text-white px-2 py-0.5 rounded-md">Details: {String(currentDiag.details)}</span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -743,6 +817,11 @@ export default function DbConsole() {
           {/* Results Display */}
           {result && result.success && (
             <div className="px-8 pb-8">
+              {result.mocked && (
+                <div className="mb-4 px-6 py-3 rounded-lg bg-yellow-100 text-yellow-800 border border-yellow-200">
+                  <strong>Note:</strong> These results are mocked because the MCP-DB Connector was not reachable. Start your MCP server or set <code>MCP_SERVER_URL</code> to get real data.
+                </div>
+              )}
               <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-800/20 border-2 border-green-200 dark:border-green-800 rounded-2xl p-6 shadow-lg mb-6">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
