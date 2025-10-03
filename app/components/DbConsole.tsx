@@ -115,7 +115,7 @@ export default function DbConsole() {
         setSchema(data.data);
         setShowSchema(true);
         // Expand all tables by default
-        setExpandedTables(new Set(data.data.tables.map((_: any, index: number) => index)));
+        setExpandedTables(new Set(data.data.tables.map((_: unknown, index: number) => index)));
       } else {
         setError(data.error || "Failed to fetch schema");
       }
@@ -173,7 +173,6 @@ export default function DbConsole() {
 
     const filteredTables = getFilteredTables();
     const allExpanded = expandedTables.size === filteredTables.length;
-    const noneExpanded = expandedTables.size === 0;
 
     return (
       <div className="mt-8 space-y-6">
@@ -281,7 +280,7 @@ export default function DbConsole() {
               <p className="text-gray-500 dark:text-gray-400">Try adjusting your search criteria</p>
             </div>
           ) : (
-            filteredTables.map((table, index) => {
+            filteredTables.map((table) => {
               const originalIndex = schema.tables.findIndex(t => t.name === table.name && t.schema === table.schema);
               const isExpanded = expandedTables.has(originalIndex);
               
@@ -824,7 +823,7 @@ export default function DbConsole() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
                   </svg>
                   <p className="text-lg font-medium text-gray-500 dark:text-gray-400 mb-2">No Results Found</p>
-                  <p className="text-sm text-gray-400 dark:text-gray-500">This query didn't return any data</p>
+                  <p className="text-sm text-gray-400 dark:text-gray-500">This query didn&apos;t return any data</p>
                 </div>
               )}
             </div>

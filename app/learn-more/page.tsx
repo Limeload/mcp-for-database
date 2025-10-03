@@ -441,7 +441,7 @@ export default function LearnMorePage() {
                 <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 mb-8">
                   <h3 className="text-xl font-semibold mb-4">Get Recognized</h3>
                   <p className="opacity-90 mb-4">
-                    After <strong>15 approved pull requests</strong>, you'll be added to our collaborators list!
+                    After <strong>15 approved pull requests</strong>, you&apos;ll be added to our collaborators list!
                   </p>
                   <div className="grid md:grid-cols-3 gap-4 text-sm">
                     <div className="bg-white/10 rounded-lg p-4">
