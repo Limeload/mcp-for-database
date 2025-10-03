@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { DatabaseTarget, DatabaseQueryResponse, SchemaMetadata } from "@/app/types/database";
+import { queryTemplates, QueryTemplate } from "@/app/config/templates";
 
 /**
  * DbConsole Component
@@ -17,6 +18,30 @@ import { DatabaseTarget, DatabaseQueryResponse, SchemaMetadata } from "@/app/typ
  */
 export default function DbConsole() {
   const [prompt, setPrompt] = useState('');
+  // Template selection state
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
+  const [selectedTemplate, setSelectedTemplate] = useState<QueryTemplate | null>(null);
+  // Placeholder values state
+  const [placeholderValues, setPlaceholderValues] = useState<Record<string, string>>({});
+  // Reset placeholder values when template changes
+  useEffect(() => {
+    if (selectedTemplate) {
+      const initial: Record<string, string> = {};
+      selectedTemplate.placeholders.forEach(ph => { initial[ph] = ''; });
+      setPlaceholderValues(initial);
+    } else {
+      setPlaceholderValues({});
+    }
+  }, [selectedTemplate]);
+  // Update selected template when dropdown changes
+  useEffect(() => {
+    if (selectedTemplateId) {
+      const found = queryTemplates.find(t => t.id === selectedTemplateId) || null;
+      setSelectedTemplate(found);
+    } else {
+      setSelectedTemplate(null);
+    }
+  }, [selectedTemplateId]);
   const [target, setTarget] = useState<DatabaseTarget>('sqlalchemy');
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<DatabaseQueryResponse | null>(null);
@@ -594,6 +619,75 @@ export default function DbConsole() {
           {/* Form */}
           <form onSubmit={handleSubmit} className="px-8 py-8 space-y-8">
             <div className="grid md:grid-cols-2 gap-8">
+              {/* Query Template Selection */}
+              <div className="md:col-span-2 mb-2">
+                <label htmlFor="template-select" className="block text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Select a Query Template</label>
+                <select
+                  id="template-select"
+                  className="w-full border-2 border-gray-200 dark:border-gray-600 rounded-xl px-3 py-2 mb-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                  value={selectedTemplateId}
+                  onChange={e => setSelectedTemplateId(e.target.value)}
+                  disabled={isLoading}
+                >
+                  <option value="">-- None --</option>
+                  {queryTemplates.map(t => (
+                    <option key={t.id} value={t.id}>{t.name}</option>
+                  ))}
+                </select>
+                {selectedTemplate && (
+                  <div className="mt-2 p-3 bg-gray-50 dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700">
+                    <div className="font-medium text-gray-900 dark:text-gray-100">{selectedTemplate.description}</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                      <span className="font-mono">{selectedTemplate.defaultPrompt}</span>
+                    </div>
+                    {/* Render placeholder input fields if any */}
+                    {selectedTemplate.placeholders.length > 0 && (
+                      <div className="mt-4">
+                        <div className="font-semibold mb-2 text-gray-800 dark:text-gray-200">Fill in template variables:</div>
+                        <div className="flex flex-col gap-2">
+                          {selectedTemplate.placeholders.map(ph => (
+                            <div key={ph} className="flex items-center gap-2">
+                              <label htmlFor={`ph-${ph}`} className="w-32 text-gray-700 dark:text-gray-300 font-medium">{ph}</label>
+                              <input
+                                id={`ph-${ph}`}
+                                type="text"
+                                className="flex-1 px-3 py-2 border rounded bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100"
+                                value={placeholderValues[ph] || ''}
+                                onChange={e => setPlaceholderValues(v => ({ ...v, [ph]: e.target.value }))}
+                                placeholder={`Enter ${ph}`}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                        {/* Insert Template Button */}
+                        <button
+                          type="button"
+                          className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded shadow disabled:opacity-50"
+                          onClick={() => {
+                            // Validate all placeholders are filled
+                            const missing = selectedTemplate.placeholders.filter(ph => !placeholderValues[ph]?.trim());
+                            if (missing.length > 0) {
+                              setError(`Please fill in: ${missing.join(', ')}`);
+                              return;
+                            }
+                            // Replace placeholders in prompt
+                            let builtPrompt = selectedTemplate.defaultPrompt;
+                            selectedTemplate.placeholders.forEach(ph => {
+                              const re = new RegExp('{{\\s*' + ph + '\\s*}}', 'g');
+                              builtPrompt = builtPrompt.replace(re, placeholderValues[ph]);
+                            });
+                            setPrompt(builtPrompt);
+                            setError(null);
+                          }}
+                          disabled={selectedTemplate.placeholders.some(ph => !placeholderValues[ph]?.trim())}
+                        >
+                          Use Template
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
               {/* Prompt Input */}
               <div className="md:col-span-2">
                 <label
