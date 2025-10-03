@@ -61,6 +61,7 @@ export async function POST(
       mcpData = await mcpResponse.json();
     } catch (error) {
       // MCP server not available, use mock data for development
+      // eslint-disable-next-line no-console
       console.warn('MCP server not available, using mock data:', error instanceof Error ? error.message : 'Unknown error');
       
       mcpData = {
