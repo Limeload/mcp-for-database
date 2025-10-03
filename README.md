@@ -45,7 +45,7 @@ Transform natural language into powerful database queries through an intuitive w
 
 ## 🎉 Hacktoberfest 2025
 
-This repository is participating in **Hacktoberfest 2025**! We welcome contributions from developers of all skill levels. After **15 approved pull requests**, you'll be recognized as a project contributor!
+This repository is participating in **Hacktoberfest 2025**! We welcome contributions from developers of all skill levels. After **15 approved pull requests**, you'll be recognized as a project collaborator!
 
 ### Quick Start for Contributors
 
@@ -54,7 +54,7 @@ This repository is participating in **Hacktoberfest 2025**! We welcome contribut
 3. **Check** our [Contributing Guidelines](CONTRIBUTING.md)
 4. **Look** for issues labeled `hacktoberfest` or `good first issue`
 5. **Create** a pull request with your contribution
-6. **Get recognized** as a contributor after 15 approved PRs!
+6. **Get recognized** as a collaborator after 15 approved PRs!
 
 ---
 
@@ -220,7 +220,7 @@ Navigate to `/db-console` to access the database query interface:
 - **[Contributing Guidelines](CONTRIBUTING.md)** - How to contribute to the project
 - **[Code of Conduct](CODE_OF_CONDUCT.md)** - Community standards and behavior
 - **[Security Policy](SECURITY.md)** - Security guidelines and vulnerability reporting
-- **[Contributors](CONTRIBUTORS.md)** - List of project contributors
+- **[Contributors](CONTRIBUTORS.md)** - List of project collaborators
 - **[Roadmap](docs/ROADMAP.md)** - Detailed development roadmap and future plans
 - **[API Documentation](docs/API.md)** - Complete API reference
 - **[Development Guide](docs/DEVELOPMENT.md)** - Development setup and guidelines
@@ -360,7 +360,7 @@ We welcome contributions from the community! This project is participating in Ha
 After **15 approved pull requests**, you'll be:
 
 - Added to our [Contributors](CONTRIBUTORS.md) list
-- Recognized as a project contributor
+- Recognized as a project collaborator
 - Eligible for Hacktoberfest completion
 
 ---
