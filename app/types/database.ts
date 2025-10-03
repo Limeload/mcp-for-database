@@ -10,7 +10,7 @@ export interface DatabaseQueryRequest {
 // API response types
 export interface DatabaseQueryResponse {
   success: boolean;
-  data?: any[];
+  data?: Record<string, unknown>[];
   error?: string;
   query?: string;
   executionTime?: number;

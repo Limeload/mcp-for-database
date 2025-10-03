@@ -280,8 +280,7 @@ export default function DbConsole() {
   /**
    * Render table headers from the first row of data
    */
-
-  const renderTableHeaders = (data: any[]) => {
+  const renderTableHeaders = (data: Record<string, unknown>[]) => {
     if (!data || data.length === 0) return null;
 
     const firstRow = data[0];
@@ -306,7 +305,7 @@ export default function DbConsole() {
   /**
    * Render table rows with data
    */
-  const renderTableRows = (data: any[]) => {
+  const renderTableRows = (data: Record<string, unknown>[]) => {
     if (!data || data.length === 0) return null;
 
     return (
@@ -568,6 +567,9 @@ export default function DbConsole() {
               )}
             </div>
           )}
+          
+          {/* Schema Display */}
+          {showSchema && renderSchema()}
         </div>
       </div>
     </>

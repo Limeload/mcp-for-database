@@ -404,7 +404,6 @@ export async function GET(request: NextRequest) {
     const now = Date.now();
 
     if (cachedEntry && (now - cachedEntry.timestamp) < CACHE_DURATION) {
-      console.log('Returning cached schema data for:', target);
       return NextResponse.json({
         success: true,
         data: cachedEntry.data,
@@ -447,10 +446,8 @@ export async function GET(request: NextRequest) {
       } else {
         throw new Error('MCP server responded with non-200 status');
       }
-    } catch (mcpError) {
-      console.log('MCP server not available, using mock data:', mcpError);
-      
-      // Fallback to mock data for development/demo purposes
+    } catch {
+      // Fallback to mock data for development/demo purposes when MCP server is unavailable
       schemaMetadata = generateMockSchemaData(target);
     }
 
@@ -461,8 +458,6 @@ export async function GET(request: NextRequest) {
       version: schemaMetadata.version
     };
 
-    console.log('Fetched and cached new schema data for:', target);
-
     return NextResponse.json({
       success: true,
       data: schemaMetadata,
@@ -471,8 +466,6 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Schema API error:', error);
-    
     const errorResponse: DatabaseErrorResponse = {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error occurred'
@@ -538,8 +531,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(errorResponse, { status: 400 });
 
   } catch (error) {
-    console.error('Schema POST API error:', error);
-    
     const errorResponse: DatabaseErrorResponse = {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error occurred'
