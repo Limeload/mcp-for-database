@@ -6,8 +6,23 @@ Copy this file to `.env.local` and update the values for your environment.
 # MCP Server Configuration
 MCP_SERVER_URL=http://localhost:8000
 
-# Database Configuration (if needed)
-DATABASE_URL=your_database_url
+# Database Configuration
+# For SQLite local development (recommended for development)
+DATABASE_TYPE=sqlite
+DATABASE_URL=sqlite:///local_dev.db
+
+# For production databases (uncomment and configure as needed)
+# DATABASE_TYPE=sqlalchemy
+# DATABASE_URL=postgresql://user:password@localhost:5432/dbname
+
+# For Snowflake (uncomment and configure as needed)
+# DATABASE_TYPE=snowflake
+# SNOWFLAKE_ACCOUNT=your_account
+# SNOWFLAKE_USER=your_user
+# SNOWFLAKE_PASSWORD=your_password
+# SNOWFLAKE_DATABASE=your_database
+# SNOWFLAKE_SCHEMA=your_schema
+# SNOWFLAKE_WAREHOUSE=your_warehouse
 
 # Application Configuration
 NODE_ENV=development
