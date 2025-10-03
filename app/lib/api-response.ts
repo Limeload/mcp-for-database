@@ -46,6 +46,17 @@ export function createSuccessResponse<T>(
   return response;
 }
 
+export function createValidatedSuccessResponse<T extends z.ZodTypeAny>(
+  data: unknown,
+  dataSchema: T,
+  metadata?: Record<string, unknown>
+): SuccessResponse<z.infer<T>> {
+  const validatedData = dataSchema.parse(data);
+  const response = createSuccessResponse(validatedData, metadata);
+  SuccessResponseSchema(dataSchema).parse(response);
+  return response;
+}
+
 export function createErrorResponse(
   message: string,
   code?: string,
@@ -68,5 +79,47 @@ export function createErrorResponse(
   if (metadata) {
     response.metadata = metadata;
   }
+  ErrorResponseSchema.parse(response);
   return response;
+}
+
+export function validateApiResponse(response: unknown): ApiResponse<unknown> {
+  if (typeof response !== 'object' || response === null) {
+    throw new Error('Response must be an object');
+  }
+
+  const obj = response as Record<string, unknown>;
+
+  if (obj.status === 'error') {
+    return ErrorResponseSchema.parse(response);
+  }
+
+  if (obj.status === 'success') {
+    return SuccessResponseSchema(z.unknown()).parse(response);
+  }
+
+  throw new Error(`Invalid response status: ${obj.status}`);
+}
+
+export function validateApiResponseWithSchema<T extends z.ZodTypeAny>(
+  response: unknown,
+  dataSchema: T
+): ApiResponse<z.infer<T>> {
+  if (typeof response !== 'object' || response === null) {
+    throw new Error('Response must be an object');
+  }
+
+  const obj = response as Record<string, unknown>;
+
+  if (obj.status === 'error') {
+    return ErrorResponseSchema.parse(response);
+  }
+
+  if (obj.status === 'success') {
+    return SuccessResponseSchema(dataSchema).parse(response) as SuccessResponse<
+      z.infer<T>
+    >;
+  }
+
+  throw new Error(`Invalid response status: ${obj.status}`);
 }
