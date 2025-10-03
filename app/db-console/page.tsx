@@ -1,4 +1,4 @@
-import DbConsole from '@/app/components/DbConsole';
+import DbConsole from "@/app/components/DbConsole";
 
 /**
  * Database Console Page

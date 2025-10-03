@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { DatabaseTarget, DatabaseQueryResponse } from '@/app/types/database';
+import { useState, useEffect } from "react";
+import { DatabaseTarget, DatabaseQueryResponse, SchemaMetadata } from "@/app/types/database";
 
 /**
  * DbConsole Component
@@ -13,6 +13,7 @@ import { DatabaseTarget, DatabaseQueryResponse } from '@/app/types/database';
  * - Results display in a styled table
  * - Error handling and user feedback
  * - Dark mode toggle functionality
+ * - Schema viewing functionality
  */
 export default function DbConsole() {
   const [prompt, setPrompt] = useState('');
@@ -21,6 +22,9 @@ export default function DbConsole() {
   const [result, setResult] = useState<DatabaseQueryResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [schema, setSchema] = useState<SchemaMetadata | null>(null);
+  const [isLoadingSchema, setIsLoadingSchema] = useState(false);
+  const [showSchema, setShowSchema] = useState(false);
 
   // Load dark mode preference on mount
   useEffect(() => {
@@ -86,9 +90,197 @@ export default function DbConsole() {
   };
 
   /**
+   * Handle schema fetching
+   * Calls the API route to fetch database schema metadata
+   */
+  const handleFetchSchema = async () => {
+    setIsLoadingSchema(true);
+    setError(null);
+
+    try {
+      const response = await fetch(`/api/schema?target=${target}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setSchema(data.data);
+        setShowSchema(true);
+      } else {
+        setError(data.error || "Failed to fetch schema");
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Network error occurred");
+    } finally {
+      setIsLoadingSchema(false);
+    }
+  };
+
+  /**
+   * Render schema tables in a structured format
+   */
+  const renderSchema = () => {
+    if (!schema) return null;
+
+    return (
+      <div className="mt-6 p-6 bg-gray-50 dark:bg-gray-800 rounded-lg">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+            Database Schema ({target})
+          </h3>
+          <button
+            onClick={() => setShowSchema(false)}
+            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+          <div className="bg-blue-100 dark:bg-blue-900 p-3 rounded">
+            <div className="text-sm text-blue-800 dark:text-blue-200">Total Tables</div>
+            <div className="text-xl font-bold text-blue-900 dark:text-blue-100">{schema.totalTables}</div>
+          </div>
+          <div className="bg-green-100 dark:bg-green-900 p-3 rounded">
+            <div className="text-sm text-green-800 dark:text-green-200">Total Columns</div>
+            <div className="text-xl font-bold text-green-900 dark:text-green-100">{schema.totalColumns}</div>
+          </div>
+          <div className="bg-purple-100 dark:bg-purple-900 p-3 rounded">
+            <div className="text-sm text-purple-800 dark:text-purple-200">Schemas</div>
+            <div className="text-xl font-bold text-purple-900 dark:text-purple-100">{schema.schemas.length}</div>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          {schema.tables.map((table, index) => (
+            <div key={index} className="bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
+              <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-600">
+                <div className="flex justify-between items-center">
+                  <h4 className="text-md font-semibold text-gray-900 dark:text-gray-100">
+                    {table.schema}.{table.name}
+                  </h4>
+                  <div className="flex space-x-2 text-xs">
+                    <span className="bg-gray-100 dark:bg-gray-600 px-2 py-1 rounded text-gray-700 dark:text-gray-300">
+                      {table.type}
+                    </span>
+                    {table.rowCount && (
+                      <span className="bg-blue-100 dark:bg-blue-900 px-2 py-1 rounded text-blue-700 dark:text-blue-300">
+                        {table.rowCount.toLocaleString()} rows
+                      </span>
+                    )}
+                  </div>
+                </div>
+                {table.description && (
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{table.description}</p>
+                )}
+              </div>
+              
+              <div className="px-4 py-3">
+                <div className="overflow-x-auto">
+                  <table className="min-w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-gray-200 dark:border-gray-600">
+                        <th className="text-left py-2 px-3 font-medium text-gray-700 dark:text-gray-300">Column</th>
+                        <th className="text-left py-2 px-3 font-medium text-gray-700 dark:text-gray-300">Type</th>
+                        <th className="text-left py-2 px-3 font-medium text-gray-700 dark:text-gray-300">Constraints</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {table.columns.map((column, colIndex) => (
+                        <tr key={colIndex} className="border-b border-gray-100 dark:border-gray-700">
+                          <td className="py-2 px-3">
+                            <div className="flex items-center space-x-2">
+                              <span className="text-gray-900 dark:text-gray-100 font-mono">{column.name}</span>
+                              {column.isPrimaryKey && (
+                                <span className="bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 px-1 py-0.5 rounded text-xs">PK</span>
+                              )}
+                              {column.isForeignKey && (
+                                <span className="bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 px-1 py-0.5 rounded text-xs">FK</span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="py-2 px-3 text-gray-700 dark:text-gray-300 font-mono text-xs">
+                            {column.dataType}
+                            {column.maxLength && `(${column.maxLength})`}
+                            {column.precision && column.scale !== undefined && `(${column.precision},${column.scale})`}
+                          </td>
+                          <td className="py-2 px-3">
+                            <div className="flex flex-wrap gap-1">
+                              {!column.isNullable && (
+                                <span className="bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 px-1 py-0.5 rounded text-xs">NOT NULL</span>
+                              )}
+                              {column.defaultValue && (
+                                <span className="bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 px-1 py-0.5 rounded text-xs">DEFAULT</span>
+                              )}
+                              {column.constraints.map((constraint, constraintIndex) => (
+                                <span key={constraintIndex} className="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-1 py-0.5 rounded text-xs">
+                                  {constraint}
+                                </span>
+                              ))}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                
+                {table.indexes.length > 0 && (
+                  <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
+                    <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Indexes:</h5>
+                    <div className="flex flex-wrap gap-2">
+                      {table.indexes.map((index, indexIndex) => (
+                        <span key={indexIndex} className="bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 px-2 py-1 rounded text-xs">
+                          {index.name} ({index.columns.join(', ')}) {index.isUnique && '- UNIQUE'}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+        
+        {schema.relationships.length > 0 && (
+          <div className="mt-6">
+            <h4 className="text-md font-semibold text-gray-900 dark:text-gray-100 mb-3">Relationships:</h4>
+            <div className="space-y-2">
+              {schema.relationships.map((rel, index) => (
+                <div key={index} className="bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded p-3">
+                  <div className="flex items-center space-x-2 text-sm">
+                    <span className="font-mono text-gray-900 dark:text-gray-100">{rel.fromTable}</span>
+                    <span className="text-gray-500 dark:text-gray-400">({rel.fromColumns.join(', ')})</span>
+                    <span className="text-gray-500 dark:text-gray-400">→</span>
+                    <span className="font-mono text-gray-900 dark:text-gray-100">{rel.toTable}</span>
+                    <span className="text-gray-500 dark:text-gray-400">({rel.toColumns.join(', ')})</span>
+                    <span className="bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 px-2 py-1 rounded text-xs">
+                      {rel.type.toUpperCase()}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        
+        <div className="mt-4 text-xs text-gray-500 dark:text-gray-400">
+          Schema version: {schema.version} | Last updated: {new Date(schema.lastUpdated).toLocaleString()}
+        </div>
+      </div>
+    );
+  };
+
+  /**
    * Render table headers from the first row of data
    */
-  const renderTableHeaders = (data: any[]) => {
+  const renderTableHeaders = (data: Record<string, unknown>[]) => {
     if (!data || data.length === 0) return null;
 
     const firstRow = data[0];
@@ -113,7 +305,7 @@ export default function DbConsole() {
   /**
    * Render table rows with data
    */
-  const renderTableRows = (data: any[]) => {
+  const renderTableRows = (data: Record<string, unknown>[]) => {
     if (!data || data.length === 0) return null;
 
     return (
@@ -202,12 +394,12 @@ export default function DbConsole() {
               </select>
             </div>
 
-            {/* Submit Button */}
-            <div>
+            {/* Action Buttons */}
+            <div className="flex space-x-4">
               <button
                 type="submit"
                 disabled={isLoading || !prompt.trim()}
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? (
                   <div className="flex items-center">
@@ -235,6 +427,47 @@ export default function DbConsole() {
                   </div>
                 ) : (
                   'Execute Query'
+                )}
+              </button>
+              
+              <button
+                type="button"
+                onClick={handleFetchSchema}
+                disabled={isLoadingSchema}
+                className="flex justify-center py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isLoadingSchema ? (
+                  <div className="flex items-center">
+                    <svg
+                      className="animate-spin -ml-1 mr-3 h-5 w-5 text-gray-500"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    Loading Schema...
+                  </div>
+                ) : (
+                  <div className="flex items-center">
+                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 1.79 4 4 4h8c2.21 0 4-1.79 4-4V7c0-2.21-1.79-4-4-4H8c-2.21 0-4 1.79-4 4z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 9h6v6H9z" />
+                    </svg>
+                    View Schema
+                  </div>
                 )}
               </button>
             </div>
@@ -335,6 +568,9 @@ export default function DbConsole() {
               )}
             </div>
           )}
+          
+          {/* Schema Display */}
+          {showSchema && renderSchema()}
         </div>
       </div>
     </>
