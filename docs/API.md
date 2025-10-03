@@ -100,6 +100,179 @@ curl -X POST http://localhost:3000/api/db/query \
 | 400  | Bad Request - Invalid request parameters  |
 | 500  | Internal Server Error - Server-side error |
 
+### GET `/api/schema`
+
+Fetch database schema metadata including tables, columns, relationships, and indexes.
+
+#### Request
+
+**URL:** `/api/schema`  
+**Method:** `GET`  
+**Content-Type:** `application/json`
+
+**Query Parameters:**
+
+- `target` (string, required): Database target type
+  - `"sqlalchemy"`: For SQLAlchemy-based applications
+  - `"snowflake"`: For Snowflake data warehouse
+
+#### Response
+
+**Success Response (200):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "version": "1.0.0-mock-1234567890",
+    "lastUpdated": "2024-01-15T10:30:00.000Z",
+    "tables": [
+      {
+        "name": "users",
+        "schema": "public",
+        "type": "table",
+        "columns": [
+          {
+            "name": "id",
+            "dataType": "INTEGER",
+            "isNullable": false,
+            "isPrimaryKey": true,
+            "isForeignKey": false,
+            "constraints": ["PRIMARY KEY", "AUTO_INCREMENT"],
+            "precision": 10,
+            "scale": 0
+          }
+        ],
+        "primaryKeys": ["id"],
+        "foreignKeys": [],
+        "indexes": [
+          {
+            "name": "idx_users_email",
+            "columns": ["email"],
+            "isUnique": true,
+            "type": "BTREE"
+          }
+        ],
+        "rowCount": 1250,
+        "description": "User accounts table"
+      }
+    ],
+    "relationships": [
+      {
+        "type": "one-to-many",
+        "fromTable": "users",
+        "fromColumns": ["id"],
+        "toTable": "orders",
+        "toColumns": ["user_id"],
+        "constraintName": "fk_orders_user_id"
+      }
+    ],
+    "schemas": ["public"],
+    "totalTables": 2,
+    "totalColumns": 9
+  },
+  "cached": false,
+  "timestamp": 1705312200000
+}
+```
+
+**Error Response (400/500):**
+
+```json
+{
+  "success": false,
+  "error": "Missing required parameter: target is required"
+}
+```
+
+#### Example Requests
+
+**Fetch SQLAlchemy Schema:**
+
+```bash
+curl -X GET "http://localhost:3000/api/schema?target=sqlalchemy" \
+  -H "Content-Type: application/json"
+```
+
+**Fetch Snowflake Schema:**
+
+```bash
+curl -X GET "http://localhost:3000/api/schema?target=snowflake" \
+  -H "Content-Type: application/json"
+```
+
+### POST `/api/schema`
+
+Manage schema cache operations.
+
+#### Request
+
+**URL:** `/api/schema`  
+**Method:** `POST`  
+**Content-Type:** `application/json`
+
+**Request Body:**
+
+```json
+{
+  "target": "sqlalchemy" | "snowflake",
+  "action": "refresh" | "version"
+}
+```
+
+**Parameters:**
+
+- `target` (string, required): Database target type
+- `action` (string, required): Action to perform
+  - `"refresh"`: Clear schema cache for the target
+  - `"version"`: Get cached schema version information
+
+#### Response
+
+**Success Response (200):**
+
+```json
+{
+  "success": true,
+  "message": "Schema cache cleared for sqlalchemy"
+}
+```
+
+**Version Check Response:**
+
+```json
+{
+  "success": true,
+  "version": "1.0.0-mock-1234567890",
+  "cached": true,
+  "lastUpdated": "2024-01-15T10:30:00.000Z"
+}
+```
+
+#### Example Requests
+
+**Refresh Schema Cache:**
+
+```bash
+curl -X POST "http://localhost:3000/api/schema" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "target": "sqlalchemy",
+    "action": "refresh"
+  }'
+```
+
+**Check Schema Version:**
+
+```bash
+curl -X POST "http://localhost:3000/api/schema" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "target": "snowflake",
+    "action": "version"
+  }'
+```
+
 ## Rate Limiting
 
 Currently, there are no rate limits imposed. This may change in future versions.
