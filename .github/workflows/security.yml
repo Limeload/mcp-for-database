@@ -10,6 +10,8 @@ on:
 
 jobs:
   security:
+    permissions:
+      contents: read
     name: Security Audit
     runs-on: ubuntu-latest
 

@@ -49,6 +49,43 @@ This repository is participating in **Hacktoberfest 2025**! We welcome contribut
 
 ### Quick Start for Contributors
 
+
+---
+
+## Local development (mock MCP)
+
+If you don't have a running MCP-DB Connector locally, the repository includes a small mock server to exercise the frontend during development.
+
+- Start the mock MCP server (listens on port 8000 by default):
+
+```powershell
+npm run mock:mcp
+```
+
+- Start the Next.js dev server in a separate terminal:
+
+```powershell
+npm run dev
+```
+
+- Open the app and try the Test Connection button:
+
+  - Visit http://localhost:3000/db-console
+  - Choose a target (e.g. `snowflake` or `sqlite`) and click **Test Connection**
+
+- You can also call the mock endpoints directly for quick checks:
+
+```powershell
+# POST to mock test-connection
+Invoke-RestMethod -Method Post -Uri http://127.0.0.1:8000/test-connection -Body (@{ target = 'snowflake' } | ConvertTo-Json) -ContentType 'application/json'
+
+# POST a mock query
+Invoke-RestMethod -Method Post -Uri http://127.0.0.1:8000/query -Body (@{ sql = 'select 1' } | ConvertTo-Json) -ContentType 'application/json'
+```
+
+Notes:
+- The mock server logs incoming requests to the terminal to help with debugging.
+- If port 8000 is already in use, set `MOCK_MCP_PORT` before running the mock, and update `MCP_SERVER_URL` in `.env.local` if necessary.
 1. **Fork** this repository
 2. **Star** the repository (optional but appreciated!)
 3. **Check** our [Contributing Guidelines](CONTRIBUTING.md)
