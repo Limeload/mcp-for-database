@@ -56,7 +56,7 @@ export default function DbConsole() {
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<DatabaseQueryResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [schema, setSchema] = useState<SchemaMetadata | null>(null);
   const [isLoadingSchema, setIsLoadingSchema] = useState(false);
   const [showSchema, setShowSchema] = useState(false);
@@ -80,25 +80,31 @@ export default function DbConsole() {
       ? (connectionStatus.diagnostics as Record<string, unknown>)
       : undefined;
 
-  // Load dark mode preference on mount
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('darkMode');
-    const prefersDark = window.matchMedia(
-      '(prefers-color-scheme: dark)'
-    ).matches;
-    const shouldBeDark =
-      savedTheme === 'true' || (savedTheme === null && prefersDark);
+  // Apply theme to document body
+  const applyTheme = (currentTheme: 'light' | 'dark') => {
+    // Remove existing theme classes
+    document.body.classList.remove('light-mode', 'dark-mode');
+    if (currentTheme === 'light') {
+      document.body.classList.add('light-mode');
+    } else {
+      document.body.classList.add('dark-mode');
+    }
+  };
 
-    setIsDarkMode(shouldBeDark);
-    document.body.classList.toggle('dark-mode', shouldBeDark);
+  // Load theme preference on mount
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
+    const currentTheme: 'light' | 'dark' = savedTheme === 'dark' ? 'dark' : 'light';
+    setTheme(currentTheme);
+    applyTheme(currentTheme);
   }, []);
 
-  // Toggle dark mode
-  const toggleDarkMode = () => {
-    const newDarkMode = !isDarkMode;
-    setIsDarkMode(newDarkMode);
-    document.body.classList.toggle('dark-mode', newDarkMode);
-    localStorage.setItem('darkMode', newDarkMode.toString());
+  // Toggle between light <-> dark
+  const toggleTheme = () => {
+    const nextTheme: 'light' | 'dark' = theme === 'light' ? 'dark' : 'light';
+    setTheme(nextTheme);
+    applyTheme(nextTheme);
+    localStorage.setItem('theme', nextTheme);
   };
 
   /**
@@ -764,13 +770,15 @@ export default function DbConsole() {
 
   return (
     <>
-      {/* Dark Mode Toggle Button */}
+      {/* Theme Toggle Button */}
       <button
-        onClick={toggleDarkMode}
+        onClick={toggleTheme}
         className="fixed top-6 right-6 z-50 p-3 rounded-full bg-white dark:bg-gray-800 shadow-lg border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-all duration-300 hover:scale-105"
-        aria-label="Toggle dark mode"
+        aria-label={`Current theme: ${theme}. Click to toggle`}
+        title={`Current: ${theme === 'light' ? 'Light' : 'Dark'} mode`}
       >
-        {isDarkMode ? (
+        {theme === 'light' ? (
+          // Light mode icon (sun)
           <svg
             className="w-5 h-5 text-yellow-500"
             fill="currentColor"
@@ -783,8 +791,9 @@ export default function DbConsole() {
             />
           </svg>
         ) : (
+          // Dark mode icon (moon)
           <svg
-            className="w-5 h-5 text-gray-700 dark:text-gray-300"
+            className="w-5 h-5 text-blue-400"
             fill="currentColor"
             viewBox="0 0 20 20"
           >
