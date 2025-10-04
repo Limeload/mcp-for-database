@@ -14,6 +14,12 @@ import {
 } from '@/app/types/database';
 import { queryTemplates, QueryTemplate } from '@/app/config/templates';
 
+type EnhancedError = {
+  error: string;
+  details?: string;
+  suggestion?: string;
+};
+
 /**
  * DbConsole Component
  * A reusable component for database query interface
@@ -61,7 +67,7 @@ export default function DbConsole() {
   const [target, setTarget] = useState<DatabaseTarget>('sqlalchemy');
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<DatabaseQueryResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<EnhancedError | null>(null);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [schema, setSchema] = useState<SchemaMetadata | null>(null);
   const [isLoadingSchema, setIsLoadingSchema] = useState(false);
@@ -88,20 +94,16 @@ export default function DbConsole() {
       ? (connectionStatus.diagnostics as Record<string, unknown>)
       : undefined;
 
-  // Load dark mode preference on mount
+  // Load dark mode preference
   useEffect(() => {
     const savedTheme = localStorage.getItem('darkMode');
-    const prefersDark = window.matchMedia(
-      '(prefers-color-scheme: dark)'
-    ).matches;
-    const shouldBeDark =
-      savedTheme === 'true' || (savedTheme === null && prefersDark);
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const shouldBeDark = savedTheme === 'true' || (savedTheme === null && prefersDark);
 
     setIsDarkMode(shouldBeDark);
     document.body.classList.toggle('dark-mode', shouldBeDark);
   }, []);
 
-  // Toggle dark mode
   const toggleDarkMode = () => {
     const newDarkMode = !isDarkMode;
     setIsDarkMode(newDarkMode);
@@ -111,13 +113,12 @@ export default function DbConsole() {
 
   /**
    * Handle form submission
-   * Calls the API route to execute database query
    */
 const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!prompt.trim()) {
-      setError('Please enter a prompt');
+      setError({ error: 'Please enter a prompt' });
       return;
     }
 
@@ -128,13 +129,8 @@ const handleSubmit = async (e: React.FormEvent) => {
     try {
       const response = await fetch('/api/db/query', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          prompt: prompt.trim(),
-          target
-        })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: prompt.trim(), target })
       });
 
       const data = await response.json();
@@ -150,7 +146,9 @@ const handleSubmit = async (e: React.FormEvent) => {
         setError(data.error?.message || 'An error occurred');
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Network error occurred');
+      setError({
+        error: err instanceof Error ? err.message : 'Network error occurred'
+      });
     } finally {
       setIsLoading(false);
     }
@@ -781,10 +779,7 @@ const handleSubmit = async (e: React.FormEvent) => {
    */
   const renderTableHeaders = (data: Record<string, unknown>[]) => {
     if (!data || data.length === 0) return null;
-
-    const firstRow = data[0];
-    const headers = Object.keys(firstRow);
-
+    const headers = Object.keys(data[0]);
     return (
       <thead className="bg-gray-50 dark:bg-gray-700">
         <tr>
@@ -806,7 +801,6 @@ const handleSubmit = async (e: React.FormEvent) => {
    */
   const renderTableRows = (data: Record<string, unknown>[]) => {
     if (!data || data.length === 0) return null;
-
     return (
       <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
         {data.map((row, rowIndex) => (
@@ -1315,7 +1309,7 @@ const handleSubmit = async (e: React.FormEvent) => {
             </div>
           )}
 
-          {/* Results Display */}
+          {/* Results */}
           {result && result.success && (
             <div className="px-8 pb-8">
               {result.mocked && (
@@ -1356,7 +1350,6 @@ const handleSubmit = async (e: React.FormEvent) => {
                 </div>
               </div>
 
-              {/* Query Display */}
               {result.query && (
                 <div className="mb-8">
                   <div className="bg-gray-50 dark:bg-gray-700/50 p-1 rounded-2xl">
@@ -1385,7 +1378,6 @@ const handleSubmit = async (e: React.FormEvent) => {
                 </div>
               )}
 
-              {/* Results Table */}
               {result.data && result.data.length > 0 ? (
                 <div>
                   <div className="bg-gray-50 dark:bg-gray-700/50 p-1 rounded-2xl">
