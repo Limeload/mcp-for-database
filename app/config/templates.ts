@@ -17,7 +17,7 @@ export const queryTemplates: QueryTemplate[] = [
     description: 'Find users registered in the last N days',
     defaultPrompt: 'Show all users who registered in the last {{days}} days',
     placeholders: ['days'],
-    databasesSupported: ['sqlalchemy', 'sqlite', 'snowflake'],
+    databasesSupported: ['sqlalchemy', 'sqlite', 'snowflake']
   },
   {
     id: 'top_products',
@@ -25,7 +25,7 @@ export const queryTemplates: QueryTemplate[] = [
     description: 'Lists the top 10 selling products by total revenue',
     defaultPrompt: 'Find the top 10 products by total sales',
     placeholders: [],
-    databasesSupported: ['sqlalchemy', 'sqlite'],
+    databasesSupported: ['sqlalchemy', 'sqlite']
   },
   {
     id: 'user_orders',
@@ -33,7 +33,7 @@ export const queryTemplates: QueryTemplate[] = [
     description: 'Show all orders placed by a specific user',
     defaultPrompt: 'Show all orders placed by user with ID {{user_id}}',
     placeholders: ['user_id'],
-    databasesSupported: ['sqlalchemy', 'sqlite', 'snowflake'],
+    databasesSupported: ['sqlalchemy', 'sqlite', 'snowflake']
   },
   {
     id: 'sales_by_date',
@@ -41,7 +41,7 @@ export const queryTemplates: QueryTemplate[] = [
     description: 'Get total sales between two dates',
     defaultPrompt: 'Show total sales from {{start_date}} to {{end_date}}',
     placeholders: ['start_date', 'end_date'],
-    databasesSupported: ['sqlalchemy', 'sqlite', 'snowflake'],
+    databasesSupported: ['sqlalchemy', 'sqlite', 'snowflake']
   },
   {
     id: 'active_customers',
@@ -49,7 +49,7 @@ export const queryTemplates: QueryTemplate[] = [
     description: 'List customers who made a purchase in the last month',
     defaultPrompt: 'List all customers who made a purchase in the last month',
     placeholders: [],
-    databasesSupported: ['sqlalchemy', 'sqlite', 'snowflake'],
+    databasesSupported: ['sqlalchemy', 'sqlite', 'snowflake']
   },
   {
     id: 'inventory_below_threshold',
@@ -57,15 +57,16 @@ export const queryTemplates: QueryTemplate[] = [
     description: 'Find products with inventory below a certain threshold',
     defaultPrompt: 'Show all products with inventory less than {{threshold}}',
     placeholders: ['threshold'],
-    databasesSupported: ['sqlalchemy', 'sqlite'],
+    databasesSupported: ['sqlalchemy', 'sqlite']
   },
   {
     id: 'user_login_activity',
     name: 'User Login Activity',
     description: 'Show login activity for a specific user in a date range',
-    defaultPrompt: 'Show login activity for user {{user_id}} from {{start_date}} to {{end_date}}',
+    defaultPrompt:
+      'Show login activity for user {{user_id}} from {{start_date}} to {{end_date}}',
     placeholders: ['user_id', 'start_date', 'end_date'],
-    databasesSupported: ['sqlalchemy', 'sqlite', 'snowflake'],
+    databasesSupported: ['sqlalchemy', 'sqlite', 'snowflake']
   },
   {
     id: 'top_customers',
@@ -73,6 +74,6 @@ export const queryTemplates: QueryTemplate[] = [
     description: 'List the top N customers by total purchase amount',
     defaultPrompt: 'List the top {{n}} customers by total purchase amount',
     placeholders: ['n'],
-    databasesSupported: ['sqlalchemy', 'sqlite', 'snowflake'],
-  },
+    databasesSupported: ['sqlalchemy', 'sqlite', 'snowflake']
+  }
 ];
