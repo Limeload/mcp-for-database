@@ -355,7 +355,94 @@ body {
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
 }
 
+/* Light mode schema display - improve badge visibility */
+.light-mode .bg-yellow-100 {
+  background-color: #fef3c7 !important;
+}
 
+.light-mode .text-yellow-800 {
+  color: #92400e !important;
+}
+
+.light-mode .bg-orange-100 {
+  background-color: #fed7aa !important;
+}
+
+.light-mode .text-orange-800 {
+  color: #9a3412 !important;
+}
+
+.light-mode .bg-red-100 {
+  background-color: #fee2e2 !important;
+}
+
+.light-mode .text-red-800 {
+  color: #991b1b !important;
+}
+
+.light-mode .bg-purple-100 {
+  background-color: #ede9fe !important;
+}
+
+.light-mode .text-purple-800 {
+  color: #5b21b6 !important;
+}
+
+.light-mode .bg-indigo-100 {
+  background-color: #e0e7ff !important;
+}
+
+.light-mode .text-indigo-800 {
+  color: #3730a3 !important;
+}
+
+.light-mode .bg-blue-100 {
+  background-color: #dbeafe !important;
+}
+
+.light-mode .text-blue-800 {
+  color: #1e40af !important;
+}
+
+.light-mode .text-blue-300:not(.text-transparent) {
+  color: #1e40af !important;
+}
+
+.light-mode .bg-green-100 {
+  background-color: #dcfce7 !important;
+}
+
+.light-mode .text-green-800 {
+  color: #166534 !important;
+}
+
+/* Light mode data type badges - better contrast */
+.light-mode .bg-blue-50 {
+  background-color: #eff6ff !important;
+}
+
+.light-mode .text-blue-700 {
+  color: #1d4ed8 !important;
+}
+
+/* Ensure dark container backgrounds appear white in light mode */
+.light-mode .bg-gray-900 {
+  background-color: #ffffff !important;
+}
+
+/* Neutralize dark: gradient tokens (classes with colon) when in light-mode
+   so elements that rely on dark gradients don't stay dark under certain
+   compiled class patterns. These target the literal Tailwind class names
+   that include a colon (escaped here). */
+.light-mode .dark\:from-gray-800 {
+  --tw-gradient-from: #ffffff !important;
+}
+.light-mode .dark\:via-gray-700 {
+  --tw-gradient-via: #ffffff !important;
+}
+.light-mode .dark\:to-gray-800 {
+  --tw-gradient-to: #ffffff !important;
+}
 /* Dark mode specific enhancements */
 .dark-mode .shadow-xl-modern {
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
