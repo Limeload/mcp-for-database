@@ -106,47 +106,47 @@ export default function DbConsole() {
    * Calls the API route to execute database query
    */
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    if (!prompt.trim()) {
-      setError('Please enter a prompt');
-      return;
-    }
+  if (!prompt.trim()) {
+    setError('Please enter a prompt');
+    return;
+  }
 
-    setIsLoading(true);
-    setError(null);
-    setResult(null);
+  setIsLoading(true);
+  setError(null);
+  setResult(null);
 
-    try {
-      const response = await fetch('/api/db/query', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          prompt: prompt.trim(),
-          target
-        })
+  try {
+    const response = await fetch('/api/db/query', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        prompt: prompt.trim(),
+        target
+      })
+    });
+
+    const data = await response.json();
+
+    if (data.status === 'success') {
+      setResult({
+        success: true,
+        data: data.data,
+        query: data.metadata?.query,
+        executionTime: data.metadata?.executionTime
       });
-
-      const data = await response.json();
-
-      if (data.status === 'success') {
-        setResult({
-          success: true,
-          data: data.data,
-          query: data.metadata?.query,
-          executionTime: data.metadata?.executionTime
-        });
-      } else {
-        setError(data.error?.message || 'An error occurred');
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Network error occurred');
-    } finally {
-      setIsLoading(false);
+    } else {
+      setError(data.error?.message || 'An error occurred');
     }
-  };
+  } catch (err) {
+    setError(err instanceof Error ? err.message : 'Network error occurred');
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   /**
    * Handle schema fetching
@@ -1371,6 +1371,33 @@ export default function DbConsole() {
                   </p>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Add loading indicator with text to results area */}
+          {isLoading && (
+            <div className="flex flex-col justify-center items-center py-12">
+              <svg
+                className="animate-spin h-10 w-10 text-blue-600 mb-4"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                />
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.972 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                />
+              </svg>
+              <p className="text-lg font-medium text-gray-700 dark:text-gray-300">Loading queries...</p>
             </div>
           )}
 
