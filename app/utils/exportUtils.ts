@@ -15,8 +15,8 @@ export interface ExportData {
 }
 
 // Constants for large dataset handling
-const LARGE_DATASET_THRESHOLD = 1000; // rows
-const CHUNK_SIZE = 500; // Process in chunks for very large datasets
+const LARGE_DATASET_THRESHOLD = 1000; 
+
 
 /**
  * Export data as CSV format
@@ -41,8 +41,8 @@ export function exportToCSV(
   // For large datasets, process in chunks to avoid memory issues
   const isLargeDataset = data.length > LARGE_DATASET_THRESHOLD;
 
-  if (isLargeDataset) {
-    console.log(
+  if (isLargeDataset && process.env.NODE_ENV !== 'production') {
+    console.debug(
       `Processing large dataset: ${data.length} rows, ${columns.length} columns`
     );
   }
@@ -65,8 +65,8 @@ export function exportToCSV(
   // Download file
   downloadFile(csvContent, filename, 'text/csv;charset=utf-8;');
 
-  if (isLargeDataset) {
-    console.log(`Successfully exported ${data.length} rows to ${filename}`);
+  if (isLargeDataset && process.env.NODE_ENV !== 'production') {
+    console.debug(`Successfully exported ${data.length} rows to ${filename}`);
   }
 }
 
@@ -135,7 +135,9 @@ export async function copyToClipboard(
     await navigator.clipboard.writeText(textContent);
     return true;
   } catch (error) {
-    console.error('Failed to copy to clipboard:', error);
+    if(process.env.NODE_ENV !== 'production'){
+    console.debug('Failed to copy to clipboard:', error);
+    }
     return false;
   }
 }
