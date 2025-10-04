@@ -16,6 +16,8 @@ async function checkDatabaseConnection(): Promise<boolean> {
 
     return res.ok;
   } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('Database connection check failed:', error);
     return false;
   }
 }
