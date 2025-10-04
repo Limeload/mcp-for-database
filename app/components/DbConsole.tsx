@@ -105,48 +105,48 @@ export default function DbConsole() {
    * Handle form submission
    * Calls the API route to execute database query
    */
-  const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
+const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-  if (!prompt.trim()) {
-    setError('Please enter a prompt');
-    return;
-  }
-
-  setIsLoading(true);
-  setError(null);
-  setResult(null);
-
-  try {
-    const response = await fetch('/api/db/query', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        prompt: prompt.trim(),
-        target
-      })
-    });
-
-    const data = await response.json();
-
-    if (data.status === 'success') {
-      setResult({
-        success: true,
-        data: data.data,
-        query: data.metadata?.query,
-        executionTime: data.metadata?.executionTime
-      });
-    } else {
-      setError(data.error?.message || 'An error occurred');
+    if (!prompt.trim()) {
+      setError('Please enter a prompt');
+      return;
     }
-  } catch (err) {
-    setError(err instanceof Error ? err.message : 'Network error occurred');
-  } finally {
-    setIsLoading(false);
-  }
-};
+
+    setIsLoading(true);
+    setError(null);
+    setResult(null);
+
+    try {
+      const response = await fetch('/api/db/query', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          prompt: prompt.trim(),
+          target
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.status === 'success') {
+        setResult({
+          success: true,
+          data: data.data,
+          query: data.metadata?.query,
+          executionTime: data.metadata?.executionTime
+        });
+      } else {
+        setError(data.error?.message || 'An error occurred');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Network error occurred');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   /**
    * Handle schema fetching
