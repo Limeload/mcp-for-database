@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-let serviceStartTime = Date.now();
+const serviceStartTime = Date.now();
 
 
 async function checkDatabaseConnection(): Promise<boolean> {
@@ -16,7 +16,6 @@ async function checkDatabaseConnection(): Promise<boolean> {
 
     return res.ok;
   } catch (error) {
-    console.error('Database connection check failed:', error);
     return false;
   }
 }
