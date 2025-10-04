@@ -183,46 +183,48 @@ For local development with SQLite, follow these additional steps:
 
 1. **Set up environment variables** for SQLite:
 
-    ```bash
-    # Create .env.local file
-    DATABASE_TYPE=sqlite
-    DATABASE_URL=sqlite:///local_dev.db
-    ```
+   ```bash
+   # Create .env.local file
+   DATABASE_TYPE=sqlite
+   DATABASE_URL=sqlite:///local_dev.db
+   ```
 
 2. **Initialize the SQLite database** (requires Python and SQLAlchemy):
 
-    ```bash
-    # Install Python dependencies (if not already installed)
-    pip install sqlalchemy
+   ```bash
+   # Install Python dependencies (if not already installed)
+   pip install sqlalchemy
 
-    # Initialize database
-    python scripts/init_sqlite.py
+   # Initialize database
+   python scripts/init_sqlite.py
 
-    # Optional: Add sample data
-    python scripts/seed_data.py
-    ```
+   # Optional: Add sample data
+   python scripts/seed_data.py
+   ```
 
 3. **Configure your MCP server** to use SQLite backend
 
-    **⚠️ Important**: The MCP-DB Connector server must be updated to support SQLite queries. The frontend now accepts SQLite as a target, but the backend server needs corresponding SQLite support.
+   **⚠️ Important**: The MCP-DB Connector server must be updated to support SQLite queries. The frontend now accepts SQLite as a target, but the backend server needs corresponding SQLite support.
 
 4. **Start both servers**:
 
-    ```bash
-    # Terminal 1: Start MCP server (with SQLite support)
-    # Your MCP server command here
+   ```bash
+   # Terminal 1: Start MCP server (with SQLite support)
+   # Your MCP server command here
 
-    # Terminal 2: Start Next.js development server
-    npm run dev
-    ```
+   # Terminal 2: Start Next.js development server
+   npm run dev
+   ```
 
 **SQLite Benefits for Development:**
+
 - No external database server required
 - File-based storage (`local_dev.db`)
 - Easy to reset and recreate
 - Perfect for testing and development
 
 **SQLite Limitations:**
+
 - Single-writer concurrency (not suitable for high-traffic production)
 - No built-in user authentication or permissions
 - Limited data types compared to PostgreSQL/MySQL
@@ -239,9 +241,9 @@ Navigate to `/db-console` to access the database query interface:
    - Example: "Find the top 10 products by sales"
 
 2. **Select Database Target**: Choose between:
-    - **SQLAlchemy**: For SQLAlchemy-based applications
-    - **Snowflake**: For Snowflake data warehouse
-    - **SQLite**: For local development with SQLite database
+   - **SQLAlchemy**: For SQLAlchemy-based applications
+   - **Snowflake**: For Snowflake data warehouse
+   - **SQLite**: For local development with SQLite database
 
 3. **Execute Query**: Click "Execute Query" to run your prompt
 
@@ -284,10 +286,13 @@ Execute a database query using natural language.
 
 ```json
 {
-  "success": true,
+  "status": "success",
   "data": [...],
-  "query": "SELECT ...",
-  "executionTime": 150
+  "error": null,
+  "metadata": {
+    "query": "SELECT ...",
+    "executionTime": 150
+  }
 }
 ```
 
@@ -295,8 +300,12 @@ Execute a database query using natural language.
 
 ```json
 {
-  "success": false,
-  "error": "Error message"
+  "status": "error",
+  "data": null,
+  "error": {
+    "message": "Error message",
+    "code": "VALIDATION_ERROR"
+  }
 }
 ```
 
