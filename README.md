@@ -71,9 +71,13 @@ Here are some screenshots/GIF showcasing the features of mcp-for-database:
    ![database-console-demo GIF](https://github.com/user-attachments/assets/dd31a131-0a12-49a7-87bd-480e1c764a99)
 
 *Watch how to use natural language to query your database:*
+
 *1. Connect to your preferred database (SQLite/Snowflake)*
+
 *2. Type your query in plain English*
+
 *3. See the results instantly in a formatted table*
+
 
 ### Quick Start for Contributors
 
