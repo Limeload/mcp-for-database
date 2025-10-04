@@ -1,6 +1,20 @@
 // Database target types
 export type DatabaseTarget = 'sqlalchemy' | 'snowflake' | 'sqlite';
 
+// Performance metrics interface
+export interface PerformanceMetrics {
+  executionTime: number; // in milliseconds
+  rowsAffected: number;
+  memoryUsage?: number; // in MB
+  cpuUsage?: number; // percentage
+  queryComplexityScore?: number; // 1-10 scale
+  peakMemoryUsage?: number; // in MB
+  totalBytesProcessed?: number; // in bytes
+  cacheHits?: number;
+  cacheMisses?: number;
+  networkLatency?: number; // in milliseconds
+}
+
 // API request types
 export interface DatabaseQueryRequest {
   prompt: string;
@@ -14,6 +28,7 @@ export interface DatabaseQueryResponse {
   error?: string;
   query?: string;
   executionTime?: number;
+  performanceMetrics?: PerformanceMetrics;
   // Indicates that the response was generated from local mock data (MCP server unreachable)
   mocked?: boolean;
 }
