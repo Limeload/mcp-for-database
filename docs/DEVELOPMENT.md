@@ -185,19 +185,19 @@ For local development with SQLite, additional setup is required:
 
 1. **Initialize SQLite database**:
 
-    ```bash
-    python scripts/init_sqlite.py
-    ```
+   ```bash
+   python scripts/init_sqlite.py
+   ```
 
 2. **Optional: Add sample data**:
 
-    ```bash
-    python scripts/seed_data.py
-    ```
+   ```bash
+   python scripts/seed_data.py
+   ```
 
 3. **Configure MCP server** to connect to SQLite database
 
-    **⚠️ Backend Requirement**: The MCP-DB Connector server must be updated separately to handle SQLite queries. The frontend changes allow selecting SQLite as a target, but the backend server needs corresponding implementation.
+   **⚠️ Backend Requirement**: The MCP-DB Connector server must be updated separately to handle SQLite queries. The frontend changes allow selecting SQLite as a target, but the backend server needs corresponding implementation.
 
 ### SQLite Benefits
 

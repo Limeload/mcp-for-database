@@ -7,7 +7,7 @@ const server = http.createServer((req, res) => {
 
   if (req.method === 'POST' && req.url === '/test-connection') {
     let body = '';
-    req.on('data', (c) => (body += c));
+    req.on('data', c => (body += c));
     req.on('end', () => {
       try {
         console.log(`[${now}] Request body: ${body}`);
@@ -18,21 +18,25 @@ const server = http.createServer((req, res) => {
       // Simulate auth failure
       if (p.target === 'authfail') {
         res.writeHead(401, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({
-          success: false,
-          error: 'Authentication failed',
-          diagnostics: { code: 'AUTH_FAIL', details: 'Mocked auth error' }
-        }));
+        res.end(
+          JSON.stringify({
+            success: false,
+            error: 'Authentication failed',
+            diagnostics: { code: 'AUTH_FAIL', details: 'Mocked auth error' }
+          })
+        );
         return;
       }
       // Simulate TLS error
       if (p.target === 'tlsfail') {
         res.writeHead(495, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({
-          success: false,
-          error: 'TLS handshake failed',
-          diagnostics: { code: 'TLS_ERROR', details: 'Mocked TLS error' }
-        }));
+        res.end(
+          JSON.stringify({
+            success: false,
+            error: 'TLS handshake failed',
+            diagnostics: { code: 'TLS_ERROR', details: 'Mocked TLS error' }
+          })
+        );
         return;
       }
       // Simulate slow response
@@ -62,16 +66,31 @@ const server = http.createServer((req, res) => {
 
   if (req.method === 'POST' && req.url === '/query') {
     let body = '';
-    req.on('data', (c) => (body += c));
+    req.on('data', c => (body += c));
     req.on('end', () => {
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(
         JSON.stringify({
           success: true,
           data: [
-            { id: 1, name: 'John Doe', email: 'john@example.com', created_at: '2024-01-15' },
-            { id: 2, name: 'Jane Smith', email: 'jane@example.com', created_at: '2024-01-20' },
-            { id: 3, name: 'Bob Johnson', email: 'bob@example.com', created_at: '2024-01-25' }
+            {
+              id: 1,
+              name: 'John Doe',
+              email: 'john@example.com',
+              created_at: '2024-01-15'
+            },
+            {
+              id: 2,
+              name: 'Jane Smith',
+              email: 'jane@example.com',
+              created_at: '2024-01-20'
+            },
+            {
+              id: 3,
+              name: 'Bob Johnson',
+              email: 'bob@example.com',
+              created_at: '2024-01-25'
+            }
           ],
           sql: '-- Mock SQL query', // Always include 'sql' for UI compatibility
           query: '-- Mock SQL query', // Also include 'query' for legacy compatibility
@@ -93,7 +112,7 @@ const server = http.createServer((req, res) => {
         `<li>POST <code>/query</code> - expects a query body; returns mock rows</li>` +
         `</ul>` +
         `<p>Use the API endpoints from your app; the root page is just informational.</p>` +
-      `</body></html>`
+        `</body></html>`
     );
     return;
   }
@@ -103,4 +122,6 @@ const server = http.createServer((req, res) => {
 });
 
 const PORT = process.env.MOCK_MCP_PORT || 8000;
-server.listen(PORT, () => console.log(`Mock MCP listening on http://127.0.0.1:${PORT}`));
+server.listen(PORT, () =>
+  console.log(`Mock MCP listening on http://127.0.0.1:${PORT}`)
+);
