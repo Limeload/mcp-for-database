@@ -7,6 +7,8 @@ import {
   SchemaMetadata
 } from '@/app/types/database';
 import { queryTemplates, QueryTemplate } from '@/app/config/templates';
+import PerformanceMetricsPanel from './PerformanceMetricsPanel';
+import PerformanceHistory, { addToPerformanceHistory } from './PerformanceHistory';
 
 /**
  * DbConsole Component
@@ -132,12 +134,19 @@ export default function DbConsole() {
       const data = await response.json();
 
       if (data.status === 'success') {
-        setResult({
+        const queryResult = {
           success: true,
           data: data.data,
           query: data.metadata?.query,
-          executionTime: data.metadata?.executionTime
-        });
+          executionTime: data.metadata?.executionTime,
+          performanceMetrics: data.metadata?.performanceMetrics
+        };
+        setResult(queryResult);
+
+        // Add to performance history if metrics are available
+        if (queryResult.performanceMetrics && queryResult.query) {
+          addToPerformanceHistory(queryResult.query, queryResult.performanceMetrics, target);
+        }
       } else {
         setError(data.error?.message || 'An error occurred');
       }
@@ -1347,6 +1356,16 @@ export default function DbConsole() {
                       </div>
                     </div>
                   </div>
+
+                  {/* Performance Metrics */}
+                  {result.performanceMetrics && (
+                    <div className="mt-6">
+                      <PerformanceMetricsPanel
+                        metrics={result.performanceMetrics}
+                        isDarkMode={isDarkMode}
+                      />
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="text-center py-12 bg-gray-50 dark:bg-gray-700/50 rounded-2xl border border-gray-200 dark:border-gray-600">
@@ -1373,6 +1392,11 @@ export default function DbConsole() {
               )}
             </div>
           )}
+
+          {/* Performance History */}
+          <div className="mt-8">
+            <PerformanceHistory isDarkMode={isDarkMode} />
+          </div>
 
           {/* Schema Display */}
           {showSchema && renderSchema()}

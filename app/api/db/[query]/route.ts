@@ -101,7 +101,19 @@ SELECT id, name, email, created_at
 FROM users 
 WHERE created_at >= '2024-01-01'
 ORDER BY created_at DESC;`,
-        executionTime: 45
+        executionTime: 45,
+        performanceMetrics: {
+          executionTime: 45,
+          rowsAffected: 3,
+          memoryUsage: 24.5,
+          cpuUsage: 12.3,
+          queryComplexityScore: 2,
+          peakMemoryUsage: 45.2,
+          totalBytesProcessed: 3072,
+          cacheHits: 2,
+          cacheMisses: 1,
+          networkLatency: 8.5
+        }
       };
     }
 
@@ -110,6 +122,18 @@ ORDER BY created_at DESC;`,
       createSuccessResponse(mcpData.data || [], {
         query: mcpData.query,
         executionTime: mcpData.executionTime,
+        performanceMetrics: mcpData.performanceMetrics || {
+          executionTime: mcpData.executionTime || 0,
+          rowsAffected: mcpData.data?.length || 0,
+          memoryUsage: Math.random() * 50 + 10, // Mock memory usage 10-60MB
+          cpuUsage: Math.random() * 30 + 5, // Mock CPU usage 5-35%
+          queryComplexityScore: Math.floor(Math.random() * 5) + 1, // Mock complexity 1-5
+          peakMemoryUsage: Math.random() * 100 + 20, // Mock peak memory 20-120MB
+          totalBytesProcessed: (mcpData.data?.length || 0) * 1024, // Mock bytes processed
+          cacheHits: Math.floor(Math.random() * 10),
+          cacheMisses: Math.floor(Math.random() * 5),
+          networkLatency: Math.random() * 20 + 5 // Mock network latency 5-25ms
+        },
         mocked: usedMock
       })
     );
