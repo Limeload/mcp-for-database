@@ -13,11 +13,6 @@ export interface ExportData {
   query?: string;
   executionTime?: number;
 }
-
-// Constants for large dataset handling
-const LARGE_DATASET_THRESHOLD = 1000; 
-
-
 /**
  * Export data as CSV format
  * Handles any number of columns and rows dynamically
@@ -38,15 +33,6 @@ export function exportToCSV(
   // Create CSV header
   const header = columns.map(col => `"${col}"`).join(',');
 
-  // For large datasets, process in chunks to avoid memory issues
-  const isLargeDataset = data.length > LARGE_DATASET_THRESHOLD;
-
-  if (isLargeDataset && process.env.NODE_ENV !== 'production') {
-    console.debug(
-      `Processing large dataset: ${data.length} rows, ${columns.length} columns`
-    );
-  }
-
   // Create CSV rows (handles any number of rows dynamically)
   const rows = data.map(row =>
     columns
@@ -61,16 +47,10 @@ export function exportToCSV(
 
   // Combine header and rows
   const csvContent = [header, ...rows].join('\n');
-
-  // Download file
+ // Download file
   downloadFile(csvContent, filename, 'text/csv;charset=utf-8;');
-
-  if (isLargeDataset && process.env.NODE_ENV !== 'production') {
-    console.debug(`Successfully exported ${data.length} rows to ${filename}`);
-  }
 }
-
-/**
+  /**
  * Export data as JSON format
  */
 export function exportToJSON(
@@ -127,21 +107,16 @@ export async function copyToClipboard(
         })
         .join('\t')
     );
-
     // Combine header and rows
     const textContent = [header, ...rows].join('\n');
 
     // Copy to clipboard
     await navigator.clipboard.writeText(textContent);
     return true;
-  } catch (error) {
-    if(process.env.NODE_ENV !== 'production'){
-    console.debug('Failed to copy to clipboard:', error);
-    }
+  } catch {
     return false;
   }
 }
-
 /**
  * Helper function to trigger file download
  */
