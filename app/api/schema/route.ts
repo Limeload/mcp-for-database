@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { SchemaMetadata, DatabaseErrorResponse, TableMetadata } from '@/app/types/database';
+import { SchemaMetadata, TableMetadata } from '@/app/types/database';
+import {
+  createSuccessResponse,
+  createErrorResponse
+} from '@/app/lib/api-response';
 
 // Cache for schema data (in-memory cache)
 interface SchemaCache {
@@ -383,19 +387,23 @@ export async function GET(request: NextRequest) {
 
     // Validate target parameter
     if (!target) {
-      const errorResponse: DatabaseErrorResponse = {
-        success: false,
-        error: 'Missing required parameter: target is required'
-      };
-      return NextResponse.json(errorResponse, { status: 400 });
+      return NextResponse.json(
+        createErrorResponse(
+          'Missing required parameter: target is required',
+          'VALIDATION_ERROR'
+        ),
+        { status: 400 }
+      );
     }
 
     if (!['sqlalchemy', 'snowflake'].includes(target)) {
-      const errorResponse: DatabaseErrorResponse = {
-        success: false,
-        error: 'Invalid target: must be either "sqlalchemy" or "snowflake"'
-      };
-      return NextResponse.json(errorResponse, { status: 400 });
+      return NextResponse.json(
+        createErrorResponse(
+          'Invalid target: must be either "sqlalchemy" or "snowflake"',
+          'VALIDATION_ERROR'
+        ),
+        { status: 400 }
+      );
     }
 
     // Check cache first
@@ -403,25 +411,25 @@ export async function GET(request: NextRequest) {
     const cachedEntry = schemaCache[cacheKey];
     const now = Date.now();
 
-    if (cachedEntry && (now - cachedEntry.timestamp) < CACHE_DURATION) {
-      return NextResponse.json({
-        success: true,
-        data: cachedEntry.data,
-        cached: true,
-        timestamp: cachedEntry.timestamp
-      });
+    if (cachedEntry && now - cachedEntry.timestamp < CACHE_DURATION) {
+      return NextResponse.json(
+        createSuccessResponse(cachedEntry.data, {
+          cached: true,
+          timestamp: cachedEntry.timestamp
+        })
+      );
     }
 
     // For now, simulate database introspection with mock data
     // In production, this would connect to the actual MCP-DB Connector server
     let schemaMetadata: SchemaMetadata;
-    
+
     try {
       // Try to fetch from MCP server first
       const mcpResponse = await fetch('http://localhost:8000/schema', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           target: target,
@@ -432,7 +440,7 @@ export async function GET(request: NextRequest) {
 
       if (mcpResponse.ok) {
         const mcpData = await mcpResponse.json();
-        
+
         // Transform MCP response to our schema format
         schemaMetadata = {
           version: mcpData.version || '1.0.0',
@@ -458,20 +466,20 @@ export async function GET(request: NextRequest) {
       version: schemaMetadata.version
     };
 
-    return NextResponse.json({
-      success: true,
-      data: schemaMetadata,
-      cached: false,
-      timestamp: now
-    });
-
+    return NextResponse.json(
+      createSuccessResponse(schemaMetadata, {
+        cached: false,
+        timestamp: now
+      })
+    );
   } catch (error) {
-    const errorResponse: DatabaseErrorResponse = {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error occurred'
-    };
-    
-    return NextResponse.json(errorResponse, { status: 500 });
+    return NextResponse.json(
+      createErrorResponse(
+        error instanceof Error ? error.message : 'Unknown error occurred',
+        'INTERNAL_ERROR'
+      ),
+      { status: 500 }
+    );
   }
 }
 
@@ -484,58 +492,67 @@ export async function POST(request: NextRequest) {
     const { target, action } = body;
 
     if (!target) {
-      const errorResponse: DatabaseErrorResponse = {
-        success: false,
-        error: 'Missing required field: target is required'
-      };
-      return NextResponse.json(errorResponse, { status: 400 });
+      return NextResponse.json(
+        createErrorResponse(
+          'Missing required field: target is required',
+          'VALIDATION_ERROR'
+        ),
+        { status: 400 }
+      );
     }
 
     if (!['sqlalchemy', 'snowflake'].includes(target)) {
-      const errorResponse: DatabaseErrorResponse = {
-        success: false,
-        error: 'Invalid target: must be either "sqlalchemy" or "snowflake"'
-      };
-      return NextResponse.json(errorResponse, { status: 400 });
+      return NextResponse.json(
+        createErrorResponse(
+          'Invalid target: must be either "sqlalchemy" or "snowflake"',
+          'VALIDATION_ERROR'
+        ),
+        { status: 400 }
+      );
     }
 
     // Handle cache refresh action
     if (action === 'refresh') {
       const cacheKey = `${target}`;
       delete schemaCache[cacheKey];
-      
-      return NextResponse.json({
-        success: true,
-        message: `Schema cache cleared for ${target}`
-      });
+
+      return NextResponse.json(
+        createSuccessResponse({ message: `Schema cache cleared for ${target}` })
+      );
     }
 
     // Handle schema version check
     if (action === 'version') {
       const cacheKey = `${target}`;
       const cachedEntry = schemaCache[cacheKey];
-      
-      return NextResponse.json({
-        success: true,
-        version: cachedEntry?.version || null,
-        cached: !!cachedEntry,
-        lastUpdated: cachedEntry?.data.lastUpdated || null
-      });
+
+      return NextResponse.json(
+        createSuccessResponse(
+          {
+            version: cachedEntry?.version || null,
+            lastUpdated: cachedEntry?.data.lastUpdated || null
+          },
+          {
+            cached: !!cachedEntry
+          }
+        )
+      );
     }
 
-    const errorResponse: DatabaseErrorResponse = {
-      success: false,
-      error: 'Invalid action: must be either "refresh" or "version"'
-    };
-    
-    return NextResponse.json(errorResponse, { status: 400 });
-
+    return NextResponse.json(
+      createErrorResponse(
+        'Invalid action: must be either "refresh" or "version"',
+        'VALIDATION_ERROR'
+      ),
+      { status: 400 }
+    );
   } catch (error) {
-    const errorResponse: DatabaseErrorResponse = {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error occurred'
-    };
-    
-    return NextResponse.json(errorResponse, { status: 500 });
+    return NextResponse.json(
+      createErrorResponse(
+        error instanceof Error ? error.message : 'Unknown error occurred',
+        'INTERNAL_ERROR'
+      ),
+      { status: 500 }
+    );
   }
 }

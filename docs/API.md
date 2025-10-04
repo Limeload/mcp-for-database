@@ -48,15 +48,18 @@ Execute a database query using natural language.
 
 ```json
 {
-  "success": true,
+  "status": "success",
   "data": [
     {
       "column1": "value1",
       "column2": "value2"
     }
   ],
-  "query": "SELECT column1, column2 FROM table_name",
-  "executionTime": 150
+  "error": null,
+  "metadata": {
+    "query": "SELECT column1, column2 FROM table_name",
+    "executionTime": 150
+  }
 }
 ```
 
@@ -64,8 +67,12 @@ Execute a database query using natural language.
 
 ```json
 {
-  "success": false,
-  "error": "Error message describing what went wrong"
+  "status": "error",
+  "data": null,
+  "error": {
+    "message": "Error message describing what went wrong",
+    "code": "VALIDATION_ERROR"
+  }
 }
 ```
 
@@ -95,10 +102,10 @@ curl -X POST http://localhost:3000/api/db/query \
 
 ## Error Codes
 
-| Code | Description                               |
-| ---- | ----------------------------------------- |
-| 400  | Bad Request - Invalid request parameters  |
-| 500  | Internal Server Error - Server-side error |
+| HTTP Status | Error Code       | Description                               |
+| ----------- | ---------------- | ----------------------------------------- |
+| 400         | VALIDATION_ERROR | Bad Request - Invalid request parameters  |
+| 500         | INTERNAL_ERROR   | Internal Server Error - Server-side error |
 
 ### GET `/api/schema`
 
@@ -122,7 +129,7 @@ Fetch database schema metadata including tables, columns, relationships, and ind
 
 ```json
 {
-  "success": true,
+  "status": "success",
   "data": {
     "version": "1.0.0-mock-1234567890",
     "lastUpdated": "2024-01-15T10:30:00.000Z",
@@ -171,8 +178,11 @@ Fetch database schema metadata including tables, columns, relationships, and ind
     "totalTables": 2,
     "totalColumns": 9
   },
-  "cached": false,
-  "timestamp": 1705312200000
+  "error": null,
+  "metadata": {
+    "cached": false,
+    "timestamp": 1705312200000
+  }
 }
 ```
 
@@ -180,8 +190,12 @@ Fetch database schema metadata including tables, columns, relationships, and ind
 
 ```json
 {
-  "success": false,
-  "error": "Missing required parameter: target is required"
+  "status": "error",
+  "data": null,
+  "error": {
+    "message": "Missing required parameter: target is required",
+    "code": "VALIDATION_ERROR"
+  }
 }
 ```
 
@@ -233,8 +247,11 @@ Manage schema cache operations.
 
 ```json
 {
-  "success": true,
-  "message": "Schema cache cleared for sqlalchemy"
+  "status": "success",
+  "data": {
+    "message": "Schema cache cleared for sqlalchemy"
+  },
+  "error": null
 }
 ```
 
@@ -242,10 +259,15 @@ Manage schema cache operations.
 
 ```json
 {
-  "success": true,
-  "version": "1.0.0-mock-1234567890",
-  "cached": true,
-  "lastUpdated": "2024-01-15T10:30:00.000Z"
+  "status": "success",
+  "data": {
+    "version": "1.0.0-mock-1234567890",
+    "lastUpdated": "2024-01-15T10:30:00.000Z"
+  },
+  "error": null,
+  "metadata": {
+    "cached": true
+  }
 }
 ```
 
