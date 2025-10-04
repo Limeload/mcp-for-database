@@ -50,7 +50,12 @@ async function testAuthFail() {
     body: JSON.stringify({ target: 'authfail' })
   });
   const data = await res.json();
-  if (res.status === 401 && !data.success && data.error && data.diagnostics?.code === 'AUTH_FAIL') {
+  if (
+    res.status === 401 &&
+    !data.success &&
+    data.error &&
+    data.diagnostics?.code === 'AUTH_FAIL'
+  ) {
     console.log('✅ Auth fail: error as expected');
   } else {
     console.error('❌ Auth fail: did not error as expected', data);
@@ -65,7 +70,12 @@ async function testTLSFail() {
     body: JSON.stringify({ target: 'tlsfail' })
   });
   const data = await res.json();
-  if (res.status === 495 && !data.success && data.error && data.diagnostics?.code === 'TLS_ERROR') {
+  if (
+    res.status === 495 &&
+    !data.success &&
+    data.error &&
+    data.diagnostics?.code === 'TLS_ERROR'
+  ) {
     console.log('✅ TLS fail: error as expected');
   } else {
     console.error('❌ TLS fail: did not error as expected', data);
@@ -82,12 +92,22 @@ async function testSlow() {
   });
   const data = await res.json();
   const elapsed = Date.now() - start;
-  if (data.success && data.diagnostics?.details === 'mock slow' && elapsed >= 2900) {
+  if (
+    data.success &&
+    data.diagnostics?.details === 'mock slow' &&
+    elapsed >= 2900
+  ) {
     console.log('✅ Slow: delayed response as expected');
   } else {
-    console.error('❌ Slow: did not delay or wrong response', { data, elapsed });
+    console.error('❌ Slow: did not delay or wrong response', {
+      data,
+      elapsed
+    });
     process.exit(1);
   }
 }
 
-runAll().catch(e => { console.error(e); process.exit(1); });
+runAll().catch(e => {
+  console.error(e);
+  process.exit(1);
+});
