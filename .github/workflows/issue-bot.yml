@@ -1,0 +1,137 @@
+name: Issue Bot
+
+on:
+  issues:
+    types: [opened, assigned, unassigned]
+
+jobs:
+  issue-bot:
+    runs-on: ubuntu-latest
+    if: github.event.issue.state == 'open'
+    permissions:
+      issues: write
+      pull-requests: read
+
+    steps:
+      - name: Comment on new issues
+        if: github.event.action == 'opened'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue;
+            const issueNumber = issue.number;
+            const issueTitle = issue.title;
+            const issueAuthor = issue.user.login;
+
+            const comment = `## 📋 Issue Guidelines
+
+            Hi @${issueAuthor}! Thanks for opening this issue. We appreciate your contribution to the project! 🚀
+
+            **Please note the following workflow guidelines:**
+
+            - 🎯 **First-come, first-serve basis**: Issues are assigned based on who expresses interest first. Please comment on the issue to show your interest before starting work.
+
+            - ⏳ **Wait for assignment**: Please **do not start working** until a maintainer has officially assigned this issue to you. This prevents duplicate work and ensures proper coordination.
+
+            - 🔗 **Link your PR**: Once assigned, when you create your pull request, make sure to link it to this issue using \`Closes #${issueNumber}\` or \`Fixes #${issueNumber}\` in your PR description.
+
+            - ⏰ **2-day timeline**: Aim to complete your work and submit a PR within **2 days** of assignment. If you need more time, please comment on this issue to discuss an extension.
+
+            - ✅ **CI checks must pass**: Before requesting a review, ensure your PR passes all automated checks (TypeScript, linting, build, security). You can see the status in the PR checks section.
+
+            **Need help?** Feel free to ask questions in the comments or reach out to maintainers.
+
+            ---
+            *This is an automated message to help maintain our workflow standards.*`;
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNumber,
+              body: comment
+            });
+
+            console.log(`Added guidelines comment to issue #${issueNumber}`);
+
+      - name: Comment when issue is assigned
+        if: github.event.action == 'assigned'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue;
+            const assignee = context.payload.assignee;
+            const issueNumber = issue.number;
+            const issueTitle = issue.title;
+
+            const comment = `## 🎯 Issue Assigned
+
+            Excellent! This issue has been assigned to @${assignee.login}. You're now ready to start working on it! 🎉
+
+            **Your next steps:**
+
+            1. 🔗 **Link your PR**: When you create your pull request, include \`Closes #${issueNumber}\` or \`Fixes #${issueNumber}\` in the PR description to automatically link it to this issue.
+
+            2. ⏰ **Timeline reminder**: You have **2 days** from now to complete your work and submit a PR. The deadline is **${new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toLocaleDateString()}**.
+
+            3. ✅ **Quality checks**: Before requesting a review, make sure your PR passes all automated checks:
+               - TypeScript compilation
+               - ESLint linting
+               - Build verification
+               - Security audit
+
+            4. 📝 **Communication**: If you encounter any blockers or need clarification, please comment on this issue. We're here to help!
+
+            5. 🚀 **Ready to start**: You can now begin working on this issue. Good luck!
+
+            **Pro tip**: You can track your progress by updating this issue with status comments as you work.
+
+            ---
+            *This is an automated reminder to help maintain our workflow standards.*`;
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNumber,
+              body: comment
+            });
+
+            console.log(`Added assignment reminder to issue #${issueNumber} for @${assignee.login}`);
+
+      - name: Comment when issue is unassigned
+        if: github.event.action == 'unassigned'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue;
+            const assignee = context.payload.assignee;
+            const issueNumber = issue.number;
+
+            const comment = `## 🔄 Issue Unassigned
+
+            This issue has been unassigned from @${assignee.login}.
+
+            **Current Status:**
+            - 🔓 **Available for assignment** - This issue is now open for anyone to claim
+            - ⏳ **Waiting for new assignee** - Please comment if you'd like to work on this issue
+
+            **For potential contributors:**
+            - 💬 **Express interest** by commenting on this issue
+            - ⏳ **Wait for assignment** before starting work
+            - 📋 **Review the guidelines** in the original issue description
+
+            **For maintainers:**
+            - 👀 **Monitor interest** from community members
+            - 🎯 **Assign to the first person** who expresses interest
+            - 📝 **Update issue status** as needed
+
+            ---
+            *This is an automated status update to help maintain our workflow standards.*`;
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNumber,
+              body: comment
+            });
+
+            console.log(`Added unassignment notification to issue #${issueNumber}`);

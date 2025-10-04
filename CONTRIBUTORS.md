@@ -1,17 +1,17 @@
 # Contributors
 
-This file recognizes contributors who have made significant contributions to the MCP Database Console project. Contributors are added to this list after having **15 or more approved pull requests** merged into the main branch.
+This file recognizes collaborators who have made significant contributions to the MCP Database Console project. Collaborators are added to this list after having **15 or more approved pull requests** merged into the main branch.
 
-## 🏆 Contributors
+## 🏆 Collaborators
 
-_Contributors will be added here after their 15th approved PR_
+_Collaborators will be added here after their 15th approved PR_
 
-### How to Become a Contributor
+### How to Become a Collaborator
 
 1. **Fork** the repository
 2. **Create** pull requests with meaningful contributions
 3. **Get** 15 pull requests approved and merged
-4. **Get added** to this contributors list!
+4. **Get added** to this collaborators list!
 
 ### Types of Contributions We Value
 

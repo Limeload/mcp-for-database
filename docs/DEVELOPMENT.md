@@ -158,12 +158,60 @@ Create a `.env.local` file with the following variables:
 # MCP Server Configuration
 MCP_SERVER_URL=http://localhost:8000
 
-# Database Configuration (if needed)
-DATABASE_URL=your_database_url
+# Database Configuration
+# For SQLite local development (recommended)
+DATABASE_TYPE=sqlite
+DATABASE_URL=sqlite:///local_dev.db
+
+# For production databases (uncomment as needed)
+# DATABASE_TYPE=sqlalchemy
+# DATABASE_URL=postgresql://user:password@localhost:5432/dbname
 
 # Development Configuration
 NODE_ENV=development
 ```
+
+## SQLite Development Setup
+
+For local development with SQLite, additional setup is required:
+
+### Prerequisites
+
+- **Python** 3.8+ (for database scripts)
+- **SQLAlchemy** (install with `pip install sqlalchemy`)
+- **MCP-DB Connector server** with SQLite support
+
+### Database Initialization
+
+1. **Initialize SQLite database**:
+
+   ```bash
+   python scripts/init_sqlite.py
+   ```
+
+2. **Optional: Add sample data**:
+
+   ```bash
+   python scripts/seed_data.py
+   ```
+
+3. **Configure MCP server** to connect to SQLite database
+
+   **⚠️ Backend Requirement**: The MCP-DB Connector server must be updated separately to handle SQLite queries. The frontend changes allow selecting SQLite as a target, but the backend server needs corresponding implementation.
+
+### SQLite Benefits
+
+- **No external dependencies**: File-based database
+- **Easy reset**: Delete `local_dev.db` to start fresh
+- **Fast setup**: No server installation required
+- **Development focused**: Perfect for testing and prototyping
+
+### Database Scripts
+
+- `scripts/init_sqlite.py`: Creates database schema
+- `scripts/seed_data.py`: Populates with sample data
+
+Both scripts are idempotent and can be run multiple times safely.
 
 ## Debugging
 
