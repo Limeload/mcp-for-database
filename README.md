@@ -52,26 +52,28 @@ Here are some screenshots/GIF showcasing the features of mcp-for-database:
 
 ### Homepage
 <img src="https://github.com/user-attachments/assets/e592c00a-b206-4dc6-aaff-92a462184c11" alt="Main Dashboard ScreenShot" width="800" />
+
 *Central dashboard with high-level metrics and quick actions.*
 <br>
 
-## Database Console
+### Database Console
 <img src="https://github.com/user-attachments/assets/9a183aea-4d75-458a-9fca-62c77f8c0024" alt="Database Console" width="800" />
+
 *Query your database using plain English and view results instantly.*
 <br>
 
 ### Live Demo (GIF)
    ![mcp-for-gif GIF](https://github.com/user-attachments/assets/54a5ceca-05b6-4e9c-a3eb-6dd58df151c9)
    <br>
-*An animated demonstration of exploring features of  mcp-for-database.*
+*An animated demonstration of exploring features of mcp-for-database.*
 
 ### Database Console in Action (GIF)
    ![database-console-demo GIF](https://github.com/user-attachments/assets/dd31a131-0a12-49a7-87bd-480e1c764a99)
-   <br>
-*Watch how to use natural language to query your database:
-1. Connect to your preferred database (SQLite/Snowflake)
-2. Type your query in plain English
-3. See the results instantly in a formatted table*
+
+*Watch how to use natural language to query your database:*
+*1. Connect to your preferred database (SQLite/Snowflake)*
+*2. Type your query in plain English*
+*3. See the results instantly in a formatted table*
 
 ### Quick Start for Contributors
 
