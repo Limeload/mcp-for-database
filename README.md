@@ -81,7 +81,6 @@ Here are some screenshots/GIF showcasing the features of mcp-for-database:
 
 ### Quick Start for Contributors
 
-
 ---
 
 ## Local development (mock MCP)
@@ -101,7 +100,6 @@ npm run dev
 ```
 
 - Open the app and try the Test Connection button:
-
   - Visit http://localhost:3000/db-console
   - Choose a target (e.g. `snowflake` or `sqlite`) and click **Test Connection**
 
@@ -116,8 +114,10 @@ Invoke-RestMethod -Method Post -Uri http://127.0.0.1:8000/query -Body (@{ sql = 
 ```
 
 Notes:
+
 - The mock server logs incoming requests to the terminal to help with debugging.
 - If port 8000 is already in use, set `MOCK_MCP_PORT` before running the mock, and update `MCP_SERVER_URL` in `.env.local` if necessary.
+
 1. **Fork** this repository
 2. **Star** the repository (optional but appreciated!)
 3. **Check** our [Contributing Guidelines](CONTRIBUTING.md)
