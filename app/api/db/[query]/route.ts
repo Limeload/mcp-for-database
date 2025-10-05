@@ -4,6 +4,12 @@ import {
   createSuccessResponse,
   createErrorResponse
 } from '@/app/lib/api-response';
+import {
+  createLoggerWithCorrelation,
+  generateCorrelationId,
+  CORRELATION_ID_HEADER,
+  safeTruncate
+} from '@/app/lib/logger';
 
 /**
  * API route handler for database queries
@@ -14,6 +20,14 @@ export async function POST(
   { params }: { params: Promise<{ query: string }> }
 ) {
   try {
+    const incomingCorrelationId =
+      request.headers.get(CORRELATION_ID_HEADER) || undefined;
+    const correlationId = incomingCorrelationId || generateCorrelationId();
+    const log = createLoggerWithCorrelation(correlationId, {
+      route: '/api/db/[query]'
+    });
+    const startedAtMs = Date.now();
+
     // Await params since it's a Promise in Next.js 15
     await params;
 
@@ -22,6 +36,11 @@ export async function POST(
 
     // Validate required fields
     if (!body.prompt || !body.target) {
+      log.warn('query.validation_failed', {
+        reason: 'missing_fields',
+        hasPrompt: Boolean(body.prompt),
+        hasTarget: Boolean(body.target)
+      });
       return NextResponse.json(
         createErrorResponse(
           'Missing required fields: prompt and target are required',
@@ -33,6 +52,10 @@ export async function POST(
 
     // Validate target value
     if (!['sqlalchemy', 'snowflake', 'sqlite'].includes(body.target)) {
+      log.warn('query.validation_failed', {
+        reason: 'invalid_target',
+        target: body.target
+      });
       return NextResponse.json(
         createErrorResponse(
           'Invalid target: must be either "sqlalchemy", "snowflake", or "sqlite"',
@@ -45,8 +68,14 @@ export async function POST(
     // Check if MCP server is available, otherwise use mock data for development
     let mcpData;
     let usedMock = false;
+    const MCP_URL = 'http://localhost:8000/query';
+    log.info('query.request_received', {
+      target: body.target,
+      promptLength: body.prompt.length,
+      prompt: safeTruncate(body.prompt, 1000)
+    });
     try {
-      const mcpResponse = await fetch('http://localhost:8000/query', {
+      const mcpResponse = await fetch(MCP_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -69,10 +98,9 @@ export async function POST(
     } catch (error) {
       // MCP server not available, use mock data for development
       // eslint-disable-next-line no-console
-      console.warn(
-        'MCP server not available, using mock data:',
-        error instanceof Error ? error.message : 'Unknown error'
-      );
+      log.warn('query.mcp_unavailable_using_mock', {
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
       usedMock = true;
 
       mcpData = {
@@ -106,23 +134,58 @@ ORDER BY created_at DESC;`,
     }
 
     // Format response for frontend
-    return NextResponse.json(
+    const dataArray = Array.isArray(mcpData?.data) ? mcpData.data : [];
+    const rowCount = dataArray.length;
+    const columnCount =
+      rowCount > 0 && dataArray[0] && typeof dataArray[0] === 'object'
+        ? Object.keys(dataArray[0] as Record<string, unknown>).length
+        : 0;
+    const finishedAtMs = Date.now();
+    const executionTimeMs =
+      typeof mcpData?.executionTime === 'number'
+        ? mcpData.executionTime
+        : finishedAtMs - startedAtMs;
+
+    log.info('query.executed', {
+      target: body.target,
+      usedMock,
+      rowCount,
+      columnCount,
+      executionTimeMs,
+      mcpReportedExecutionTimeMs: mcpData?.executionTime,
+      queryLength: typeof mcpData?.query === 'string' ? mcpData.query.length : 0
+    });
+
+    const response = NextResponse.json(
       createSuccessResponse(mcpData.data || [], {
         query: mcpData.query,
-        executionTime: mcpData.executionTime,
-        mocked: usedMock
+        executionTime: executionTimeMs,
+        mocked: usedMock,
+        correlationId
       })
     );
+    response.headers.set(CORRELATION_ID_HEADER, correlationId);
+    return response;
   } catch (error) {
     // eslint-disable-next-line no-console
-    console.error('Database query API error:', error);
+    const correlationId = generateCorrelationId();
+    const log = createLoggerWithCorrelation(correlationId, {
+      route: '/api/db/[query]'
+    });
+    log.error('query.error', {
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
 
-    return NextResponse.json(
+    const response = NextResponse.json(
       createErrorResponse(
         error instanceof Error ? error.message : 'Unknown error occurred',
-        'INTERNAL_ERROR'
+        'INTERNAL_ERROR',
+        undefined,
+        { correlationId }
       ),
       { status: 500 }
     );
+    response.headers.set(CORRELATION_ID_HEADER, correlationId);
+    return response;
   }
 }
