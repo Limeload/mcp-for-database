@@ -47,7 +47,76 @@ Transform natural language into powerful database queries through an intuitive w
 
 This repository is participating in **Hacktoberfest 2025**! We welcome contributions from developers of all skill levels. After **15 approved pull requests**, you'll be recognized as a project collaborator!
 
+## 🎬 Visual Tour
+Here are some screenshots/GIF showcasing the features of mcp-for-database:
+
+### Homepage
+<img src="https://github.com/user-attachments/assets/e592c00a-b206-4dc6-aaff-92a462184c11" alt="Main Dashboard ScreenShot" width="800" />
+
+*Central dashboard with high-level metrics and quick actions.*
+<br>
+
+### Database Console
+<img src="https://github.com/user-attachments/assets/9a183aea-4d75-458a-9fca-62c77f8c0024" alt="Database Console" width="800" />
+
+*Query your database using plain English and view results instantly.*
+<br>
+
+### Live Demo (GIF)
+   ![mcp-for-gif GIF](https://github.com/user-attachments/assets/54a5ceca-05b6-4e9c-a3eb-6dd58df151c9)
+   <br>
+*An animated demonstration of exploring features of mcp-for-database.*
+
+### Database Console in Action (GIF)
+   ![database-console-demo GIF](https://github.com/user-attachments/assets/dd31a131-0a12-49a7-87bd-480e1c764a99)
+
+*Watch how to use natural language to query your database:*
+
+*1. Connect to your preferred database (SQLite/Snowflake)*
+
+*2. Type your query in plain English*
+
+*3. See the results instantly in a formatted table*
+
+
 ### Quick Start for Contributors
+
+---
+
+## Local development (mock MCP)
+
+If you don't have a running MCP-DB Connector locally, the repository includes a small mock server to exercise the frontend during development.
+
+- Start the mock MCP server (listens on port 8000 by default):
+
+```powershell
+npm run mock:mcp
+```
+
+- Start the Next.js dev server in a separate terminal:
+
+```powershell
+npm run dev
+```
+
+- Open the app and try the Test Connection button:
+  - Visit http://localhost:3000/db-console
+  - Choose a target (e.g. `snowflake` or `sqlite`) and click **Test Connection**
+
+- You can also call the mock endpoints directly for quick checks:
+
+```powershell
+# POST to mock test-connection
+Invoke-RestMethod -Method Post -Uri http://127.0.0.1:8000/test-connection -Body (@{ target = 'snowflake' } | ConvertTo-Json) -ContentType 'application/json'
+
+# POST a mock query
+Invoke-RestMethod -Method Post -Uri http://127.0.0.1:8000/query -Body (@{ sql = 'select 1' } | ConvertTo-Json) -ContentType 'application/json'
+```
+
+Notes:
+
+- The mock server logs incoming requests to the terminal to help with debugging.
+- If port 8000 is already in use, set `MOCK_MCP_PORT` before running the mock, and update `MCP_SERVER_URL` in `.env.local` if necessary.
 
 1. **Fork** this repository
 2. **Star** the repository (optional but appreciated!)
@@ -146,46 +215,48 @@ For local development with SQLite, follow these additional steps:
 
 1. **Set up environment variables** for SQLite:
 
-    ```bash
-    # Create .env.local file
-    DATABASE_TYPE=sqlite
-    DATABASE_URL=sqlite:///local_dev.db
-    ```
+   ```bash
+   # Create .env.local file
+   DATABASE_TYPE=sqlite
+   DATABASE_URL=sqlite:///local_dev.db
+   ```
 
 2. **Initialize the SQLite database** (requires Python and SQLAlchemy):
 
-    ```bash
-    # Install Python dependencies (if not already installed)
-    pip install sqlalchemy
+   ```bash
+   # Install Python dependencies (if not already installed)
+   pip install sqlalchemy
 
-    # Initialize database
-    python scripts/init_sqlite.py
+   # Initialize database
+   python scripts/init_sqlite.py
 
-    # Optional: Add sample data
-    python scripts/seed_data.py
-    ```
+   # Optional: Add sample data
+   python scripts/seed_data.py
+   ```
 
 3. **Configure your MCP server** to use SQLite backend
 
-    **⚠️ Important**: The MCP-DB Connector server must be updated to support SQLite queries. The frontend now accepts SQLite as a target, but the backend server needs corresponding SQLite support.
+   **⚠️ Important**: The MCP-DB Connector server must be updated to support SQLite queries. The frontend now accepts SQLite as a target, but the backend server needs corresponding SQLite support.
 
 4. **Start both servers**:
 
-    ```bash
-    # Terminal 1: Start MCP server (with SQLite support)
-    # Your MCP server command here
+   ```bash
+   # Terminal 1: Start MCP server (with SQLite support)
+   # Your MCP server command here
 
-    # Terminal 2: Start Next.js development server
-    npm run dev
-    ```
+   # Terminal 2: Start Next.js development server
+   npm run dev
+   ```
 
 **SQLite Benefits for Development:**
+
 - No external database server required
 - File-based storage (`local_dev.db`)
 - Easy to reset and recreate
 - Perfect for testing and development
 
 **SQLite Limitations:**
+
 - Single-writer concurrency (not suitable for high-traffic production)
 - No built-in user authentication or permissions
 - Limited data types compared to PostgreSQL/MySQL
@@ -202,9 +273,9 @@ Navigate to `/db-console` to access the database query interface:
    - Example: "Find the top 10 products by sales"
 
 2. **Select Database Target**: Choose between:
-    - **SQLAlchemy**: For SQLAlchemy-based applications
-    - **Snowflake**: For Snowflake data warehouse
-    - **SQLite**: For local development with SQLite database
+   - **SQLAlchemy**: For SQLAlchemy-based applications
+   - **Snowflake**: For Snowflake data warehouse
+   - **SQLite**: For local development with SQLite database
 
 3. **Execute Query**: Click "Execute Query" to run your prompt
 
@@ -247,10 +318,13 @@ Execute a database query using natural language.
 
 ```json
 {
-  "success": true,
+  "status": "success",
   "data": [...],
-  "query": "SELECT ...",
-  "executionTime": 150
+  "error": null,
+  "metadata": {
+    "query": "SELECT ...",
+    "executionTime": 150
+  }
 }
 ```
 
@@ -258,8 +332,12 @@ Execute a database query using natural language.
 
 ```json
 {
-  "success": false,
-  "error": "Error message"
+  "status": "error",
+  "data": null,
+  "error": {
+    "message": "Error message",
+    "code": "VALIDATION_ERROR"
+  }
 }
 ```
 

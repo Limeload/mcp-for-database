@@ -1,7 +1,18 @@
 'use client';
 
-import { useState, useEffect } from "react";
-import { DatabaseTarget, DatabaseQueryResponse, SchemaMetadata } from "@/app/types/database";
+import {
+  exportToCSV,
+  exportToJSON,
+  copyToClipboard,
+  ExportData
+} from '@/app/utils/exportUtils';
+import { useState, useEffect } from 'react';
+import {
+  DatabaseTarget,
+  DatabaseQueryResponse,
+  SchemaMetadata
+} from '@/app/types/database';
+import { queryTemplates, QueryTemplate } from '@/app/config/templates';
 
 /**
  * DbConsole Component
@@ -17,45 +28,98 @@ import { DatabaseTarget, DatabaseQueryResponse, SchemaMetadata } from "@/app/typ
  */
 export default function DbConsole() {
   const [prompt, setPrompt] = useState('');
+  // Template selection state
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
+  const [selectedTemplate, setSelectedTemplate] =
+    useState<QueryTemplate | null>(null);
+  // Placeholder values state
+  const [placeholderValues, setPlaceholderValues] = useState<
+    Record<string, string>
+  >({});
+  // Reset placeholder values when template changes
+  useEffect(() => {
+    if (selectedTemplate) {
+      const initial: Record<string, string> = {};
+      selectedTemplate.placeholders.forEach(ph => {
+        initial[ph] = '';
+      });
+      setPlaceholderValues(initial);
+    } else {
+      setPlaceholderValues({});
+    }
+  }, [selectedTemplate]);
+  // Update selected template when dropdown changes
+  useEffect(() => {
+    if (selectedTemplateId) {
+      const found =
+        queryTemplates.find(t => t.id === selectedTemplateId) || null;
+      setSelectedTemplate(found);
+    } else {
+      setSelectedTemplate(null);
+    }
+  }, [selectedTemplateId]);
   const [target, setTarget] = useState<DatabaseTarget>('sqlalchemy');
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<DatabaseQueryResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [schema, setSchema] = useState<SchemaMetadata | null>(null);
   const [isLoadingSchema, setIsLoadingSchema] = useState(false);
   const [showSchema, setShowSchema] = useState(false);
+  const [isTestingConnection, setIsTestingConnection] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState<null | {
+    success: boolean;
+    message?: string;
+    error?: string;
+    diagnostics?: { [k: string]: unknown } | null;
+  }>(null);
 
   // Schema view state for expand/collapse functionality
   const [expandedTables, setExpandedTables] = useState<Set<number>>(new Set());
   const [schemaSearchTerm, setSchemaSearchTerm] = useState('');
 
-  // Load dark mode preference on mount
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('darkMode');
-    const prefersDark = window.matchMedia(
-      '(prefers-color-scheme: dark)'
-    ).matches;
-    const shouldBeDark =
-      savedTheme === 'true' || (savedTheme === null && prefersDark);
+  // Export state
+  const [copySuccess, setCopySuccess] = useState(false);
+  // Typed diagnostics helper to safely render unknown diagnostics
+  const currentDiag: Record<string, unknown> | undefined =
+    connectionStatus &&
+    connectionStatus.diagnostics &&
+    typeof connectionStatus.diagnostics === 'object'
+      ? (connectionStatus.diagnostics as Record<string, unknown>)
+      : undefined;
 
-    setIsDarkMode(shouldBeDark);
-    document.body.classList.toggle('dark-mode', shouldBeDark);
+  // Apply theme to document body
+  const applyTheme = (currentTheme: 'light' | 'dark') => {
+    // Remove existing theme classes
+    document.body.classList.remove('light-mode', 'dark-mode');
+    if (currentTheme === 'light') {
+      document.body.classList.add('light-mode');
+    } else {
+      document.body.classList.add('dark-mode');
+    }
+  };
+
+  // Load theme preference on mount
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
+    const currentTheme: 'light' | 'dark' = savedTheme === 'dark' ? 'dark' : 'light';
+    setTheme(currentTheme);
+    applyTheme(currentTheme);
   }, []);
 
-  // Toggle dark mode
-  const toggleDarkMode = () => {
-    const newDarkMode = !isDarkMode;
-    setIsDarkMode(newDarkMode);
-    document.body.classList.toggle('dark-mode', newDarkMode);
-    localStorage.setItem('darkMode', newDarkMode.toString());
+  // Toggle between light <-> dark
+  const toggleTheme = () => {
+    const nextTheme: 'light' | 'dark' = theme === 'light' ? 'dark' : 'light';
+    setTheme(nextTheme);
+    applyTheme(nextTheme);
+    localStorage.setItem('theme', nextTheme);
   };
 
   /**
    * Handle form submission
    * Calls the API route to execute database query
    */
-  const handleSubmit = async (e: React.FormEvent) => {
+const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!prompt.trim()) {
@@ -79,12 +143,17 @@ export default function DbConsole() {
         })
       });
 
-      const data: DatabaseQueryResponse = await response.json();
+      const data = await response.json();
 
-      if (data.success) {
-        setResult(data);
+      if (data.status === 'success') {
+        setResult({
+          success: true,
+          data: data.data,
+          query: data.metadata?.query,
+          executionTime: data.metadata?.executionTime
+        });
       } else {
-        setError(data.error || 'An error occurred');
+        setError(data.error?.message || 'An error occurred');
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Network error occurred');
@@ -103,24 +172,26 @@ export default function DbConsole() {
 
     try {
       const response = await fetch(`/api/schema?target=${target}`, {
-        method: "GET",
+        method: 'GET',
         headers: {
-          "Content-Type": "application/json",
-        },
+          'Content-Type': 'application/json'
+        }
       });
 
       const data = await response.json();
 
-      if (data.success) {
+      if (data.status === 'success') {
         setSchema(data.data);
         setShowSchema(true);
         // Expand all tables by default
-        setExpandedTables(new Set(data.data.tables.map((_: unknown, index: number) => index)));
+        setExpandedTables(
+          new Set(data.data.tables.map((_: unknown, index: number) => index))
+        );
       } else {
-        setError(data.error || "Failed to fetch schema");
+        setError(data.error?.message || 'Failed to fetch schema');
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Network error occurred");
+      setError(err instanceof Error ? err.message : 'Network error occurred');
     } finally {
       setIsLoadingSchema(false);
     }
@@ -155,14 +226,77 @@ export default function DbConsole() {
    */
   const getFilteredTables = () => {
     if (!schema || !schemaSearchTerm.trim()) return schema?.tables || [];
-    
+
     const searchLower = schemaSearchTerm.toLowerCase();
-    return schema.tables.filter(table => 
-      table.name.toLowerCase().includes(searchLower) ||
-      table.schema.toLowerCase().includes(searchLower) ||
-      table.description?.toLowerCase().includes(searchLower) ||
-      table.columns.some(col => col.name.toLowerCase().includes(searchLower))
+    return schema.tables.filter(
+      table =>
+        table.name.toLowerCase().includes(searchLower) ||
+        table.schema.toLowerCase().includes(searchLower) ||
+        table.description?.toLowerCase().includes(searchLower) ||
+        table.columns.some(col => col.name.toLowerCase().includes(searchLower))
     );
+  };
+
+  /**
+   * Handle export to CSV
+   */
+  const handleExportCSV = () => {
+    if (!result?.data || result.data.length === 0) return;
+
+    try {
+      const exportData: ExportData = {
+        data: result.data,
+        query: result.query,
+        executionTime: result.executionTime
+      };
+      const timestamp = new Date().toISOString().split('T')[0];
+      exportToCSV(exportData, `query-results-${timestamp}.csv`);
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Export failed');
+    }
+  };
+
+  /**
+   * Handle export to JSON
+   */
+  const handleExportJSON = () => {
+    if (!result?.data || result.data.length === 0) return;
+
+    try {
+      const exportData: ExportData = {
+        data: result.data,
+        query: result.query,
+        executionTime: result.executionTime
+      };
+      const timestamp = new Date().toISOString().split('T')[0];
+      exportToJSON(exportData, `query-results-${timestamp}.json`);
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Export failed');
+    }
+  };
+
+  /**
+   * Handle copy to clipboard
+   */
+  const handleCopyToClipboard = async () => {
+    if (!result?.data || result.data.length === 0) return;
+
+    try {
+      const exportData: ExportData = {
+        data: result.data,
+        query: result.query,
+        executionTime: result.executionTime
+      };
+      const success = await copyToClipboard(exportData);
+      if (success) {
+        setCopySuccess(true);
+        setTimeout(() => setCopySuccess(false), 2000);
+      } else {
+        setError('Failed to copy to clipboard');
+      }
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Copy failed');
+    }
   };
 
   /**
@@ -177,13 +311,28 @@ export default function DbConsole() {
     return (
       <div className="mt-8 space-y-6">
         {/* Schema Header */}
-          <div className="bg-gradient-to-r from-indigo-50 via-purple-50 to-blue-50 dark:from-gray-800 dark:via-gray-700 dark:to-gray-800 rounded-2xl p-6 border border-indigo-200 dark:border-gray-600 shadow-lg">
+        <div className="bg-gradient-to-r from-indigo-50 via-purple-50 to-blue-50 dark:from-gray-800 dark:via-gray-700 dark:to-gray-800 rounded-2xl p-6 border border-indigo-200 dark:border-gray-600 shadow-lg">
           <div className="mb-6">
             <div className="flex items-center space-x-3">
               <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 1.79 4 4 4h8c2.21 0 4-1.79 4-4V7c0-2.21-1.79-4-4-4H8c-2.21 0-4 1.79-4 4z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 9h6v6H9z" />
+                <svg
+                  className="w-6 h-6 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 7v10c0 2.21 1.79 4 4 4h8c2.21 0 4-1.79 4-4V7c0-2.21-1.79-4-4-4H8c-2.21 0-4 1.79-4 4z"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 9h6v6H9z"
+                  />
                 </svg>
               </div>
               <div>
@@ -205,7 +354,11 @@ export default function DbConsole() {
                   <div className="text-sm opacity-90">Total Tables</div>
                   <div className="text-2xl font-bold">{schema.totalTables}</div>
                 </div>
-                <svg className="w-8 h-8 opacity-80" fill="currentColor" viewBox="0 0 20 20">
+                <svg
+                  className="w-8 h-8 opacity-80"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
                   <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
                 </svg>
               </div>
@@ -214,10 +367,20 @@ export default function DbConsole() {
               <div className="flex items-center justify-between">
                 <div>
                   <div className="text-sm opacity-90">Total Columns</div>
-                  <div className="text-2xl font-bold">{schema.totalColumns}</div>
+                  <div className="text-2xl font-bold">
+                    {schema.totalColumns}
+                  </div>
                 </div>
-                <svg className="w-8 h-8 opacity-80" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm0 4a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1V8zm8 0a1 1 0 011-1h4a1 1 0 011 1v2a1 1 0 01-1 1h-4a1 1 0 01-1-1V8zm0 4a1 1 0 011-1h4a1 1 0 011 1v2a1 1 0 01-1 1h-4a1 1 0 01-1-1v-2z" clipRule="evenodd" />
+                <svg
+                  className="w-8 h-8 opacity-80"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm0 4a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1V8zm8 0a1 1 0 011-1h4a1 1 0 011 1v2a1 1 0 01-1 1h-4a1 1 0 01-1-1V8zm0 4a1 1 0 011-1h4a1 1 0 011 1v2a1 1 0 01-1 1h-4a1 1 0 01-1-1v-2z"
+                    clipRule="evenodd"
+                  />
                 </svg>
               </div>
             </div>
@@ -225,10 +388,20 @@ export default function DbConsole() {
               <div className="flex items-center justify-between">
                 <div>
                   <div className="text-sm opacity-90">Schemas</div>
-                  <div className="text-2xl font-bold">{schema.schemas.length}</div>
+                  <div className="text-2xl font-bold">
+                    {schema.schemas.length}
+                  </div>
                 </div>
-                <svg className="w-8 h-8 opacity-80" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M3 6a3 3 0 013-3h10a1 1 0 01.8 1.6L14.25 8l2.55 3.4A1 1 0 0116 13H6a1 1 0 00-1 1v3a1 1 0 11-2 0V6z" clipRule="evenodd" />
+                <svg
+                  className="w-8 h-8 opacity-80"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M3 6a3 3 0 013-3h10a1 1 0 01.8 1.6L14.25 8l2.55 3.4A1 1 0 0116 13H6a1 1 0 00-1 1v3a1 1 0 11-2 0V6z"
+                    clipRule="evenodd"
+                  />
                 </svg>
               </div>
             </div>
@@ -239,15 +412,25 @@ export default function DbConsole() {
             <div className="flex flex-col sm:flex-row gap-4 items-center">
               <div className="relative flex-1">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg className="h-5 w-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  <svg
+                    className="h-5 w-5 text-gray-400 dark:text-gray-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    />
                   </svg>
                 </div>
                 <input
                   type="text"
                   placeholder="Search tables, columns, schemas..."
                   value={schemaSearchTerm}
-                  onChange={(e) => setSchemaSearchTerm(e.target.value)}
+                  onChange={e => setSchemaSearchTerm(e.target.value)}
                   className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg leading-5 bg-white dark:bg-gray-600 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200"
                 />
               </div>
@@ -256,13 +439,24 @@ export default function DbConsole() {
                   onClick={toggleAllTablesExpansion}
                   className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-500 transition-colors duration-200"
                 >
-                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={allExpanded ? "M19 9l-7 7-7-7" : "M5 15l7-7 7 7"} />
+                  <svg
+                    className="w-4 h-4 mr-2"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d={allExpanded ? 'M19 9l-7 7-7-7' : 'M5 15l7-7 7 7'}
+                    />
                   </svg>
                   {allExpanded ? 'Collapse All' : 'Expand All'}
                 </button>
                 <div className="flex items-center px-3 py-2 text-sm text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-600 rounded-lg">
-                  {filteredTables.length} {filteredTables.length === 1 ? 'table' : 'tables'}
+                  {filteredTables.length}{' '}
+                  {filteredTables.length === 1 ? 'table' : 'tables'}
                 </div>
               </div>
             </div>
@@ -273,19 +467,38 @@ export default function DbConsole() {
         <div className="space-y-4">
           {filteredTables.length === 0 ? (
             <div className="text-center py-12 bg-white dark:bg-gray-700 rounded-2xl border-2 border-dashed border-gray-300 dark:border-gray-600">
-              <svg className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              <svg
+                className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500 mb-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
               </svg>
-              <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">No Tables Found</h3>
-              <p className="text-gray-500 dark:text-gray-400">Try adjusting your search criteria</p>
+              <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+                No Tables Found
+              </h3>
+              <p className="text-gray-500 dark:text-gray-400">
+                Try adjusting your search criteria
+              </p>
             </div>
           ) : (
-            filteredTables.map((table) => {
-              const originalIndex = schema.tables.findIndex(t => t.name === table.name && t.schema === table.schema);
+            filteredTables.map(table => {
+              const originalIndex = schema.tables.findIndex(
+                t => t.name === table.name && t.schema === table.schema
+              );
               const isExpanded = expandedTables.has(originalIndex);
-              
+
               return (
-                <div key={originalIndex} className="bg-white dark:bg-gray-700 rounded-2xl border border-gray-200 dark:border-gray-600 shadow-lg overflow-hidden transition-all duration-200 hover:shadow-xl">
+                <div
+                  key={originalIndex}
+                  className="bg-white dark:bg-gray-700 rounded-2xl border border-gray-200 dark:border-gray-600 shadow-lg overflow-hidden transition-all duration-200 hover:shadow-xl"
+                >
                   {/* Table Header */}
                   <div className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-600 dark:to-gray-700 px-6 py-4 border-b border-gray-200 dark:border-gray-600">
                     <div className="flex items-center justify-between">
@@ -294,8 +507,18 @@ export default function DbConsole() {
                           onClick={() => toggleTableExpansion(originalIndex)}
                           className="group p-2 rounded-lg bg-white dark:bg-gray-600 hover:bg-gray-50 dark:hover:bg-gray-500 transition-all duration-200 hover:scale-105 shadow-sm"
                         >
-                          <svg className={`w-5 h-5 text-gray-600 dark:text-gray-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-transform duration-200 ${isExpanded ? 'rotate-180' : 'rotate-0'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          <svg
+                            className={`w-5 h-5 text-gray-600 dark:text-gray-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-transform duration-200 ${isExpanded ? 'rotate-180' : 'rotate-0'}`}
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19 9l-7 7-7-7"
+                            />
                           </svg>
                         </button>
                         <div>
@@ -303,12 +526,16 @@ export default function DbConsole() {
                             {table.schema}.{table.name}
                           </h4>
                           {table.description && (
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{table.description}</p>
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                              {table.description}
+                            </p>
                           )}
                         </div>
                       </div>
                       <div className="flex items-center space-x-3">
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${table.type === 'table' ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' : 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200'}`}>
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-medium ${table.type === 'table' ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' : 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200'}`}
+                        >
                           {table.type.toUpperCase()}
                         </span>
                         {table.rowCount && (
@@ -331,45 +558,72 @@ export default function DbConsole() {
                           <table className="min-w-full">
                             <thead>
                               <tr className="border-b border-gray-200 dark:border-gray-600">
-                                <th className="text-left py-3 px-4 font-semibold text-gray-800 dark:text-gray-200">Column</th>
-                                <th className="text-left py-3 px-4 font-semibold text-gray-800 dark:text-gray-200">Type</th>
-                                <th className="text-left py-3 px-4 font-semibold text-gray-800 dark:text-gray-200">Constraints</th>
+                                <th className="text-left py-3 px-4 font-semibold text-gray-800 dark:text-gray-200">
+                                  Column
+                                </th>
+                                <th className="text-left py-3 px-4 font-semibold text-gray-800 dark:text-gray-200">
+                                  Type
+                                </th>
+                                <th className="text-left py-3 px-4 font-semibold text-gray-800 dark:text-gray-200">
+                                  Constraints
+                                </th>
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                               {table.columns.map((column, colIndex) => (
-                                <tr key={colIndex} className="hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors duration-150">
+                                <tr
+                                  key={colIndex}
+                                  className="hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors duration-150"
+                                >
                                   <td className="py-3 px-4">
                                     <div className="flex items-center space-x-3">
-                                      <span className="font-mono text-gray-900 dark:text-gray-100 font-medium">{column.name}</span>
+                                      <span className="font-mono text-gray-900 dark:text-gray-100 font-medium">
+                                        {column.name}
+                                      </span>
                                       {column.isPrimaryKey && (
-                                        <span className="bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 px-2 py-1 rounded-md text-xs font-semibold">PK</span>
+                                        <span className="bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 px-2 py-1 rounded-md text-xs font-semibold">
+                                          PK
+                                        </span>
                                       )}
                                       {column.isForeignKey && (
-                                        <span className="bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 px-2 py-1 rounded-md text-xs font-semibold">FK</span>
+                                        <span className="bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 px-2 py-1 rounded-md text-xs font-semibold">
+                                          FK
+                                        </span>
                                       )}
                                     </div>
                                   </td>
                                   <td className="py-3 px-4">
                                     <span className="font-mono text-sm text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded-md">
                                       {column.dataType}
-                                      {column.maxLength && `(${column.maxLength})`}
-                                      {column.precision && column.scale !== undefined && `(${column.precision},${column.scale})`}
+                                      {column.maxLength &&
+                                        `(${column.maxLength})`}
+                                      {column.precision &&
+                                        column.scale !== undefined &&
+                                        `(${column.precision},${column.scale})`}
                                     </span>
                                   </td>
                                   <td className="py-3 px-4">
                                     <div className="flex flex-wrap gap-1">
                                       {!column.isNullable && (
-                                        <span className="bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 px-2 py-1 rounded-md text-xs font-medium">NOT NULL</span>
+                                        <span className="bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 px-2 py-1 rounded-md text-xs font-medium">
+                                          NOT NULL
+                                        </span>
                                       )}
                                       {column.defaultValue && (
-                                        <span className="bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 px-2 py-1 rounded-md text-xs font-medium">DEFAULT</span>
-                                      )}
-                                      {column.constraints.map((constraint, constraintIndex) => (
-                                        <span key={constraintIndex} className="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 px-2 py-1 rounded-md text-xs font-medium">
-                                          {constraint}
+                                        <span className="bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 px-2 py-1 rounded-md text-xs font-medium">
+                                          DEFAULT
                                         </span>
-                                      ))}
+                                      )}
+                                      {column.constraints.map(
+                                        (constraint, constraintIndex) => (
+                                          <span
+                                            key={constraintIndex}
+                                            className="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 px-2 py-1 rounded-md text-xs font-medium"
+                                          >
+                                            {constraint}
+                                          </span>
+                                        )
+                                      )}
                                     </div>
                                   </td>
                                 </tr>
@@ -382,22 +636,39 @@ export default function DbConsole() {
                         {table.indexes.length > 0 && (
                           <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-600">
                             <h5 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center">
-                              <svg className="w-5 h-5 mr-2 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v 6a2 2 0 002 2h6a2 2 0 002 2v6m0 0V9a2 2 0 012 2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002 2-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                              <svg
+                                className="w-5 h-5 mr-2 text-indigo-600 dark:text-indigo-400"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M9 19v 6a2 2 0 002 2h6a2 2 0 002 2v6m0 0V9a2 2 0 012 2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002 2-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                                />
                               </svg>
                               Indexes ({table.indexes.length})
                             </h5>
                             <div className="space-y-2">
                               {table.indexes.map((index, indexIndex) => (
-                                <div key={indexIndex} className="bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-700 rounded-lg p-3">
+                                <div
+                                  key={indexIndex}
+                                  className="bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-700 rounded-lg p-3"
+                                >
                                   <div className="flex items-center justify-between">
-                                    <span className="font-mono text-sm font-medium text-indigo-800 dark:text-indigo-200">{index.name}</span>
+                                    <span className="font-mono text-sm font-medium text-indigo-800 dark:text-indigo-200">
+                                      {index.name}
+                                    </span>
                                     <div className="flex items-center space-x-2">
                                       <span className="text-xs text-indigo-600 dark:text-indigo-400">
                                         {index.columns.join(', ')}
                                       </span>
                                       {index.isUnique && (
-                                        <span className="bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 px-2 py-1 rounded-md text-xs font-semibold">UNIQUE</span>
+                                        <span className="bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 px-2 py-1 rounded-md text-xs font-semibold">
+                                          UNIQUE
+                                        </span>
                                       )}
                                       <span className="bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 px-2 py-1 rounded-md text-xs">
                                         {index.type}
@@ -422,14 +693,27 @@ export default function DbConsole() {
         {schema.relationships.length > 0 && (
           <div className="bg-white dark:bg-gray-700 rounded-2xl border border-gray-200 dark:border-gray-600 shadow-lg p-6">
             <h4 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4 flex items-center">
-              <svg className="w-6 h-6 mr-3 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.102m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+              <svg
+                className="w-6 h-6 mr-3 text-purple-600 dark:text-purple-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.102m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+                />
               </svg>
               Database Relationships ({schema.relationships.length})
             </h4>
             <div className="space-y-3">
               {schema.relationships.map((rel, index) => (
-                <div key={index} className="bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 border border-purple-200 dark:border-purple-700 rounded-xl p-4">
+                <div
+                  key={index}
+                  className="bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 border border-purple-200 dark:border-purple-700 rounded-xl p-4"
+                >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
                       <div className="text-center">
@@ -440,8 +724,18 @@ export default function DbConsole() {
                           {rel.fromColumns.join(', ')}
                         </div>
                       </div>
-                      <svg className="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                      <svg
+                        className="w-6 h-6 text-purple-600 dark:text-purple-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M17 8l4 4m0 0l-4 4m4-4H3"
+                        />
                       </svg>
                       <div className="text-center">
                         <div className="font-mono text-sm font-semibold text-purple-800 dark:text-purple-200">
@@ -453,7 +747,9 @@ export default function DbConsole() {
                       </div>
                     </div>
                     <span className="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 px-3 py-1 rounded-lg text-sm font-semibold">
-                      {rel.type.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                      {rel.type
+                        .replace('-', ' ')
+                        .replace(/\b\w/g, l => l.toUpperCase())}
                     </span>
                   </div>
                   {rel.constraintName && (
@@ -470,8 +766,16 @@ export default function DbConsole() {
         {/* Schema Footer */}
         <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-4 border border-gray-200 dark:border-gray-600">
           <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
-            <div>Schema version: <span className="font-mono font-semibold">{schema.version}</span></div>
-            <div>Last updated: <span className="font-mono">{new Date(schema.lastUpdated).toLocaleString()}</span></div>
+            <div>
+              Schema version:{' '}
+              <span className="font-mono font-semibold">{schema.version}</span>
+            </div>
+            <div>
+              Last updated:{' '}
+              <span className="font-mono">
+                {new Date(schema.lastUpdated).toLocaleString()}
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -536,18 +840,33 @@ export default function DbConsole() {
 
   return (
     <>
-      {/* Dark Mode Toggle Button */}
-      <button 
-        onClick={toggleDarkMode} 
+      {/* Theme Toggle Button */}
+      <button
+        onClick={toggleTheme}
         className="fixed top-6 right-6 z-50 p-3 rounded-full bg-white dark:bg-gray-800 shadow-lg border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-all duration-300 hover:scale-105"
-        aria-label="Toggle dark mode"
+        aria-label={`Current theme: ${theme}. Click to toggle`}
+        title={`Current: ${theme === 'light' ? 'Light' : 'Dark'} mode`}
       >
-        {isDarkMode ? (
-          <svg className="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clipRule="evenodd" />
+        {theme === 'light' ? (
+          // Light mode icon (sun)
+          <svg
+            className="w-5 h-5 text-yellow-500"
+            fill="currentColor"
+            viewBox="0 0 20 20"
+          >
+            <path
+              fillRule="evenodd"
+              d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"
+              clipRule="evenodd"
+            />
           </svg>
         ) : (
-          <svg className="w-5 h-5 text-gray-700 dark:text-gray-300" fill="currentColor" viewBox="0 0 20 20">
+          // Dark mode icon (moon)
+          <svg
+            className="w-5 h-5 text-blue-400"
+            fill="currentColor"
+            viewBox="0 0 20 20"
+          >
             <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
           </svg>
         )}
@@ -559,8 +878,18 @@ export default function DbConsole() {
           <div className="px-8 py-6 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-700 border-b border-gray-200 dark:border-gray-600">
             <div className="flex items-center mb-4">
               <div className="flex-shrink-0">
-                <svg className="h-8 w-8 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                <svg
+                  className="h-8 w-8 text-blue-600 dark:text-blue-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
                 </svg>
               </div>
               <div className="ml-4">
@@ -568,7 +897,8 @@ export default function DbConsole() {
                   Database Console
                 </h1>
                 <p className="mt-2 text-base text-gray-600 dark:text-gray-400">
-                  Query your database using natural language prompts powered by the Model Context Protocol
+                  Query your database using natural language prompts powered by
+                  the Model Context Protocol
                 </p>
               </div>
             </div>
@@ -577,14 +907,127 @@ export default function DbConsole() {
           {/* Form */}
           <form onSubmit={handleSubmit} className="px-8 py-8 space-y-8">
             <div className="grid md:grid-cols-2 gap-8">
+              {/* Query Template Selection */}
+              <div className="md:col-span-2 mb-2">
+                <label
+                  htmlFor="template-select"
+                  className="block text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2"
+                >
+                  Select a Query Template
+                </label>
+                <select
+                  id="template-select"
+                  className="w-full border-2 border-gray-200 dark:border-gray-600 rounded-xl px-3 py-2 mb-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                  value={selectedTemplateId}
+                  onChange={e => setSelectedTemplateId(e.target.value)}
+                  disabled={isLoading}
+                >
+                  <option value="">-- None --</option>
+                  {queryTemplates.map(t => (
+                    <option key={t.id} value={t.id}>
+                      {t.name}
+                    </option>
+                  ))}
+                </select>
+                {selectedTemplate && (
+                  <div className="mt-2 p-3 bg-gray-50 dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700">
+                    <div className="font-medium text-gray-900 dark:text-gray-100">
+                      {selectedTemplate.description}
+                    </div>
+                    <div className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                      <span className="font-mono">
+                        {selectedTemplate.defaultPrompt}
+                      </span>
+                    </div>
+                    {/* Render placeholder input fields if any */}
+                    {selectedTemplate.placeholders.length > 0 && (
+                      <div className="mt-4">
+                        <div className="font-semibold mb-2 text-gray-800 dark:text-gray-200">
+                          Fill in template variables:
+                        </div>
+                        <div className="flex flex-col gap-2">
+                          {selectedTemplate.placeholders.map(ph => (
+                            <div key={ph} className="flex items-center gap-2">
+                              <label
+                                htmlFor={`ph-${ph}`}
+                                className="w-32 text-gray-700 dark:text-gray-300 font-medium"
+                              >
+                                {ph}
+                              </label>
+                              <input
+                                id={`ph-${ph}`}
+                                type="text"
+                                className="flex-1 px-3 py-2 border rounded bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100"
+                                value={placeholderValues[ph] || ''}
+                                onChange={e =>
+                                  setPlaceholderValues(v => ({
+                                    ...v,
+                                    [ph]: e.target.value
+                                  }))
+                                }
+                                placeholder={`Enter ${ph}`}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                        {/* Insert Template Button */}
+                        <button
+                          type="button"
+                          className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded shadow disabled:opacity-50"
+                          onClick={() => {
+                            // Validate all placeholders are filled
+                            const missing =
+                              selectedTemplate.placeholders.filter(
+                                ph => !placeholderValues[ph]?.trim()
+                              );
+                            if (missing.length > 0) {
+                              setError(`Please fill in: ${missing.join(', ')}`);
+                              return;
+                            }
+                            // Replace placeholders in prompt
+                            let builtPrompt = selectedTemplate.defaultPrompt;
+                            selectedTemplate.placeholders.forEach(ph => {
+                              const re = new RegExp(
+                                '{{\\s*' + ph + '\\s*}}',
+                                'g'
+                              );
+                              builtPrompt = builtPrompt.replace(
+                                re,
+                                placeholderValues[ph]
+                              );
+                            });
+                            setPrompt(builtPrompt);
+                            setError(null);
+                          }}
+                          disabled={selectedTemplate.placeholders.some(
+                            ph => !placeholderValues[ph]?.trim()
+                          )}
+                        >
+                          Use Template
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
               {/* Prompt Input */}
               <div className="md:col-span-2">
                 <label
                   htmlFor="prompt"
-                  className="block text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center"
+                  className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center"
                 >
-                  <svg className="w-5 h-5 mr-2 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  <svg
+                    className="w-5 h-5 mr-2 text-blue-600 dark:text-blue-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                    />
                   </svg>
                   Natural Language Prompt
                 </label>
@@ -606,11 +1049,26 @@ export default function DbConsole() {
               <div>
                 <label
                   htmlFor="target"
-                  className="block text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center"
+                  className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center"
                 >
-                  <svg className="w-5 h-5 mr-2 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 1.79 4 4 4h8c2.21 0 4-1.79 4-4V7c0-2.21-1.79-4-4-4H8c-2.21 0-4 1.79-4 4z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 9h6v6H9z" />
+                  <svg
+                    className="w-5 h-5 mr-2 text-green-600 dark:text-green-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 7v10c0 2.21 1.79 4 4 4h8c2.21 0 4-1.79 4-4V7c0-2.21-1.79-4-4-4H8c-2.21 0-4 1.79-4 4z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 9h6v6H9z"
+                    />
                   </svg>
                   Database Target
                 </label>
@@ -628,6 +1086,85 @@ export default function DbConsole() {
                 <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
                   Choose your database connection type
                 </p>
+                {/* Test Connection button placed below the target select for visibility */}
+                <div className="mt-3">
+                  <button
+                    onClick={async () => {
+                      setIsTestingConnection(true);
+                      setConnectionStatus(null);
+
+                      try {
+                        const resp = await fetch('/api/db/test-connection', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ target })
+                        });
+
+                        interface ConnectionApiResponse {
+                          success: boolean;
+                          message?: string;
+                          error?: string;
+                          diagnostics?: { [k: string]: unknown } | null;
+                        }
+
+                        const data =
+                          (await resp.json()) as ConnectionApiResponse;
+                        setConnectionStatus(data);
+                      } catch (err) {
+                        setConnectionStatus({
+                          success: false,
+                          error:
+                            err instanceof Error ? err.message : 'Network error'
+                        });
+                      } finally {
+                        setIsTestingConnection(false);
+                      }
+                    }}
+                    className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm"
+                  >
+                    {isTestingConnection ? 'Testing...' : 'Test Connection'}
+                  </button>
+                  {connectionStatus && (
+                    <div
+                      className={`inline-flex items-center px-3 py-2 text-sm rounded-lg ml-3 shadow-sm ${connectionStatus.success ? 'bg-green-600 text-white' : 'bg-red-600 text-white'}`}
+                      role="status"
+                      aria-live="polite"
+                    >
+                      <div className="flex flex-col">
+                        <div className="flex items-center">
+                          <span className="font-semibold mr-3">
+                            {connectionStatus.success ? 'Connected' : 'Failed'}
+                          </span>
+                          <span className="opacity-90">
+                            {connectionStatus.message ??
+                              connectionStatus.error ??
+                              ''}
+                          </span>
+                        </div>
+                        {currentDiag && (
+                          <div className="flex flex-wrap gap-2 mt-2 text-xs">
+                            {currentDiag.latencyMs !== undefined &&
+                              currentDiag.latencyMs !== null && (
+                                <span className="bg-white/10 text-white px-2 py-0.5 rounded-md">
+                                  Latency: {String(currentDiag.latencyMs)}ms
+                                </span>
+                              )}
+                            {currentDiag.ping !== undefined && (
+                              <span className="bg-white/10 text-white px-2 py-0.5 rounded-md">
+                                Ping: {String(currentDiag.ping)}ms
+                              </span>
+                            )}
+                            {currentDiag.details !== undefined && (
+                              <span className="bg-white/10 text-white px-2 py-0.5 rounded-md">
+                                Details: {String(currentDiag.details)}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -648,7 +1185,11 @@ export default function DbConsole() {
                     >
                       <circle
                         className="opacity-25"
-                        cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
                       />
                       <path
                         className="opacity-75"
@@ -660,17 +1201,29 @@ export default function DbConsole() {
                   </>
                 ) : (
                   <>
-                    <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    <svg
+                      className="w-5 h-5 mr-3"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M13 10V3L4 14h7v7l9-11h-7z"
+                      />
                     </svg>
                     Execute Query
                   </>
                 )}
               </button>
-              
+
               <button
                 type="button"
-                onClick={showSchema ? () => setShowSchema(false) : handleFetchSchema}
+                onClick={
+                  showSchema ? () => setShowSchema(false) : handleFetchSchema
+                }
                 disabled={isLoadingSchema}
                 className="flex justify-center items-center px-8 py-4 border-2 border-gray-300 dark:border-gray-600 rounded-xl shadow-lg text-lg font-semibold text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 hover:border-purple-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 dark:focus:ring-offset-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 transition-all duration-200"
               >
@@ -682,26 +1235,57 @@ export default function DbConsole() {
                       fill="none"
                       viewBox="0 0 24 24"
                     >
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      />
                     </svg>
                     Loading Schema...
                   </>
                 ) : showSchema ? (
                   <>
-                    <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 10.125A3.375 3.375 0 1120.25 6.75a3.375 3.375 0 01-6.375 2.25zM9.879 12.121L7.5 14.5m8.379-8.379l2.121 2.121M9.879 9.879l-2.16 2.16M14.121 14.121l2.16-2.16M9.879 14.121l1.515-1.515M14.121 9.879l-1.515 1.515" />
+                    <svg
+                      className="w-5 h-5 mr-3"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M13.875 10.125A3.375 3.375 0 1120.25 6.75a3.375 3.375 0 01-6.375 2.25zM9.879 12.121L7.5 14.5m8.379-8.379l2.121 2.121M9.879 9.879l-2.16 2.16M14.121 14.121l2.16-2.16M9.879 14.121l1.515-1.515M14.121 9.879l-1.515 1.515"
+                      />
                     </svg>
                     Hide Schema
                   </>
                 ) : (
-                    <>
-                      <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                      View Schema
-                    </>
-                  )}
+                  <>
+                    <svg
+                      className="w-5 h-5 mr-3"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                      />
+                    </svg>
+                    View Schema
+                  </>
+                )}
               </button>
             </div>
           </form>
@@ -743,10 +1327,17 @@ export default function DbConsole() {
           {/* Results Display */}
           {result && result.success && (
             <div className="px-8 pb-8">
+              {result.mocked && (
+                <div className="mb-4 px-6 py-3 rounded-lg bg-yellow-100 text-yellow-800 border border-yellow-200">
+                  <strong>Note:</strong> These results are mocked because the
+                  MCP-DB Connector was not reachable. Start your MCP server or
+                  set <code>MCP_SERVER_URL</code> to get real data.
+                </div>
+              )}
               <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-800/20 border-2 border-green-200 dark:border-green-800 rounded-2xl p-6 shadow-lg mb-6">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
-                 <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
+                    <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
                       <svg
                         className="h-6 w-6 text-green-600 dark:text-green-400"
                         xmlns="http://www.w3.org/2000/svg"
@@ -766,10 +1357,9 @@ export default function DbConsole() {
                       Query Executed Successfully
                     </h3>
                     <div className="mt-1 text-base text-green-700 dark:text-green-300">
-                      {result.executionTime ?
-                        `⚡ Executed in ${result.executionTime}ms` :
-                        '✨ Query completed successfully'
-                      }
+                      {result.executionTime
+                        ? `⚡ Executed in ${result.executionTime}ms`
+                        : '✨ Query completed successfully'}
                     </div>
                   </div>
                 </div>
@@ -780,8 +1370,18 @@ export default function DbConsole() {
                 <div className="mb-8">
                   <div className="bg-gray-50 dark:bg-gray-700/50 p-1 rounded-2xl">
                     <h4 className="flex items-center text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4 px-4 pt-4">
-                      <svg className="w-5 h-5 mr-2 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      <svg
+                        className="w-5 h-5 mr-2 text-purple-600 dark:text-purple-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                        />
                       </svg>
                       Generated SQL Query
                     </h4>
@@ -798,15 +1398,114 @@ export default function DbConsole() {
               {result.data && result.data.length > 0 ? (
                 <div>
                   <div className="bg-gray-50 dark:bg-gray-700/50 p-1 rounded-2xl">
-                    <h4 className="flex items-center text-lg font-semibold text-gray-800 dark:text-gray-200 mb-6 px-4 pt-4">
-                      <svg className="w-5 h-5 mr-2 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                      </svg>
-                      Query Results
-                      <span className="ml-3 text-sm font-normal bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-3 py-1 rounded-full">
-                        {result.data.length} rows
-                      </span>
-                    </h4>
+                    <div className="flex items-center justify-between px-4 pt-4 mb-6">
+                      <h4 className="flex items-center text-lg font-semibold text-gray-800 dark:text-gray-200">
+                        <svg
+                          className="w-5 h-5 mr-2 text-blue-600 dark:text-blue-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                          />
+                        </svg>
+                        Query Results
+                        <span className="ml-3 text-sm font-normal bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-3 py-1 rounded-full">
+                          {result.data.length} rows
+                        </span>
+                      </h4>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={handleExportCSV}
+                          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-500 transition-colors duration-200"
+                          title="Export as CSV"
+                        >
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                            />
+                          </svg>
+                          CSV
+                        </button>
+                        <button
+                          onClick={handleExportJSON}
+                          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-500 transition-colors duration-200"
+                          title="Export as JSON"
+                        >
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                            strokeWidth={2.5}
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M6.75 7.5c-1.5 0-2.25.75-2.25 2.25v4.5c0 1.5.75 2.25 2.25 2.25M17.25 7.5c1.5 0 2.25.75 2.25 2.25v4.5c0 1.5-.75 2.25-2.25 2.25"
+                            />
+                          </svg>
+                          JSON
+                        </button>
+                        <button
+                          onClick={handleCopyToClipboard}
+                          className={`flex items-center gap-2 px-4 py-2 text-sm font-medium ${
+                            copySuccess
+                              ? 'text-green-700 dark:text-green-300 bg-green-50 dark:bg-green-900/30 border-green-300 dark:border-green-700'
+                              : 'text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-600 border-gray-300 dark:border-gray-500'
+                          } border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-500 transition-colors duration-200`}
+                          title="Copy to clipboard"
+                        >
+                          {copySuccess ? (
+                            <>
+                              <svg
+                                className="w-4 h-4"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M5 13l4 4L19 7"
+                                />
+                              </svg>
+                              Copied!
+                            </>
+                          ) : (
+                            <>
+                              <svg
+                                className="w-4 h-4"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                                />
+                              </svg>
+                              Copy
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
                     <div className="mx-4 mb-4 overflow-hidden shadow-2xl border border-gray-200 dark:border-gray-600 rounded-xl">
                       <div className="overflow-x-auto bg-white dark:bg-gray-800">
                         <table className="min-w-full divide-y divide-gray-300 dark:divide-gray-600">
@@ -819,16 +1518,57 @@ export default function DbConsole() {
                 </div>
               ) : (
                 <div className="text-center py-12 bg-gray-50 dark:bg-gray-700/50 rounded-2xl border border-gray-200 dark:border-gray-600">
-                  <svg className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                  <svg
+                    className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500 mb-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
+                    />
                   </svg>
-                  <p className="text-lg font-medium text-gray-500 dark:text-gray-400 mb-2">No Results Found</p>
-                  <p className="text-sm text-gray-400 dark:text-gray-500">This query didn&apos;t return any data</p>
+                  <p className="text-lg font-medium text-gray-500 dark:text-gray-400 mb-2">
+                    No Results Found
+                  </p>
+                  <p className="text-sm text-gray-400 dark:text-gray-500">
+                    This query didn&apos;t return any data
+                  </p>
                 </div>
               )}
             </div>
           )}
-          
+
+          {/* Add loading indicator with text to results area */}
+          {isLoading && (
+            <div className="flex flex-col justify-center items-center py-12">
+              <svg
+                className="animate-spin h-10 w-10 text-blue-600 mb-4"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                />
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.972 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                />
+              </svg>
+              <p className="text-lg font-medium text-gray-700 dark:text-gray-300">Loading queries...</p>
+            </div>
+          )}
+
           {/* Schema Display */}
           {showSchema && renderSchema()}
         </div>
