@@ -4,6 +4,7 @@ import {
   DatabaseQueryResponse,
   DatabaseErrorResponse
 } from '@/app/types/database';
+import { fetchWithRetry } from '@/app/lib/fetchWithRetry';
 
 /**
  * API route handler for database queries
@@ -41,7 +42,7 @@ export async function POST(
     // Check if MCP server is available, otherwise use mock data for development
     let mcpData;
     try {
-      const mcpResponse = await fetch('http://localhost:8000/query', {
+      const mcpResponse = await fetchWithRetry('http://localhost:8000/query', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
