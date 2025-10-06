@@ -11,6 +11,8 @@ import {
   safeTruncate
 } from '@/app/lib/logger';
 
+import { fetchWithRetry } from '@/app/lib/fetchWithRetry';
+
 /**
  * API route handler for database queries
  * Forwards requests to the MCP server backend at http://localhost:8000/query
@@ -75,7 +77,9 @@ export async function POST(
       prompt: safeTruncate(body.prompt, 1000)
     });
     try {
+      feat/structured-logging-db-queries
       const mcpResponse = await fetch(MCP_URL, {
+
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
