@@ -15,6 +15,15 @@ DATABASE_URL=sqlite:///local_dev.db
 # DATABASE_TYPE=sqlalchemy
 # DATABASE_URL=postgresql://user:password@localhost:5432/dbname
 
+# SQLAlchemy Pool Configuration (optional)
+# POOL_SIZE=5
+# POOL_MAX_OVERFLOW=10
+# POOL_TIMEOUT=30
+# POOL_RECYCLE=1800
+# POOL_PRE_PING=true
+# POOL_USE_LIFO=false
+# POOL_LOG_EVENTS=true
+
 # For Snowflake (uncomment and configure as needed)
 # DATABASE_TYPE=snowflake
 # SNOWFLAKE_ACCOUNT=your_account
