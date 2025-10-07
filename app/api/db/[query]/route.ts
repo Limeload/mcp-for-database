@@ -11,8 +11,6 @@ import {
   safeTruncate
 } from '@/app/lib/logger';
 
-import { fetchWithRetry } from '@/app/lib/fetchWithRetry';
-
 /**
  * API route handler for database queries
  * Forwards requests to the MCP server backend at http://localhost:8000/query
