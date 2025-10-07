@@ -8,15 +8,15 @@ Templates are defined in `app/config/templates.ts`:
 
 ```ts
 export const queryTemplates: QueryTemplate[] = [
-   {
-      id: 'recent_users',
-      name: 'Users Registered in Last N Days',
-      description: 'Find users registered in the last N days',
-      defaultPrompt: 'Show all users who registered in the last {{days}} days',
-      placeholders: ['days'],
-      databasesSupported: ['sqlalchemy', 'sqlite', 'snowflake'],
-   },
-   // ...more templates
+  {
+    id: 'recent_users',
+    name: 'Users Registered in Last N Days',
+    description: 'Find users registered in the last N days',
+    defaultPrompt: 'Show all users who registered in the last {{days}} days',
+    placeholders: ['days'],
+    databasesSupported: ['sqlalchemy', 'sqlite', 'snowflake']
+  }
+  // ...more templates
 ];
 ```
 

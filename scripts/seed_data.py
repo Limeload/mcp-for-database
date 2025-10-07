@@ -21,8 +21,8 @@ import os
 import sys
 import random
 from datetime import datetime, timedelta
-from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from db_pool import create_pooled_engine, log_pool_status
 
 # Import your SQLAlchemy models here
 # from your_models import User, Product, Order, Base
@@ -106,8 +106,8 @@ def seed_database():
     try:
         print(f"Seeding database: {DATABASE_URL}")
 
-        # Create engine and session
-        engine = create_engine(DATABASE_URL)
+        # Create pooled engine and session
+        engine = create_pooled_engine(DATABASE_URL)
         SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
         db = SessionLocal()
 
@@ -117,6 +117,7 @@ def seed_database():
         create_sample_orders(db)
 
         db.close()
+        log_pool_status(engine, label="seed_data")
         print("✅ Database seeding completed successfully!")
 
     except Exception as e:
@@ -141,7 +142,7 @@ def clear_existing_data(db):
 
 if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == "--clear":
-        engine = create_engine(DATABASE_URL)
+        engine = create_pooled_engine(DATABASE_URL)
         SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
         db = SessionLocal()
         clear_existing_data(db)

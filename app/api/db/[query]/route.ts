@@ -5,6 +5,8 @@ import {
   createErrorResponse
 } from '@/app/lib/api-response';
 
+import { fetchWithRetry } from '@/app/lib/fetchWithRetry';
+
 /**
  * API route handler for database queries
  * Forwards requests to the MCP server backend at http://localhost:8000/query
@@ -46,7 +48,7 @@ export async function POST(
     let mcpData;
     let usedMock = false;
     try {
-      const mcpResponse = await fetch('http://localhost:8000/query', {
+      const mcpResponse = await fetchWithRetry('http://localhost:8000/query', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
