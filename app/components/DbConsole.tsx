@@ -102,7 +102,8 @@ export default function DbConsole() {
   // Load theme preference on mount
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
-    const currentTheme: 'light' | 'dark' = savedTheme === 'dark' ? 'dark' : 'light';
+    const currentTheme: 'light' | 'dark' =
+      savedTheme === 'dark' ? 'dark' : 'light';
     setTheme(currentTheme);
     applyTheme(currentTheme);
   }, []);
@@ -119,7 +120,7 @@ export default function DbConsole() {
    * Handle form submission
    * Calls the API route to execute database query
    */
-const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!prompt.trim()) {
@@ -1565,7 +1566,9 @@ const handleSubmit = async (e: React.FormEvent) => {
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.972 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                 />
               </svg>
-              <p className="text-lg font-medium text-gray-700 dark:text-gray-300">Loading queries...</p>
+              <p className="text-lg font-medium text-gray-700 dark:text-gray-300">
+                Loading queries...
+              </p>
             </div>
           )}
 

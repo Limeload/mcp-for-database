@@ -330,33 +330,35 @@ body {
 }
 
 /* Light mode overrides for gradient backgrounds */
-.light-mode [class*="from-blue-50"] {
+.light-mode [class*='from-blue-50'] {
   --tw-gradient-from: #ffffff !important;
 }
 
-.light-mode [class*="via-white"] {
+.light-mode [class*='via-white'] {
   --tw-gradient-via: #ffffff !important;
 }
 
-.light-mode [class*="to-indigo-50"] {
+.light-mode [class*='to-indigo-50'] {
   --tw-gradient-to: #ffffff !important;
 }
 
-.light-mode [class*="from-gray-900"] {
+.light-mode [class*='from-gray-900'] {
   --tw-gradient-from: #ffffff !important;
 }
 
-.light-mode [class*="via-gray-800"] {
+.light-mode [class*='via-gray-800'] {
   --tw-gradient-via: #ffffff !important;
 }
 
-.light-mode [class*="to-gray-900"] {
+.light-mode [class*='to-gray-900'] {
   --tw-gradient-to: #ffffff !important;
 }
 
 /* Light mode specific enhancements */
 .light-mode .shadow-xl-modern {
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.05),
+    0 10px 10px -5px rgba(0, 0, 0, 0.02);
 }
 
 /* Light mode schema display - improve badge visibility */
@@ -449,5 +451,7 @@ body {
 }
 /* Dark mode specific enhancements */
 .dark-mode .shadow-xl-modern {
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.3),
+    0 10px 10px -5px rgba(0, 0, 0, 0.2);
 }
