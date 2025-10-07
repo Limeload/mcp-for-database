@@ -6,6 +6,8 @@ import {
 } from '@/app/lib/api-response';
 
 import { fetchWithRetry } from '@/app/lib/fetchWithRetry';
+import { authorize } from '@/app/lib/auth/authorize';
+import { isWriteQuery } from '@/app/lib/sql/operation';
 
 /**
  * API route handler for database queries
@@ -16,6 +18,8 @@ export async function POST(
   { params }: { params: Promise<{ query: string }> }
 ) {
   try {
+    const canQuery = await authorize('query:read');
+    if (!canQuery.ok) return canQuery.response;
     // Await params since it's a Promise in Next.js 15
     await params;
 
@@ -68,6 +72,13 @@ export async function POST(
 
       // Parse MCP server response
       mcpData = await mcpResponse.json();
+
+      // If query returned includes SQL text, enforce write permission if needed
+      const sqlText = typeof mcpData.query === 'string' ? mcpData.query : '';
+      if (sqlText && isWriteQuery(sqlText)) {
+        const canWrite = await authorize('query:write');
+        if (!canWrite.ok) return canWrite.response;
+      }
     } catch (error) {
       // MCP server not available, use mock data for development
       // eslint-disable-next-line no-console
