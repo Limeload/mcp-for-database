@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 /* Dark Mode Toggle Styles */
 body {
@@ -30,6 +30,22 @@ body {
 
 .dark-mode-toggle:hover {
   background-color: #f0f0f0;
+}
+
+/* Light Mode Styles */
+.light-mode {
+  background-color: white;
+  color: black;
+}
+
+.light-mode .dark-mode-toggle {
+  border-color: #ccc;
+  background-color: white;
+  color: black;
+}
+
+.light-mode .dark-mode-toggle:hover {
+  background-color: #f9f9f9;
 }
 
 /* Dark Mode Styles */
@@ -169,14 +185,451 @@ body {
 
 /* Enhanced shadows */
 .shadow-xl-modern {
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
 .shadow-xl-modern-dark {
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.3),
+    0 10px 10px -5px rgba(0, 0, 0, 0.2);
 }
 
+/* Light mode styles for components */
+.light-mode .bg-gray-100 {
+  background-color: #f7f7f7 !important;
+}
+
+.light-mode .bg-white {
+  background-color: #ffffff !important;
+}
+
+.light-mode .bg-gray-50 {
+  background-color: #fafafa !important;
+}
+
+.light-mode .bg-gray-800 {
+  background-color: #ffffff !important;
+}
+
+.light-mode .bg-gray-700 {
+  background-color: #f8f9fa !important;
+}
+
+.light-mode .bg-gray-600 {
+  background-color: #e9ecef !important;
+}
+
+.light-mode .text-gray-900 {
+  color: #111111 !important;
+}
+
+.light-mode .text-gray-700 {
+  color: #374151 !important;
+}
+
+.light-mode .text-gray-600 {
+  color: #4b5563 !important;
+}
+
+.light-mode .text-gray-500 {
+  color: #6b7280 !important;
+}
+
+.light-mode .text-gray-400 {
+  color: #9ca3af !important;
+}
+
+.light-mode .text-gray-300 {
+  color: #d1d5db !important;
+}
+
+.light-mode .text-gray-200 {
+  color: #e5e7eb !important;
+}
+
+.light-mode .text-gray-100 {
+  color: #f3f4f6 !important;
+}
+
+.light-mode .text-white {
+  color: #111111 !important;
+}
+
+.light-mode .border-gray-200 {
+  border-color: #e5e7eb !important;
+}
+
+.light-mode .border-gray-300 {
+  border-color: #d1d5db !important;
+}
+
+.light-mode .border-gray-600 {
+  border-color: #d1d5db !important;
+}
+
+.light-mode .border-gray-700 {
+  border-color: #d1d5db !important;
+}
+
+.light-mode .divide-gray-200 > * + * {
+  border-color: #e5e7eb !important;
+}
+
+.light-mode .divide-gray-300 > * + * {
+  border-color: #d1d5db !important;
+}
+
+.light-mode .divide-gray-600 > * + * {
+  border-color: #e5e7eb !important;
+}
+
+.light-mode .divide-gray-700 > * + * {
+  border-color: #e5e7eb !important;
+}
+
+.light-mode .bg-red-50 {
+  background-color: #fef2f2 !important;
+}
+
+.light-mode .border-red-200 {
+  border-color: #fecaca !important;
+}
+
+.light-mode .text-red-800 {
+  color: #991b1b !important;
+}
+
+.light-mode .text-red-700 {
+  color: #b91c1c !important;
+}
+
+.light-mode .text-red-400 {
+  color: #f87171 !important;
+}
+
+.light-mode .bg-green-50 {
+  background-color: #f0fdf4 !important;
+}
+
+.light-mode .border-green-200 {
+  border-color: #bbf7d0 !important;
+}
+
+.light-mode .text-green-800 {
+  color: #166534 !important;
+}
+
+.light-mode .text-green-700 {
+  color: #15803d !important;
+}
+
+.light-mode .text-green-400 {
+  color: #4ade80 !important;
+}
+
+/* Light mode overrides for gradient backgrounds */
+.light-mode [class*="from-blue-50"] {
+  --tw-gradient-from: #ffffff !important;
+}
+
+.light-mode [class*="via-white"] {
+  --tw-gradient-via: #ffffff !important;
+}
+
+.light-mode [class*="to-indigo-50"] {
+  --tw-gradient-to: #ffffff !important;
+}
+
+.light-mode [class*="from-gray-900"] {
+  --tw-gradient-from: #ffffff !important;
+}
+
+.light-mode [class*="via-gray-800"] {
+  --tw-gradient-via: #ffffff !important;
+}
+
+.light-mode [class*="to-gray-900"] {
+  --tw-gradient-to: #ffffff !important;
+}
+
+/* Light mode specific enhancements */
+.light-mode .shadow-xl-modern {
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
+}
+
+/* Light mode schema display - improve badge visibility */
+.light-mode .bg-yellow-100 {
+  background-color: #fef3c7 !important;
+}
+
+.light-mode .text-yellow-800 {
+  color: #92400e !important;
+}
+
+.light-mode .bg-orange-100 {
+  background-color: #fed7aa !important;
+}
+
+.light-mode .text-orange-800 {
+  color: #9a3412 !important;
+}
+
+.light-mode .bg-red-100 {
+  background-color: #fee2e2 !important;
+}
+
+.light-mode .text-red-800 {
+  color: #991b1b !important;
+}
+
+.light-mode .bg-purple-100 {
+  background-color: #ede9fe !important;
+}
+
+.light-mode .text-purple-800 {
+  color: #5b21b6 !important;
+}
+
+.light-mode .bg-indigo-100 {
+  background-color: #e0e7ff !important;
+}
+
+.light-mode .text-indigo-800 {
+  color: #3730a3 !important;
+}
+
+.light-mode .bg-blue-100 {
+  background-color: #dbeafe !important;
+}
+
+.light-mode .text-blue-800 {
+  color: #1e40af !important;
+}
+
+.light-mode .text-blue-300:not(.text-transparent) {
+  color: #1e40af !important;
+}
+
+.light-mode .bg-green-100 {
+  background-color: #dcfce7 !important;
+}
+
+.light-mode .text-green-800 {
+  color: #166534 !important;
+}
+
+/* Light mode data type badges - better contrast */
+.light-mode .bg-blue-50 {
+  background-color: #eff6ff !important;
+}
+
+.light-mode .text-blue-700 {
+  color: #1d4ed8 !important;
+}
+
+/* Ensure dark container backgrounds appear white in light mode */
+.light-mode .bg-gray-900 {
+  background-color: #ffffff !important;
+}
+
+/* Neutralize dark: gradient tokens (classes with colon) when in light-mode
+   so elements that rely on dark gradients don't stay dark under certain
+   compiled class patterns. These target the literal Tailwind class names
+   that include a colon (escaped here). */
+.light-mode .dark\:from-gray-800 {
+  --tw-gradient-from: #ffffff !important;
+}
+.light-mode .dark\:via-gray-700 {
+  --tw-gradient-via: #ffffff !important;
+}
+.light-mode .dark\:to-gray-800 {
+  --tw-gradient-to: #ffffff !important;
+}
 /* Dark mode specific enhancements */
 .dark-mode .shadow-xl-modern {
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.3),
+    0 10px 10px -5px rgba(0, 0, 0, 0.2);
+}
+
+/* ========================================
+   MOBILE OPTIMIZATIONS
+   ======================================== */
+
+/* Improve touch interactions */
+.touch-manipulation {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Better scrolling on mobile */
+.scrollbar-visible {
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(155, 155, 155, 0.5) transparent;
+}
+
+.scrollbar-visible::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+
+.scrollbar-visible::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-visible::-webkit-scrollbar-thumb {
+  background-color: rgba(155, 155, 155, 0.5);
+  border-radius: 20px;
+  border: transparent;
+}
+
+.scrollbar-visible::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(155, 155, 155, 0.7);
+}
+
+/* Dark mode scrollbar */
+.dark-mode .scrollbar-visible {
+  scrollbar-color: rgba(200, 200, 200, 0.3) transparent;
+}
+
+.dark-mode .scrollbar-visible::-webkit-scrollbar-thumb {
+  background-color: rgba(200, 200, 200, 0.3);
+}
+
+.dark-mode .scrollbar-visible::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(200, 200, 200, 0.5);
+}
+
+/* Improved text readability on mobile */
+@media (max-width: 640px) {
+  body {
+    font-size: 16px; /* Prevents zoom on iOS */
+    -webkit-text-size-adjust: 100%;
+    -moz-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  /* Ensure minimum touch target size */
+  button,
+  a,
+  input[type='button'],
+  input[type='submit'],
+  select {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Improve form input readability */
+  input,
+  textarea,
+  select {
+    font-size: 16px !important; /* Prevents zoom on focus in iOS */
+  }
+
+  /* Better spacing for mobile */
+  .mobile-friendly-spacing {
+    padding: 0.75rem;
+  }
+
+  /* Optimize table display on mobile */
+  table {
+    font-size: 14px;
+  }
+
+  th,
+  td {
+    padding: 0.5rem !important;
+  }
+}
+
+/* Tablet optimizations */
+@media (min-width: 641px) and (max-width: 1024px) {
+  /* Optimize for tablet touch targets */
+  button,
+  a {
+    min-height: 40px;
+  }
+}
+
+/* Prevent horizontal scroll */
+html,
+body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Better focus states for accessibility and touch */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Active state feedback for touch */
+button:active,
+a:active {
+  transform: scale(0.98);
+  transition: transform 0.1s ease;
+}
+
+/* Improve image loading on mobile */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Mobile-specific utility classes */
+@media (max-width: 640px) {
+  .hide-on-mobile {
+    display: none !important;
+  }
+
+  .mobile-full-width {
+    width: 100% !important;
+  }
+
+  .mobile-text-center {
+    text-align: center !important;
+  }
+
+  .mobile-stack {
+    flex-direction: column !important;
+  }
+}
+
+/* Prevent text selection on buttons for better UX */
+button {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+}
+
+/* Safe area insets for notched devices */
+@supports (padding: max(0px)) {
+  body {
+    padding-left: max(0px, env(safe-area-inset-left));
+    padding-right: max(0px, env(safe-area-inset-right));
+  }
+}
+
+/* Optimize animations on mobile for performance */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

@@ -18,8 +18,9 @@ Environment Variables:
 
 import os
 import sys
-from sqlalchemy import create_engine, MetaData, text
+from sqlalchemy import MetaData, text
 from sqlalchemy.orm import sessionmaker
+from db_pool import create_pooled_engine, log_pool_status, start_periodic_pool_logger, quick_healthcheck
 from sqlalchemy.ext.declarative import declarative_base
 
 # Import your SQLAlchemy models here
@@ -33,8 +34,9 @@ def init_database():
     try:
         print(f"Initializing SQLite database at: {DATABASE_URL}")
 
-        # Create engine
-        engine = create_engine(DATABASE_URL, echo=True)
+        # Create pooled engine
+        engine = create_pooled_engine(DATABASE_URL)
+        start_periodic_pool_logger(engine, interval_seconds=15, label="init_sqlite")
 
         # Create all tables defined in your models
         # Replace this with your actual Base.metadata.create_all() call
@@ -49,6 +51,11 @@ def init_database():
             version = result.fetchone()[0]
             print(f"📊 SQLite version: {version}")
 
+        # Healthcheck and pool status
+        ok = quick_healthcheck(engine)
+        print(f"🩺 Healthcheck: {'ok' if ok else 'failed'}")
+        log_pool_status(engine, label="init_sqlite")
+
     except Exception as e:
         print(f"❌ Error initializing database: {e}")
         sys.exit(1)
@@ -56,7 +63,7 @@ def init_database():
 def create_sample_data():
     """Optional: Create sample data for development."""
     try:
-        engine = create_engine(DATABASE_URL)
+        engine = create_pooled_engine(DATABASE_URL)
         SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
         db = SessionLocal()
 

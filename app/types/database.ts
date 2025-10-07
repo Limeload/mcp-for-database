@@ -7,16 +7,18 @@ export interface DatabaseQueryRequest {
   target: DatabaseTarget;
 }
 
-// API response types
+// API response types (DEPRECATED - use ApiResponse from @/app/lib/api-response)
 export interface DatabaseQueryResponse {
   success: boolean;
   data?: Record<string, unknown>[];
   error?: string;
   query?: string;
   executionTime?: number;
+  // Indicates that the response was generated from local mock data (MCP server unreachable)
+  mocked?: boolean;
 }
 
-// Error response type
+// Error response type (DEPRECATED - use ApiResponse from @/app/lib/api-response)
 export interface DatabaseErrorResponse {
   success: false;
   error: string;
@@ -87,6 +89,7 @@ export interface SchemaMetadata {
   totalColumns: number;
 }
 
+// DEPRECATED - use ApiResponse from @/app/lib/api-response
 export interface SchemaResponse {
   success: boolean;
   data?: SchemaMetadata;
