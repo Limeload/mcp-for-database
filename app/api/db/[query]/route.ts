@@ -77,7 +77,6 @@ export async function POST(
       prompt: safeTruncate(body.prompt, 1000)
     });
     try {
-      feat/structured-logging-db-queries
       const mcpResponse = await fetch(MCP_URL, {
 
         method: 'POST',
