@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import {
   getSessionToken,
   verifyJwt,
@@ -100,7 +100,7 @@ export const authenticateRequest = async (): Promise<AuthResult> => {
       ok: true,
       user: { id, email, name, role, tokenVersion: user.tokenVersion }
     };
-  } catch (e) {
+  } catch {
     return {
       ok: false,
       response: NextResponse.json(

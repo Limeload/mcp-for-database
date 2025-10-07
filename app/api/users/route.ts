@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { authorize, authenticateRequest } from '@/app/lib/auth/authorize';
+import { authorize } from '@/app/lib/auth/authorize';
 import {
   createErrorResponse,
   createSuccessResponse

@@ -1,8 +1,5 @@
 import { NextResponse } from 'next/server';
-import {
-  createErrorResponse,
-  createSuccessResponse
-} from '@/app/lib/api-response';
+import { createSuccessResponse } from '@/app/lib/api-response';
 import { authenticateRequest } from '@/app/lib/auth/authorize';
 
 export async function GET() {

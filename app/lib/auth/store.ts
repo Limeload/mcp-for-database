@@ -52,7 +52,7 @@ async function createRedisClient() {
   try {
     await client.connect();
     return client;
-  } catch (e) {
+  } catch {
     console.warn('Redis unavailable, using in-memory store');
     return null;
   }
