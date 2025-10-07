@@ -108,7 +108,7 @@ export async function DELETE(request: NextRequest) {
     const store = await getStore();
     const ok = await store.deleteUser(id);
     return NextResponse.json(createSuccessResponse({ deleted: ok }));
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       createErrorResponse('Failed to delete user', 'INTERNAL_ERROR'),
       { status: 500 }
