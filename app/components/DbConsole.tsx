@@ -906,7 +906,10 @@ export default function DbConsole() {
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 space-y-4 sm:space-y-6 lg:space-y-8">
+          <form
+            onSubmit={handleSubmit}
+            className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 space-y-4 sm:space-y-6 lg:space-y-8"
+          >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
               {/* Query Template Selection */}
               <div className="md:col-span-2 mb-2">
@@ -1077,7 +1080,7 @@ export default function DbConsole() {
                   id="target"
                   value={target}
                   onChange={e => setTarget(e.target.value as DatabaseTarget)}
-                  className="w-full px-3 sm:px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 transition-all duration-200 text-base min-h-[44px]"  
+                  className="w-full px-3 sm:px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 transition-all duration-200 text-base min-h-[44px]"
                   disabled={isLoading}
                 >
                   <option value="sqlalchemy">SQLAlchemy (Python ORM)</option>
