@@ -10,7 +10,8 @@ import { useState, useEffect } from 'react';
 import {
   DatabaseTarget,
   DatabaseQueryResponse,
-  SchemaMetadata
+  SchemaMetadata,
+  QueryHistoryItem
 } from '@/app/types/database';
 import { queryTemplates, QueryTemplate } from '@/app/config/templates';
 
@@ -26,6 +27,173 @@ import { queryTemplates, QueryTemplate } from '@/app/config/templates';
  * - Dark mode toggle functionality
  * - Schema viewing functionality
  */
+// History item component
+interface HistoryItemProps {
+  item: QueryHistoryItem;
+  runQueryFromHistory: (item: QueryHistoryItem) => void;
+  removeHistoryItem: (id: string) => void;
+}
+
+function HistoryItem({
+  item,
+  runQueryFromHistory,
+  removeHistoryItem
+}: HistoryItemProps) {
+  const [showDetails, setShowDetails] = useState(false);
+
+  return (
+    <div className="bg-gray-50 dark:bg-gray-750 border border-gray-200 dark:border-gray-600 rounded-lg p-4 hover:shadow-md transition-shadow duration-200">
+      <div className="flex justify-between items-start mb-2">
+        <div className="text-sm text-gray-500 dark:text-gray-400">
+          {new Date(item.timestamp).toLocaleString()} • {item.target}
+        </div>
+        <div className="flex space-x-1">
+          <button
+            onClick={() => runQueryFromHistory(item)}
+            className="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded"
+            title="Run query"
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
+              />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+          </button>
+          <button
+            onClick={() => removeHistoryItem(item.id)}
+            className="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded"
+            title="Remove from history"
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+              />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div className="font-medium text-gray-900 dark:text-gray-100 mb-2">
+        {item.prompt}
+      </div>
+
+      {item.query && (
+        <div className="mb-2">
+          <div className="flex justify-between items-center mb-1">
+            <div className="text-xs font-medium text-gray-700 dark:text-gray-300">
+              SQL Query
+            </div>
+            <div className="flex space-x-2">
+              <button
+                onClick={async () => {
+                  await navigator.clipboard.writeText(item.query || '');
+                }}
+                className="text-xs text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400"
+                title="Copy SQL"
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"
+                  />
+                </svg>
+              </button>
+              <button
+                onClick={() => setShowDetails(!showDetails)}
+                className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
+              >
+                {showDetails ? 'Hide details' : 'Show full query'}
+              </button>
+            </div>
+          </div>
+          <div
+            className={`text-xs bg-gray-100 dark:bg-gray-700 p-3 rounded-md font-mono whitespace-pre-wrap text-gray-600 dark:text-gray-300 ${showDetails ? '' : 'max-h-20 overflow-hidden'}`}
+          >
+            {item.query}
+          </div>
+        </div>
+      )}
+
+      {showDetails && item.result && item.result.length > 0 && (
+        <div className="mt-3">
+          <div className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Results ({item.result.length} rows)
+          </div>
+          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-md overflow-x-auto max-h-40">
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+              <thead className="bg-gray-50 dark:bg-gray-700">
+                <tr>
+                  {Object.keys(item.result[0]).map((header, idx) => (
+                    <th
+                      key={idx}
+                      className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                    >
+                      {header}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                {item.result.slice(0, 5).map((row, rowIdx) => (
+                  <tr key={rowIdx}>
+                    {Object.values(row).map((cell, cellIdx) => (
+                      <td
+                        key={cellIdx}
+                        className="px-3 py-2 whitespace-nowrap text-xs text-gray-900 dark:text-gray-100"
+                      >
+                        {String(cell)}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+                {item.result.length > 5 && (
+                  <tr>
+                    <td
+                      colSpan={Object.keys(item.result[0]).length}
+                      className="px-3 py-2 text-xs text-gray-500 dark:text-gray-400 text-center"
+                    >
+                      + {item.result.length - 5} more rows
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function DbConsole() {
   const [prompt, setPrompt] = useState('');
   // Template selection state
@@ -70,7 +238,7 @@ export default function DbConsole() {
   const [connectionStatus, setConnectionStatus] = useState<null | {
     success: boolean;
     message?: string;
-    error?: string;
+    error?: string | { message?: string; code?: string; details?: string };
     diagnostics?: { [k: string]: unknown } | null;
   }>(null);
 
@@ -80,6 +248,10 @@ export default function DbConsole() {
 
   // Export state
   const [copySuccess, setCopySuccess] = useState(false);
+  // Query history state
+  const [queryHistory, setQueryHistory] = useState<QueryHistoryItem[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
+  const [historySearchTerm, setHistorySearchTerm] = useState('');
   // Typed diagnostics helper to safely render unknown diagnostics
   const currentDiag: Record<string, unknown> | undefined =
     connectionStatus &&
@@ -102,9 +274,23 @@ export default function DbConsole() {
   // Load theme preference on mount
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
-    const currentTheme: 'light' | 'dark' = savedTheme === 'dark' ? 'dark' : 'light';
+    const currentTheme: 'light' | 'dark' =
+      savedTheme === 'dark' ? 'dark' : 'light';
     setTheme(currentTheme);
     applyTheme(currentTheme);
+  }, []);
+
+  // Load query history from localStorage on mount
+  useEffect(() => {
+    try {
+      const savedHistory = localStorage.getItem('queryHistory');
+      if (savedHistory) {
+        setQueryHistory(JSON.parse(savedHistory));
+      }
+    } catch {
+      // If there's an error parsing the stored history, start fresh
+      setQueryHistory([]);
+    }
   }, []);
 
   // Toggle between light <-> dark
@@ -119,7 +305,7 @@ export default function DbConsole() {
    * Handle form submission
    * Calls the API route to execute database query
    */
-const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!prompt.trim()) {
@@ -146,12 +332,28 @@ const handleSubmit = async (e: React.FormEvent) => {
       const data = await response.json();
 
       if (data.status === 'success') {
-        setResult({
+        const queryResult = {
           success: true,
           data: data.data,
           query: data.metadata?.query,
           executionTime: data.metadata?.executionTime
-        });
+        };
+        setResult(queryResult);
+
+        // Save to query history
+        const historyItem: QueryHistoryItem = {
+          id: crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(),
+          prompt: prompt.trim(),
+          target,
+          query: data.metadata?.query,
+          executionTime: data.metadata?.executionTime,
+          timestamp: Date.now(),
+          result: data.data
+        };
+
+        const updatedHistory = [historyItem, ...queryHistory].slice(0, 50); // Keep most recent 50 queries
+        setQueryHistory(updatedHistory);
+        localStorage.setItem('queryHistory', JSON.stringify(updatedHistory));
       } else {
         setError(data.error?.message || 'An error occurred');
       }
@@ -298,6 +500,52 @@ const handleSubmit = async (e: React.FormEvent) => {
       setError(error instanceof Error ? error.message : 'Copy failed');
     }
   };
+
+  // We're now using the browser's clipboard API directly in the HistoryItem component
+  // so we don't need this function anymore
+
+  /**
+   * Handle running a query from history
+   */
+  const runQueryFromHistory = (historyItem: QueryHistoryItem) => {
+    setPrompt(historyItem.prompt);
+    setTarget(historyItem.target);
+    // Use setTimeout to ensure the form is updated before submission
+    setTimeout(() => {
+      const form = document.getElementById('query-form') as HTMLFormElement;
+      if (form) {
+        form.dispatchEvent(new Event('submit', { cancelable: true }));
+      }
+    }, 0);
+  };
+
+  /**
+   * Clear all query history
+   */
+  const clearAllHistory = () => {
+    setQueryHistory([]);
+    localStorage.removeItem('queryHistory');
+  };
+
+  /**
+   * Remove a single history item
+   */
+  const removeHistoryItem = (id: string) => {
+    const updatedHistory = queryHistory.filter(item => item.id !== id);
+    setQueryHistory(updatedHistory);
+    localStorage.setItem('queryHistory', JSON.stringify(updatedHistory));
+  };
+
+  /**
+   * Filter history items based on search term
+   */
+  const filteredHistory = historySearchTerm
+    ? queryHistory.filter(
+        item =>
+          item.prompt.toLowerCase().includes(historySearchTerm.toLowerCase()) ||
+          item.query?.toLowerCase().includes(historySearchTerm.toLowerCase())
+      )
+    : queryHistory;
 
   /**
    * Render schema tables in a modern, structured format with hide/show functionality
@@ -905,7 +1153,11 @@ const handleSubmit = async (e: React.FormEvent) => {
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 space-y-4 sm:space-y-6 lg:space-y-8">
+          <form
+            id="query-form"
+            onSubmit={handleSubmit}
+            className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 space-y-4 sm:space-y-6 lg:space-y-8"
+          >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
               {/* Query Template Selection */}
               <div className="md:col-span-2 mb-2">
@@ -1076,7 +1328,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                   id="target"
                   value={target}
                   onChange={e => setTarget(e.target.value as DatabaseTarget)}
-                  className="w-full px-3 sm:px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 transition-all duration-200 text-base min-h-[44px]"  
+                  className="w-full px-3 sm:px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 transition-all duration-200 text-base min-h-[44px]"
                   disabled={isLoading}
                 >
                   <option value="sqlalchemy">SQLAlchemy (Python ORM)</option>
@@ -1089,6 +1341,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                 {/* Test Connection button placed below the target select for visibility */}
                 <div className="mt-3 flex flex-col sm:flex-row gap-2 sm:gap-3">
                   <button
+                    type="button"
                     onClick={async () => {
                       setIsTestingConnection(true);
                       setConnectionStatus(null);
@@ -1103,7 +1356,13 @@ const handleSubmit = async (e: React.FormEvent) => {
                         interface ConnectionApiResponse {
                           success: boolean;
                           message?: string;
-                          error?: string;
+                          error?:
+                            | string
+                            | {
+                                message?: string;
+                                code?: string;
+                                details?: string;
+                              };
                           diagnostics?: { [k: string]: unknown } | null;
                         }
 
@@ -1137,7 +1396,10 @@ const handleSubmit = async (e: React.FormEvent) => {
                           </span>
                           <span className="opacity-90">
                             {connectionStatus.message ??
-                              connectionStatus.error ??
+                              (typeof connectionStatus.error === 'string'
+                                ? connectionStatus.error
+                                : connectionStatus.error?.message ||
+                                  'Connection failed') ??
                               ''}
                           </span>
                         </div>
@@ -1290,6 +1552,128 @@ const handleSubmit = async (e: React.FormEvent) => {
             </div>
           </form>
 
+          {/* Query History Panel */}
+          <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 border-t border-gray-200 dark:border-gray-700">
+            <div className="flex items-center justify-between mb-4">
+              <button
+                onClick={() => setShowHistory(!showHistory)}
+                className="flex items-center text-gray-800 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400 font-semibold"
+              >
+                <svg
+                  className={`w-5 h-5 mr-2 transition-transform duration-300 ${
+                    showHistory ? 'rotate-90' : ''
+                  }`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
+                </svg>
+                Query History
+                <span className="ml-2 bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300 px-2 py-0.5 text-xs rounded-full">
+                  {queryHistory.length}
+                </span>
+              </button>
+
+              {queryHistory.length > 0 && (
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={clearAllHistory}
+                    className="flex items-center text-sm text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+                  >
+                    <svg
+                      className="w-4 h-4 mr-1"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                      />
+                    </svg>
+                    Clear All
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {showHistory && (
+              <div className="mt-2 mb-4">
+                <div className="mb-3 relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg
+                      className="h-5 w-5 text-gray-400"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                      />
+                    </svg>
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Search query history..."
+                    value={historySearchTerm}
+                    onChange={e => setHistorySearchTerm(e.target.value)}
+                    className="w-full pl-10 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600 focus:border-transparent"
+                  />
+                  {historySearchTerm && (
+                    <button
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                      onClick={() => setHistorySearchTerm('')}
+                    >
+                      <svg
+                        className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                    </button>
+                  )}
+                </div>
+
+                <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
+                  {filteredHistory.length > 0 ? (
+                    filteredHistory.map(item => (
+                      <HistoryItem
+                        key={item.id}
+                        item={item}
+                        runQueryFromHistory={runQueryFromHistory}
+                        removeHistoryItem={removeHistoryItem}
+                      />
+                    ))
+                  ) : (
+                    <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                      {queryHistory.length === 0
+                        ? 'No queries in history yet'
+                        : 'No matching queries found'}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* Error Display */}
           {error && (
             <div className="px-4 sm:px-6 lg:px-8 pb-4 sm:pb-6">
@@ -1316,7 +1700,9 @@ const handleSubmit = async (e: React.FormEvent) => {
                       Query Error
                     </h3>
                     <div className="text-base text-red-700 dark:text-red-300 leading-relaxed">
-                      {error}
+                      {typeof error === 'string'
+                        ? error
+                        : (error as Error)?.message || 'An error occurred'}
                     </div>
                   </div>
                 </div>
@@ -1565,7 +1951,9 @@ const handleSubmit = async (e: React.FormEvent) => {
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.972 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                 />
               </svg>
-              <p className="text-lg font-medium text-gray-700 dark:text-gray-300">Loading queries...</p>
+              <p className="text-lg font-medium text-gray-700 dark:text-gray-300">
+                Loading queries...
+              </p>
             </div>
           )}
 

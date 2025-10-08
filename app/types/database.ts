@@ -7,6 +7,17 @@ export interface DatabaseQueryRequest {
   target: DatabaseTarget;
 }
 
+// Query history types
+export interface QueryHistoryItem {
+  id: string;
+  prompt: string;
+  target: DatabaseTarget;
+  query?: string;
+  executionTime?: number;
+  timestamp: number;
+  result?: Record<string, unknown>[];
+}
+
 // API response types (DEPRECATED - use ApiResponse from @/app/lib/api-response)
 export interface DatabaseQueryResponse {
   success: boolean;
