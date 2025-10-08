@@ -1,4 +1,9 @@
 'use client';
+import React, { useRef, useState, useEffect } from "react";
+import { useKeyboardShortcuts, Shortcut } from "../hooks/KeyBoardShortcuts";
+import { createShortcuts } from "../config/shortcuts";
+import ShortcutHelp from "./Shortcuthelp";
+import { DatabaseTarget, DatabaseQueryResponse, SchemaMetadata } from "@/app/types/database";
 
 import {
   exportToCSV,
@@ -27,6 +32,8 @@ import { queryTemplates, QueryTemplate } from '@/app/config/templates';
  * - Schema viewing functionality
  */
 export default function DbConsole() {
+  const [prompt, setPrompt] = useState("");
+  const [target, setTarget] = useState<DatabaseTarget>("sqlalchemy");
   const [prompt, setPrompt] = useState('');
   // Template selection state
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
@@ -78,6 +85,9 @@ export default function DbConsole() {
   const [expandedTables, setExpandedTables] = useState<Set<number>>(new Set());
   const [schemaSearchTerm, setSchemaSearchTerm] = useState('');
 
+  const queryInputRef = useRef<HTMLTextAreaElement | null>(null);
+
+  // Load dark mode preference on mount
   // Export state
   const [copySuccess, setCopySuccess] = useState(false);
   // Typed diagnostics helper to safely render unknown diagnostics
@@ -108,6 +118,12 @@ export default function DbConsole() {
     applyTheme(currentTheme);
   }, []);
 
+  // Toggle dark mode
+  const toggleDarkModeLegacy = () => {
+    const newDarkMode = !isDarkMode;
+    setIsDarkMode(newDarkMode);
+    document.body.classList.toggle('dark-mode', newDarkMode);
+    localStorage.setItem('darkMode', newDarkMode.toString());
   // Toggle between light <-> dark
   const toggleTheme = () => {
     const nextTheme: 'light' | 'dark' = theme === 'light' ? 'dark' : 'light';
@@ -839,6 +855,95 @@ export default function DbConsole() {
     );
   };
 
+  // Concrete behaviors used by shortcuts
+  const executeQuery = async () => {
+    const q = prompt.trim();
+    if (!q) return;
+    setIsLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/db/query", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: q, target }),
+      });
+      if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+      const data = await res.json();
+      setResult(data);
+    } catch (err: any) {
+      setError(err?.message ?? "Unknown error");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const clearForm = () => {
+    setPrompt("");
+    setError(null);
+    setResult(null);
+    queryInputRef.current?.focus();
+  };
+
+  const focusInput = () => {
+    queryInputRef.current?.focus();
+  };
+
+  const toggleDarkMode = () => {
+    const next = !isDarkMode;
+    setIsDarkMode(next);
+
+    // Tailwind with darkMode: 'class' expects the 'dark' class on <html>
+    document.documentElement.classList.toggle("dark", next);
+
+    // also toggle on body to support any non-tailwind global rules
+    document.body.classList.toggle("dark", next);
+
+    try {
+      localStorage.setItem("darkMode", next ? "1" : "0");
+    } catch {}
+  };
+
+  useEffect(() => {
+    // restore preference on mount
+    try {
+      const pref = localStorage.getItem("darkMode");
+      const shouldDark = pref === "1";
+      setIsDarkMode(shouldDark);
+      document.documentElement.classList.toggle("dark", shouldDark);
+      document.body.classList.toggle("dark", shouldDark);
+    } catch {}
+  }, []);
+
+  const exportResults = () => {
+    if (!result || !Array.isArray((result as any).data)) return;
+    const rows = (result as any).data as Record<string, any>[];
+    const csv = convertToCSV(rows);
+    downloadCSV(csv, "query-results.csv");
+  };
+
+  // Create shortcuts using handlers defined above
+  const shortcuts = createShortcuts({
+    executeQuery,
+    clearForm,
+    focusInput,
+    toggleDarkMode,
+    exportResults,
+  });
+
+  // Register global keyboard shortcuts
+  useKeyboardShortcuts(shortcuts);
+
+  // Example: restore dark mode preference on mount
+  useEffect(() => {
+    try {
+      const pref = localStorage.getItem("darkMode");
+      if (pref === "1") {
+        setIsDarkMode(true);
+        document.documentElement.classList.add("dark");
+      }
+    } catch {}
+  }, []);
+
   return (
     <>
       {/* Theme Toggle Button - Mobile Optimized */}
@@ -879,6 +984,8 @@ export default function DbConsole() {
           <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-700 border-b border-gray-200 dark:border-gray-600">
             <div className="flex flex-col sm:flex-row items-start sm:items-center mb-4">
               <div className="flex-shrink-0">
+                <svg className="h-8 w-8 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 01-2 2z" />
                 <svg
                   className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600 dark:text-blue-400"
                   fill="none"
@@ -1037,6 +1144,7 @@ export default function DbConsole() {
                 </label>
                 <textarea
                   id="prompt"
+                  ref={queryInputRef}
                   value={prompt}
                   onChange={e => setPrompt(e.target.value)}
                   placeholder="e.g., Show me all users who registered in the last 30 days, or Get the total sales for this month..."
@@ -1374,6 +1482,8 @@ export default function DbConsole() {
                 <div className="mb-8">
                   <div className="bg-gray-50 dark:bg-gray-700/50 p-1 rounded-2xl">
                     <h4 className="flex items-center text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4 px-4 pt-4">
+                      <svg className="w-5 h-5 mr-2 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 01-2 2z" />
                       <svg
                         className="w-5 h-5 mr-2 text-purple-600 dark:text-purple-400"
                         fill="none"
@@ -1581,4 +1691,25 @@ export default function DbConsole() {
       </div>
     </>
   );
+}
+
+// helper CSV utilities
+function convertToCSV(data: Record<string, any>[]) {
+  if (!data.length) return "";
+  const headers = Object.keys(data[0]);
+  const rows = data.map((r) =>
+    headers.map((h) => JSON.stringify(r[h] ?? "")).join(",")
+  );
+  return [headers.join(","), ...rows].join("\n");
+}
+
+function downloadCSV(csv: string, filename: string) {
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(link.href);
 }
