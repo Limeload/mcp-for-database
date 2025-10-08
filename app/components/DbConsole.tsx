@@ -112,7 +112,8 @@ export default function DbConsole() {
   // Load theme preference on mount
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
-    const currentTheme: 'light' | 'dark' = savedTheme === 'dark' ? 'dark' : 'light';
+    const currentTheme: 'light' | 'dark' =
+      savedTheme === 'dark' ? 'dark' : 'light';
     setTheme(currentTheme);
     applyTheme(currentTheme);
   }, []);
@@ -135,7 +136,7 @@ export default function DbConsole() {
    * Handle form submission
    * Calls the API route to execute database query
    */
-const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!prompt.trim()) {
@@ -1012,7 +1013,10 @@ const handleSubmit = async (e: React.FormEvent) => {
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 space-y-4 sm:space-y-6 lg:space-y-8">
+          <form
+            onSubmit={handleSubmit}
+            className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 space-y-4 sm:space-y-6 lg:space-y-8"
+          >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
               {/* Query Template Selection */}
               <div className="md:col-span-2 mb-2">
@@ -1184,7 +1188,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                   id="target"
                   value={target}
                   onChange={e => setTarget(e.target.value as DatabaseTarget)}
-                  className="w-full px-3 sm:px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 transition-all duration-200 text-base min-h-[44px]"  
+                  className="w-full px-3 sm:px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 transition-all duration-200 text-base min-h-[44px]"
                   disabled={isLoading}
                 >
                   <option value="sqlalchemy">SQLAlchemy (Python ORM)</option>
@@ -1675,7 +1679,9 @@ const handleSubmit = async (e: React.FormEvent) => {
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.972 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                 />
               </svg>
-              <p className="text-lg font-medium text-gray-700 dark:text-gray-300">Loading queries...</p>
+              <p className="text-lg font-medium text-gray-700 dark:text-gray-300">
+                Loading queries...
+              </p>
             </div>
           )}
 

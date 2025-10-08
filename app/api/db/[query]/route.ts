@@ -10,6 +10,8 @@ import {
   CORRELATION_ID_HEADER,
   safeTruncate
 } from '@/app/lib/logger';
+import { isWriteQuery } from '@/app/lib/sql/operation';
+import { authorize } from '@/app/lib/auth/authorize';
 
 /**
  * API route handler for database queries
@@ -76,7 +78,6 @@ export async function POST(
     });
     try {
       const mcpResponse = await fetch(MCP_URL, {
-
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -96,6 +97,13 @@ export async function POST(
 
       // Parse MCP server response
       mcpData = await mcpResponse.json();
+
+      // If query returned includes SQL text, enforce write permission if needed
+      const sqlText = typeof mcpData.query === 'string' ? mcpData.query : '';
+      if (sqlText && isWriteQuery(sqlText)) {
+        const canWrite = await authorize('query:write');
+        if (!canWrite.ok) return canWrite.response;
+      }
     } catch (error) {
       // MCP server not available, use mock data for development
       // eslint-disable-next-line no-console
