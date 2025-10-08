@@ -1,9 +1,9 @@
 type FetchWithRetryConfig = {
-  retries?: number;             // max retry attempts 
-  retryDelayBaseMs?: number;    // base delay for exponential backoff 
-  maxRetryDelayMs?: number;     // max delay 
-  circuitBreakerThreshold?: number; // fail count before circuit breaker opens 
-  circuitBreakerCooldownMs?: number; // cooldown time before circuit breaker resets 
+  retries?: number; // max retry attempts
+  retryDelayBaseMs?: number; // base delay for exponential backoff
+  maxRetryDelayMs?: number; // max delay
+  circuitBreakerThreshold?: number; // fail count before circuit breaker opens
+  circuitBreakerCooldownMs?: number; // cooldown time before circuit breaker resets
 };
 
 type CircuitBreakerState = {
@@ -15,7 +15,7 @@ type CircuitBreakerState = {
 const circuitBreakerState: CircuitBreakerState = {
   failureCount: 0,
   lastFailureTime: null,
-  open: false,
+  open: false
 };
 
 const DEFAULT_RETRIES = 5;
@@ -39,7 +39,11 @@ function sleep(ms: number): Promise<void> {
 /**
  * Exponential backoff with jitter delay calculation
  */
-function getExponentialBackoffDelay(attempt: number, baseDelay: number, maxDelay: number): number {
+function getExponentialBackoffDelay(
+  attempt: number,
+  baseDelay: number,
+  maxDelay: number
+): number {
   const expDelay = Math.min(maxDelay, baseDelay * 2 ** attempt);
   // jitter: random between 50% and 100% of expDelay
   return expDelay / 2 + Math.random() * (expDelay / 2);
@@ -54,15 +58,21 @@ export async function fetchWithRetry(
   config?: FetchWithRetryConfig
 ): Promise<Response> {
   const retries = config?.retries ?? DEFAULT_RETRIES;
-  const retryDelayBaseMs = config?.retryDelayBaseMs ?? DEFAULT_RETRY_DELAY_BASE_MS;
+  const retryDelayBaseMs =
+    config?.retryDelayBaseMs ?? DEFAULT_RETRY_DELAY_BASE_MS;
   const maxRetryDelayMs = config?.maxRetryDelayMs ?? DEFAULT_MAX_RETRY_DELAY_MS;
-  const circuitBreakerThreshold = config?.circuitBreakerThreshold ?? DEFAULT_CIRCUIT_BREAKER_THRESHOLD;
-  const circuitBreakerCooldownMs = config?.circuitBreakerCooldownMs ?? DEFAULT_CIRCUIT_BREAKER_COOLDOWN_MS;
+  const circuitBreakerThreshold =
+    config?.circuitBreakerThreshold ?? DEFAULT_CIRCUIT_BREAKER_THRESHOLD;
+  const circuitBreakerCooldownMs =
+    config?.circuitBreakerCooldownMs ?? DEFAULT_CIRCUIT_BREAKER_COOLDOWN_MS;
 
   // Circuit breaker logic: if open and cooldown period passed, reset breaker
   if (circuitBreakerState.open) {
     const now = Date.now();
-    if (circuitBreakerState.lastFailureTime && (now - circuitBreakerState.lastFailureTime) > circuitBreakerCooldownMs) {
+    if (
+      circuitBreakerState.lastFailureTime &&
+      now - circuitBreakerState.lastFailureTime > circuitBreakerCooldownMs
+    ) {
       // Reset circuit breaker
       circuitBreakerState.open = false;
       circuitBreakerState.failureCount = 0;
@@ -70,7 +80,9 @@ export async function fetchWithRetry(
       console.info('[Circuit Breaker] Reset after cooldown');
     } else {
       // Circuit breaker open - reject immediately
-      return Promise.reject(new Error('Circuit breaker open: temporarily rejecting requests'));
+      return Promise.reject(
+        new Error('Circuit breaker open: temporarily rejecting requests')
+      );
     }
   }
 
@@ -82,8 +94,14 @@ export async function fetchWithRetry(
         if (isRetryableError(response.status)) {
           // Retryable error
           if (attempt < retries) {
-            const delay = getExponentialBackoffDelay(attempt, retryDelayBaseMs, maxRetryDelayMs);
-            console.warn(`[fetchWithRetry] Attempt ${attempt + 1} failed with status ${response.status}. Retrying in ${delay.toFixed(0)}ms...`);
+            const delay = getExponentialBackoffDelay(
+              attempt,
+              retryDelayBaseMs,
+              maxRetryDelayMs
+            );
+            console.warn(
+              `[fetchWithRetry] Attempt ${attempt + 1} failed with status ${response.status}. Retrying in ${delay.toFixed(0)}ms...`
+            );
             await sleep(delay);
             continue;
           } else {
@@ -92,9 +110,13 @@ export async function fetchWithRetry(
             circuitBreakerState.lastFailureTime = Date.now();
             if (circuitBreakerState.failureCount >= circuitBreakerThreshold) {
               circuitBreakerState.open = true;
-              console.error('[Circuit Breaker] Opened due to repeated failures');
+              console.error(
+                '[Circuit Breaker] Opened due to repeated failures'
+              );
             }
-            throw new Error(`Max retries reached. Last status: ${response.status}`);
+            throw new Error(
+              `Max retries reached. Last status: ${response.status}`
+            );
           }
         } else {
           // Non-retryable HTTP error, throw immediately
@@ -109,8 +131,14 @@ export async function fetchWithRetry(
     } catch (error) {
       // Network or other fetch failure
       if (attempt < retries) {
-        const delay = getExponentialBackoffDelay(attempt, retryDelayBaseMs, maxRetryDelayMs);
-        console.warn(`[fetchWithRetry] Attempt ${attempt + 1} failed with error: ${error instanceof Error ? error.message : error}. Retrying in ${delay.toFixed(0)}ms...`);
+        const delay = getExponentialBackoffDelay(
+          attempt,
+          retryDelayBaseMs,
+          maxRetryDelayMs
+        );
+        console.warn(
+          `[fetchWithRetry] Attempt ${attempt + 1} failed with error: ${error instanceof Error ? error.message : error}. Retrying in ${delay.toFixed(0)}ms...`
+        );
         await sleep(delay);
         continue;
       } else {

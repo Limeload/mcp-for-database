@@ -1,7 +1,6 @@
-import { NextResponse } from "next/server";
+import { NextResponse } from 'next/server';
 
 const serviceStartTime = Date.now();
-
 
 async function checkDatabaseConnection(): Promise<boolean> {
   try {
@@ -11,7 +10,7 @@ async function checkDatabaseConnection(): Promise<boolean> {
       body: JSON.stringify({
         prompt: 'SELECT 1',
         target: 'sqlalchemy'
-      }),
+      })
     });
 
     return res.ok;
@@ -23,23 +22,22 @@ async function checkDatabaseConnection(): Promise<boolean> {
 }
 
 export async function GET() {
-    const startTime = Date.now();
+  const startTime = Date.now();
 
-    const dbConnected = await checkDatabaseConnection();
-    const upTimeInSeconds = Math.floor((Date.now() - serviceStartTime) / 1000);
-    const responseTime = Date.now() - startTime;
+  const dbConnected = await checkDatabaseConnection();
+  const upTimeInSeconds = Math.floor((Date.now() - serviceStartTime) / 1000);
+  const responseTime = Date.now() - startTime;
 
-    const status= dbConnected ? 'healthy' : 'unhealthy'
-    const statusCode = dbConnected ? 200 : 503;
-    
-    const response = {
-        status,
-        upTime: `${upTimeInSeconds}s`,
-        version: '1.0.0',
-        responseTime: `${responseTime}ms`,
-        database: dbConnected ? 'connected' : 'disconnected',
-    };
+  const status = dbConnected ? 'healthy' : 'unhealthy';
+  const statusCode = dbConnected ? 200 : 503;
 
+  const response = {
+    status,
+    upTime: `${upTimeInSeconds}s`,
+    version: '1.0.0',
+    responseTime: `${responseTime}ms`,
+    database: dbConnected ? 'connected' : 'disconnected'
+  };
 
-    return NextResponse.json(response, {status: statusCode});
+  return NextResponse.json(response, { status: statusCode });
 }
