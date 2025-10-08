@@ -10,6 +10,8 @@ import {
   CORRELATION_ID_HEADER,
   safeTruncate
 } from '@/app/lib/logger';
+import { isWriteQuery } from '@/app/lib/sql/operation';
+import { authorize } from '@/app/lib/auth/authorize';
 
 /**
  * API route handler for database queries
@@ -76,7 +78,6 @@ export async function POST(
     });
     try {
       const mcpResponse = await fetch(MCP_URL, {
-
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
