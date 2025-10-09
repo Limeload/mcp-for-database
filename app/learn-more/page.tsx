@@ -24,7 +24,8 @@ export default function LearnMorePage() {
   // Load theme preference on mount
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
-    const currentTheme: 'light' | 'dark' = savedTheme === 'dark' ? 'dark' : 'light';
+    const currentTheme: 'light' | 'dark' =
+      savedTheme === 'dark' ? 'dark' : 'light';
     setTheme(currentTheme);
     applyTheme(currentTheme);
   }, []);
@@ -40,26 +41,44 @@ export default function LearnMorePage() {
   return (
     <>
       {/* Theme Toggle Button */}
-      <button 
-        onClick={toggleTheme} 
+      <button
+        onClick={toggleTheme}
         className="fixed top-6 right-6 z-50 p-3 rounded-full bg-white dark:bg-gray-800 shadow-lg border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-all duration-300 hover:scale-105"
         aria-label={`Current theme: ${theme}. Click to toggle`}
         title={`Current: ${theme === 'light' ? 'Light' : 'Dark'} mode`}
       >
         {theme === 'light' ? (
           // Light mode icon (sun)
-          <svg className="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clipRule="evenodd" />
+          <svg
+            className="w-5 h-5 text-yellow-500"
+            fill="currentColor"
+            viewBox="0 0 20 20"
+          >
+            <path
+              fillRule="evenodd"
+              d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"
+              clipRule="evenodd"
+            />
           </svg>
         ) : (
           // Dark mode icon (moon)
-          <svg className="w-5 h-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+          <svg
+            className="w-5 h-5 text-blue-400"
+            fill="currentColor"
+            viewBox="0 0 20 20"
+          >
             <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
           </svg>
         )}
       </button>
 
-      <div className={theme === 'dark' ? 'min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' : 'min-h-screen bg-gradient-to-br from-white via-white to-white'}>
+      <div
+        className={
+          theme === 'dark'
+            ? 'min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900'
+            : 'min-h-screen bg-gradient-to-br from-white via-white to-white'
+        }
+      >
         {/* Navigation Header */}
         <nav className="relative z-40 w-full px-6 py-4">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -75,7 +94,13 @@ export default function LearnMorePage() {
 
         {/* Hero Section */}
         <div className="relative overflow-hidden pt-10">
-          <div className={theme === 'dark' ? 'absolute inset-0 bg-gradient-to-r from-blue-400/5 to-purple-400/5' : 'absolute inset-0 bg-gradient-to-r from-blue-600/10 to-purple-600/10'}></div>
+          <div
+            className={
+              theme === 'dark'
+                ? 'absolute inset-0 bg-gradient-to-r from-blue-400/5 to-purple-400/5'
+                : 'absolute inset-0 bg-gradient-to-r from-blue-600/10 to-purple-600/10'
+            }
+          ></div>
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
             <div className="text-center">
               <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-6">
