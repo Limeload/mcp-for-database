@@ -1,0 +1,15 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 14
+    },
+    "auditLog": "/Users/shraddharao/Development/code/Work/headstarter/mcp-for-database/logs/.13d55a6705502350b2ccd9389bc8334e1ab43d7c-audit.json",
+    "files": [
+        {
+            "date": 1760020424652,
+            "name": "/Users/shraddharao/Development/code/Work/headstarter/mcp-for-database/logs/app-2025-10-09.log",
+            "hash": "63490e33801bef765909d08ae3f7ecf2ebdc6e9a73964ac289359680d1486e75"
+        }
+    ],
+    "hashType": "sha256"
+}

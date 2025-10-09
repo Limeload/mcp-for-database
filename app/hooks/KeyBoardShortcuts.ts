@@ -16,6 +16,11 @@ export const useKeyboardShortcuts = (shortcuts: Shortcut[]) => {
       target?.tagName === "TEXTAREA" ||
       (target?.getAttribute && target.getAttribute("contenteditable") === "true");
 
+      // If user is typing in an input-like element without modifiers, do nothing
+      if (isTyping && !(event.ctrlKey || event.metaKey || event.altKey)) {
+        return;
+      }
+
       // allow typing but still allow global combos — remove early return
       const matching = shortcuts.find((s) =>
       s.keys.every((key) => {

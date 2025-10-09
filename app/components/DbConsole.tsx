@@ -1,8 +1,7 @@
 'use client';
 import React, { useRef, useState, useEffect } from "react";
-import { useKeyboardShortcuts, Shortcut } from "../hooks/KeyBoardShortcuts";
+import { useKeyboardShortcuts } from "../hooks/KeyBoardShortcuts";
 import { createShortcuts } from "../config/shortcuts";
-import ShortcutHelp from "./Shortcuthelp";
 import { DatabaseTarget, DatabaseQueryResponse, SchemaMetadata } from "@/app/types/database";
 
 import {
@@ -11,12 +10,6 @@ import {
   copyToClipboard,
   ExportData
 } from '@/app/utils/exportUtils';
-import { useState, useEffect } from 'react';
-import {
-  DatabaseTarget,
-  DatabaseQueryResponse,
-  SchemaMetadata
-} from '@/app/types/database';
 import { queryTemplates, QueryTemplate } from '@/app/config/templates';
 
 /**
@@ -34,7 +27,6 @@ import { queryTemplates, QueryTemplate } from '@/app/config/templates';
 export default function DbConsole() {
   const [prompt, setPrompt] = useState("");
   const [target, setTarget] = useState<DatabaseTarget>("sqlalchemy");
-  const [prompt, setPrompt] = useState('');
   // Template selection state
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
   const [selectedTemplate, setSelectedTemplate] =
@@ -65,11 +57,11 @@ export default function DbConsole() {
       setSelectedTemplate(null);
     }
   }, [selectedTemplateId]);
-  const [target, setTarget] = useState<DatabaseTarget>('sqlalchemy');
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<DatabaseQueryResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const [isDarkMode, setIsDarkMode] = useState(false);
   const [schema, setSchema] = useState<SchemaMetadata | null>(null);
   const [isLoadingSchema, setIsLoadingSchema] = useState(false);
   const [showSchema, setShowSchema] = useState(false);
@@ -118,12 +110,6 @@ export default function DbConsole() {
     applyTheme(currentTheme);
   }, []);
 
-  // Toggle dark mode
-  const toggleDarkModeLegacy = () => {
-    const newDarkMode = !isDarkMode;
-    setIsDarkMode(newDarkMode);
-    document.body.classList.toggle('dark-mode', newDarkMode);
-    localStorage.setItem('darkMode', newDarkMode.toString());
   // Toggle between light <-> dark
   const toggleTheme = () => {
     const nextTheme: 'light' | 'dark' = theme === 'light' ? 'dark' : 'light';
@@ -868,10 +854,11 @@ export default function DbConsole() {
         body: JSON.stringify({ prompt: q, target }),
       });
       if (!res.ok) throw new Error(`Request failed: ${res.status}`);
-      const data = await res.json();
+      const data = (await res.json()) as DatabaseQueryResponse;
       setResult(data);
-    } catch (err: any) {
-      setError(err?.message ?? "Unknown error");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Unknown error";
+      setError(message);
     } finally {
       setIsLoading(false);
     }
@@ -900,7 +887,11 @@ export default function DbConsole() {
 
     try {
       localStorage.setItem("darkMode", next ? "1" : "0");
-    } catch {}
+    } catch (e) {
+      if (process.env.NODE_ENV !== 'production') {
+        console.warn('Failed to persist darkMode', e);
+      }
+    }
   };
 
   useEffect(() => {
@@ -911,12 +902,16 @@ export default function DbConsole() {
       setIsDarkMode(shouldDark);
       document.documentElement.classList.toggle("dark", shouldDark);
       document.body.classList.toggle("dark", shouldDark);
-    } catch {}
+    } catch (e) {
+      if (process.env.NODE_ENV !== 'production') {
+        console.warn('Failed to read darkMode', e);
+      }
+    }
   }, []);
 
   const exportResults = () => {
-    if (!result || !Array.isArray((result as any).data)) return;
-    const rows = (result as any).data as Record<string, any>[];
+    if (!result || !Array.isArray((result as { data?: Record<string, unknown>[] }).data)) return;
+    const rows = (result.data ?? []) as Record<string, unknown>[];
     const csv = convertToCSV(rows);
     downloadCSV(csv, "query-results.csv");
   };
@@ -941,7 +936,11 @@ export default function DbConsole() {
         setIsDarkMode(true);
         document.documentElement.classList.add("dark");
       }
-    } catch {}
+    } catch (e) {
+      if (process.env.NODE_ENV !== 'production') {
+        console.warn('Failed to read darkMode', e);
+      }
+    }
   }, []);
 
   return (
@@ -984,8 +983,6 @@ export default function DbConsole() {
           <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-700 border-b border-gray-200 dark:border-gray-600">
             <div className="flex flex-col sm:flex-row items-start sm:items-center mb-4">
               <div className="flex-shrink-0">
-                <svg className="h-8 w-8 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 01-2 2z" />
                 <svg
                   className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600 dark:text-blue-400"
                   fill="none"
@@ -996,7 +993,7 @@ export default function DbConsole() {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={2}
-                    d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 01-2 2z"
                   />
                 </svg>
               </div>
@@ -1484,18 +1481,6 @@ export default function DbConsole() {
                     <h4 className="flex items-center text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4 px-4 pt-4">
                       <svg className="w-5 h-5 mr-2 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 01-2 2z" />
-                      <svg
-                        className="w-5 h-5 mr-2 text-purple-600 dark:text-purple-400"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                        />
                       </svg>
                       Generated SQL Query
                     </h4>
@@ -1694,7 +1679,7 @@ export default function DbConsole() {
 }
 
 // helper CSV utilities
-function convertToCSV(data: Record<string, any>[]) {
+function convertToCSV(data: Record<string, unknown>[]) {
   if (!data.length) return "";
   const headers = Object.keys(data[0]);
   const rows = data.map((r) =>
