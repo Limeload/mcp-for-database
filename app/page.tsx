@@ -52,7 +52,7 @@ export default function HomePage() {
 
   return (
     <>
-      {/* Dark Mode Toggle Button */}
+      {/* Shortcuts help panel */}
       <div className="fixed top-6 right-6 z-50 flex items-center gap-3">
         <button
           onClick={toggleTheme}
@@ -84,7 +84,6 @@ export default function HomePage() {
 
         {/* Shortcuts help button */}
         <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700">
-          {/* Use the shortcuts array, not the component reference */}
           <ShortcutHelp shortcuts={homeShortcuts} />
         </div>
       </div>

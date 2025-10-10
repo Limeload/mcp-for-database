@@ -234,6 +234,7 @@ export default function DbConsole() {
   const [result, setResult] = useState<DatabaseQueryResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const [isDarkMode, setIsDarkMode] = useState(false);
   const [schema, setSchema] = useState<SchemaMetadata | null>(null);
   const [isLoadingSchema, setIsLoadingSchema] = useState(false);
   const [showSchema, setShowSchema] = useState(false);
@@ -1105,7 +1106,7 @@ export default function DbConsole() {
         body: JSON.stringify({ prompt: q, target })
       });
       if (!res.ok) throw new Error(`Request failed: ${res.status}`);
-      const data = await res.json();
+      const data = (await res.json()) as DatabaseQueryResponse;
       setResult(data);
     } catch (err: Error | unknown) {
       setError(err instanceof Error ? err.message : 'Unknown error');
@@ -1136,14 +1137,11 @@ export default function DbConsole() {
     document.body.classList.toggle('dark', next);
 
     try {
-      localStorage.setItem('darkMode', next ? '1' : '0');
-    } catch (
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      error
-    ) {
-      // Silently handle localStorage errors (e.g., in private browsing)
-      // We could implement a fallback using cookies or session storage
-      // or notify the user that their preferences might not be saved
+      localStorage.setItem("darkMode", next ? "1" : "0");
+    } catch (e) {
+      if (process.env.NODE_ENV !== 'production') {
+        console.warn('Failed to persist darkMode', e);
+      }
     }
   };
 
@@ -1153,15 +1151,12 @@ export default function DbConsole() {
       const pref = localStorage.getItem('darkMode');
       const shouldDark = pref === '1';
       setIsDarkMode(shouldDark);
-      document.documentElement.classList.toggle('dark', shouldDark);
-      document.body.classList.toggle('dark', shouldDark);
-    } catch (
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      error
-    ) {
-      // Silently handle localStorage errors (e.g., in private browsing)
-      // Could set a default theme based on user's OS preference:
-      // const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.classList.toggle("dark", shouldDark);
+      document.body.classList.toggle("dark", shouldDark);
+    } catch (e) {
+      if (process.env.NODE_ENV !== 'production') {
+        console.warn('Failed to read darkMode', e);
+      }
     }
   }, []);
 
@@ -1192,16 +1187,10 @@ export default function DbConsole() {
         setIsDarkMode(true);
         document.documentElement.classList.add('dark');
       }
-    } catch (
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      error
-    ) {
-      // Silently handle localStorage errors
-      // For better UX, we could detect system dark mode preference
-      // if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      //   setIsDarkMode(true);
-      //   document.documentElement.classList.add("dark");
-      // }
+    } catch (e) {
+      if (process.env.NODE_ENV !== 'production') {
+        console.warn('Failed to read darkMode', e);
+      }
     }
   }, []);
 
@@ -1268,7 +1257,7 @@ export default function DbConsole() {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={2}
-                    d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 01-2 2z"
                   />
                 </svg>
               </div>
@@ -1888,20 +1877,7 @@ export default function DbConsole() {
               {result.query && (
                 <div className="mb-8">
                   <div className="bg-gray-50 dark:bg-gray-700/50 p-1 rounded-2xl">
-                    <h4 className="flex items-center text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4 px-4 pt-4">
-                      <svg
-                        className="w-5 h-5 mr-2 text-purple-600 dark:text-purple-400"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 01-2 2z"
-                        />
-                      </svg>
+                    <h4 className="flex items-center text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4 px-4 pt-4">                      
                       <svg
                         className="w-5 h-5 mr-2 text-purple-600 dark:text-purple-400"
                         fill="none"
