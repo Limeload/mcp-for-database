@@ -65,7 +65,7 @@ export default function DbConsole() {
   }, [selectedTemplateId]);
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<DatabaseQueryResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<EnhancedError | string | null>(null);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [schema, setSchema] = useState<SchemaMetadata | null>(null);
@@ -1423,7 +1423,23 @@ export default function DbConsole() {
                       Query Error
                     </h3>
                     <div className="text-base text-red-700 dark:text-red-300 leading-relaxed">
-                      {error}
+                      {typeof error === 'string' ? (
+                        error
+                      ) : (
+                        <div className="space-y-2">
+                          <div className="font-semibold">{error.error}</div>
+                          {error.details && (
+                            <div className="text-sm text-red-600 dark:text-red-400">
+                              {error.details}
+                            </div>
+                          )}
+                          {error.suggestion && (
+                            <div className="text-sm text-red-600 dark:text-red-400">
+                              <strong>Suggestion:</strong> {error.suggestion}
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
