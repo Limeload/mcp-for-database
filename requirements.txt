@@ -1,0 +1,6 @@
+requests
+pynacl
+httpx
+fastapi
+python-jose[cryptography]
+pytest
