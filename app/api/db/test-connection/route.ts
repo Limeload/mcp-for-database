@@ -15,8 +15,10 @@ const MCP_SERVER_URL = process.env.MCP_SERVER_URL || 'http://localhost:8000';
  */
 export async function POST(request: NextRequest) {
   try {
-    const auth = await authorize('db:test');
-    if (!auth.ok) return auth.response;
+  // In dev we allow unauthenticated test calls to ease local development
+  const auth = await authorize('db:test');
+  const isDev = process.env.NODE_ENV !== 'production';
+  if (!auth.ok && !isDev) return auth.response;
     const body = await request.json();
     const { target } = body || {};
 
@@ -30,12 +32,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Allow error simulation targets in non-production
-    const allowedTargets = ['sqlalchemy', 'snowflake', 'sqlite'];
-    const testTargets = ['authfail', 'tlsfail', 'slow'];
-    const isTestTarget = testTargets.includes(target);
-    const isDev = process.env.NODE_ENV !== 'production';
-    if (!allowedTargets.includes(target) && !(isDev && isTestTarget)) {
+  // Allow error simulation targets in non-production
+  const allowedTargets = ['sqlalchemy', 'snowflake', 'sqlite'];
+  const testTargets = ['authfail', 'tlsfail', 'slow'];
+  const isTestTarget = testTargets.includes(target);
+  if (!allowedTargets.includes(target) && !(isDev && isTestTarget)) {
       return NextResponse.json(
         createErrorResponse(
           'Invalid target: must be either "sqlalchemy", "snowflake", or "sqlite"' +

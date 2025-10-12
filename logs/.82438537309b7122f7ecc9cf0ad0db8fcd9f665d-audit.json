@@ -1,0 +1,15 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 14
+    },
+    "auditLog": "C:\\Users\\siddh\\Desktop\\opensource\\mcp-for-database\\logs\\.82438537309b7122f7ecc9cf0ad0db8fcd9f665d-audit.json",
+    "files": [
+        {
+            "date": 1760304624178,
+            "name": "C:\\Users\\siddh\\Desktop\\opensource\\mcp-for-database\\logs\\app-2025-10-13.log",
+            "hash": "16135d8a6180b9cfca5ffac190e15985fa468855ddd0064a5edc9de1991aede6"
+        }
+    ],
+    "hashType": "sha256"
+}
