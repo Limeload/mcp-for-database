@@ -42,6 +42,7 @@ rows = run_query_with_authy("SELECT * FROM customers LIMIT 10;", passport_b64=DE
 from cli_bridge.example_cli_bridge import run_command_with_authy
 code, out, err = run_command_with_authy("echo hello", passport_b64=DEMO_PASSPORT_B64)
 ```
+“CLI wrapper is provided as a separate optional integration (see Terminal_CLI_Agent PR).”
 
 ## Security
 - **Signatures:** Ed25519 via PyNaCl
