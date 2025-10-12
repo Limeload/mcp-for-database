@@ -7,7 +7,8 @@ import DbConsole from '@/app/components/DbConsole';
  */
 export default function DatabaseConsolePage() {
   return (
-    <div className="min-h-screen bg-gray-100">
+    // add dark:bg-* so tailwind switches background when html.dark is set
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
       <DbConsole />
     </div>
   );

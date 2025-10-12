@@ -47,10 +47,10 @@ export function exportToCSV(
 
   // Combine header and rows
   const csvContent = [header, ...rows].join('\n');
- // Download file
+  // Download file
   downloadFile(csvContent, filename, 'text/csv;charset=utf-8;');
 }
-  /**
+/**
  * Export data as JSON format
  */
 export function exportToJSON(

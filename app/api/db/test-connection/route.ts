@@ -3,6 +3,7 @@ import {
   createSuccessResponse,
   createErrorResponse
 } from '@/app/lib/api-response';
+import { authorize } from '@/app/lib/auth/authorize';
 
 const MCP_SERVER_URL = process.env.MCP_SERVER_URL || 'http://localhost:8000';
 
@@ -14,6 +15,8 @@ const MCP_SERVER_URL = process.env.MCP_SERVER_URL || 'http://localhost:8000';
  */
 export async function POST(request: NextRequest) {
   try {
+    const auth = await authorize('db:test');
+    if (!auth.ok) return auth.response;
     const body = await request.json();
     const { target } = body || {};
 

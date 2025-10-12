@@ -104,3 +104,9 @@ export interface SchemaCacheEntry {
   version: string;
   target: DatabaseTarget;
 }
+
+export interface Shortcut {
+  keys: string[];
+  action: () => void;
+  description: string;
+}

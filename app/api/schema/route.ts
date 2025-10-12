@@ -4,6 +4,7 @@ import {
   createSuccessResponse,
   createErrorResponse
 } from '@/app/lib/api-response';
+import { authorize } from '@/app/lib/auth/authorize';
 
 // Cache for schema data (in-memory cache)
 interface SchemaCache {
@@ -381,6 +382,8 @@ function generateMockSchemaData(target: string): SchemaMetadata {
  */
 export async function GET(request: NextRequest) {
   try {
+    const auth = await authorize('schema:read');
+    if (!auth.ok) return auth.response;
     // Get target from query parameters
     const { searchParams } = new URL(request.url);
     const target = searchParams.get('target');
@@ -488,6 +491,8 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
+    const auth = await authorize('schema:manage');
+    if (!auth.ok) return auth.response;
     const body = await request.json();
     const { target, action } = body;
 

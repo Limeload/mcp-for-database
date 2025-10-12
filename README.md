@@ -47,6 +47,42 @@ Transform natural language into powerful database queries through an intuitive w
 
 This repository is participating in **Hacktoberfest 2025**! We welcome contributions from developers of all skill levels. After **15 approved pull requests**, you'll be recognized as a project collaborator!
 
+## 🎬 Visual Tour
+
+Here are some screenshots/GIF showcasing the features of mcp-for-database:
+
+### Homepage
+
+<img src="https://github.com/user-attachments/assets/e592c00a-b206-4dc6-aaff-92a462184c11" alt="Main Dashboard ScreenShot" width="800" />
+
+_Central dashboard with high-level metrics and quick actions._
+<br>
+
+### Database Console
+
+<img src="https://github.com/user-attachments/assets/9a183aea-4d75-458a-9fca-62c77f8c0024" alt="Database Console" width="800" />
+
+_Query your database using plain English and view results instantly._
+<br>
+
+### Live Demo (GIF)
+
+![mcp-for-gif GIF](https://github.com/user-attachments/assets/54a5ceca-05b6-4e9c-a3eb-6dd58df151c9)
+<br>
+_An animated demonstration of exploring features of mcp-for-database._
+
+### Database Console in Action (GIF)
+
+![database-console-demo GIF](https://github.com/user-attachments/assets/dd31a131-0a12-49a7-87bd-480e1c764a99)
+
+_Watch how to use natural language to query your database:_
+
+_1. Connect to your preferred database (SQLite/Snowflake)_
+
+_2. Type your query in plain English_
+
+_3. See the results instantly in a formatted table_
+
 ### Quick Start for Contributors
 
 ---
