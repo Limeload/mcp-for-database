@@ -57,8 +57,19 @@ export async function POST(
     // Await params since it's a Promise in Next.js 15
     await params;
 
-    // Parse the request body
-    const body: DatabaseQueryRequest = await request.json();
+    // Parse the request body safely (return 400 on invalid JSON)
+    let body: DatabaseQueryRequest;
+    try {
+      body = (await request.json()) as DatabaseQueryRequest;
+    } catch (err) {
+      log.warn('query.invalid_json_body', {
+        error: err instanceof Error ? err.message : String(err)
+      });
+      return NextResponse.json(
+        createErrorResponse('Invalid JSON body', 'INVALID_JSON'),
+        { status: 400 }
+      );
+    }
 
     // Validate required fields
     if (!body.prompt || !body.target) {
