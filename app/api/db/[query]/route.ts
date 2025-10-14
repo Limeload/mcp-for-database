@@ -14,6 +14,30 @@ import { isWriteQuery } from '@/app/lib/sql/operation';
 import { authorize } from '@/app/lib/auth/authorize';
 
 /**
+ * Suggestion helper: generate user-friendly tips based on error details
+ */
+function getSuggestion(details: string): string {
+  if (!details) return "Check your query and try again.";
+
+  const lower = details.toLowerCase();
+
+  if (lower.includes("econnrefused")) {
+    return "Could not connect to MCP server. Make sure it is running on http://localhost:8000.";
+  }
+  if (lower.includes("syntax")) {
+    return "There seems to be a SQL syntax error. Double-check your query.";
+  }
+  if (lower.includes("no such table")) {
+    return "The table you are querying does not exist. Verify the table name.";
+  }
+  if (lower.includes("timeout")) {
+    return "The query took too long to execute. Try simplifying it or check server performance.";
+  }
+
+  return "Check your query and try again. If the issue persists, ensure the database and MCP server are configured correctly.";
+}
+
+/**
  * API route handler for database queries
  * Forwards requests to the MCP server backend at http://localhost:8000/query
  */
@@ -33,8 +57,19 @@ export async function POST(
     // Await params since it's a Promise in Next.js 15
     await params;
 
-    // Parse the request body
-    const body: DatabaseQueryRequest = await request.json();
+    // Parse the request body safely (return 400 on invalid JSON)
+    let body: DatabaseQueryRequest;
+    try {
+      body = (await request.json()) as DatabaseQueryRequest;
+    } catch (err) {
+      log.warn('query.invalid_json_body', {
+        error: err instanceof Error ? err.message : String(err)
+      });
+      return NextResponse.json(
+        createErrorResponse('Invalid JSON body', 'INVALID_JSON'),
+        { status: 400 }
+      );
+    }
 
     // Validate required fields
     if (!body.prompt || !body.target) {
