@@ -1,0 +1,68 @@
+openapi: 3.0.3
+info:
+  title: ISM-X Authy v4 (Open Cutline)
+  version: "4.0-open"
+paths:
+  /healthz:
+    get:
+      summary: Healthcheck
+      responses:
+        '200':
+          description: OK
+  /did:
+    get:
+      summary: Return DID and key info
+      responses:
+        '200':
+          description: OK
+  /issue:
+    post:
+      summary: Issue a short-TTL passport
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [sub, nonce]
+              properties:
+                sub: { type: string }
+                scope: { type: array, items: { type: string } }
+                ttl: { type: integer }
+                nonce: { type: string }
+                org_id: { type: string }
+                raw: { type: string }
+      responses:
+        '200':
+          description: Token issued
+  /verify:
+    post:
+      summary: Verify a passport
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token]
+              properties:
+                token: { type: string }
+      responses:
+        '200':
+          description: Verification result
+  /revoke:
+    post:
+      summary: Revoke a token by token or JTI
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token: { type: string }
+                jti: { type: string }
+                reason: { type: string }
+      responses:
+        '200':
+          description: Revoked

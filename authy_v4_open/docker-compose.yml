@@ -1,0 +1,13 @@
+version: "3.9"
+services:
+  authy:
+    build: .
+    container_name: ismx-authy-v4-open
+    env_file:
+      - .env
+    ports:
+      - "8011:8011"
+    volumes:
+      - authy_data:/data
+volumes:
+  authy_data: {}
