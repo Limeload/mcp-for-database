@@ -1,0 +1,4 @@
+
+app/components/DbConsole.tsx
+
+app/api/db/[query]/route.ts
