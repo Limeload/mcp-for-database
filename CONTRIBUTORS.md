@@ -6,6 +6,34 @@ This file recognizes collaborators who have made significant contributions to th
 
 _Collaborators will be added here after their 15th approved PR_
 
+## 🎉 Hacktoberfest 2025 Top Contributors
+
+**Mid-Hacktoberfest Recognition (October 2025):**
+
+### 🥇 Top Contributor
+**@Andrew Qu** - **17 commits**
+- Valuable improvements and bug fixes
+- Consistent code quality contributions
+- Active community engagement
+
+### 🥈 Runner-ups
+**@Sheikh Mohammad Nazmul H.** - **17 commits**
+- Authentication features implementation
+- Code refactoring and improvements
+- Strong technical contributions
+
+**@Malte Ubl** - **13 commits**
+- Technical expertise and code improvements
+- Valuable insights and optimizations
+
+### 📊 Community Impact
+- **30+ active contributors** from around the world
+- **100+ commits** since October 1st, 2025
+- **Major features** added: Authentication system, keyboard shortcuts, structured logging, deployment automation
+- **Multiple languages** and frameworks represented in our contributor base
+
+*We're halfway through Hacktoberfest 2025 and the response has been incredible! Thank you to all contributors for making this project amazing.*
+
 ### How to Become a Collaborator
 
 1. **Fork** the repository
