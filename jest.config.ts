@@ -22,16 +22,18 @@ const config: Config = {
     '^@/(.*)$': '<rootDir>/app/$1'
   },
   transform: {
-    '^.+\\.(ts|tsx)$': 'ts-jest'
+    '^.+\\.(ts|tsx)$': ['ts-jest', {
+      useESM: true,
+      tsconfig: {
+        moduleResolution: 'node',
+        allowSyntheticDefaultImports: true,
+        esModuleInterop: true
+      }
+    }]
   },
   testTimeout: 10000,
   preset: 'ts-jest',
-  extensionsToTreatAsEsm: ['.ts', '.tsx'],
-  globals: {
-    'ts-jest': {
-      useESM: true
-    }
-  }
+  extensionsToTreatAsEsm: ['.ts', '.tsx']
 };
 
 export default config;
