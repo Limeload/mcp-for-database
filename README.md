@@ -47,6 +47,34 @@ Transform natural language into powerful database queries through an intuitive w
 
 This repository is participating in **Hacktoberfest 2025**! We welcome contributions from developers of all skill levels. After **15 approved pull requests**, you'll be recognized as a project collaborator!
 
+### 🏆 Mid-Hacktoberfest Update
+
+We're halfway through Hacktoberfest 2025 and the response has been incredible! Here's our progress:
+
+**🎯 Top Contributors (as of mid-October 2025):**
+
+🥇 **@Andrew Qu** - **17 commits** - Contributing valuable improvements and bug fixes
+
+🥈 **@Sheikh Mohammad Nazmul H.** - **17 commits** - Implementing authentication features and code refactoring
+
+🥉 **@Malte Ubl** - **13 commits** - Providing technical expertise and code improvements
+
+**📊 Community Impact:**
+- **30+ active contributors** from around the world
+- **100+ commits** since October 1st
+- **Major features** added: Authentication system, keyboard shortcuts, structured logging, deployment automation
+- **Multiple languages** and frameworks represented in our contributor base
+
+**🚀 Recent Achievements:**
+- ✅ JWT-based Role-Based Access Control (RBAC) system
+- ✅ Keyboard shortcuts for power users
+- ✅ Structured JSON logging with correlation IDs
+- ✅ Automated deployment workflows
+- ✅ Enhanced error handling with actionable suggestions
+- ✅ User management API with authentication
+
+**🎯 Next Milestone:** We're looking forward to recognizing our first project collaborators after they reach 15 approved PRs!
+
 ## 🎬 Visual Tour
 
 Here are some screenshots/GIF showcasing the features of mcp-for-database:
@@ -445,6 +473,16 @@ After **15 approved pull requests**, you'll be:
 - Recognized as a project collaborator
 - Eligible for Hacktoberfest completion
 
+### 🏆 Current Leaderboard
+
+**Top Contributors (Mid-Hacktoberfest 2025):**
+
+1. **@Andrew Qu** - 17 commits 🥇
+2. **@Sheikh Mohammad Nazmul H.** - 17 commits 🥈  
+3. **@Malte Ubl** - 13 commits 🥉
+
+*Leaderboard updates daily during Hacktoberfest*
+
 ---
 
 ## 📄 License
@@ -459,6 +497,15 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **TailwindCSS** for the utility-first CSS framework
 - **MCP-DB Connector** for the database integration
 - **Hacktoberfest** community for inspiring open-source contributions
+
+### 🌟 Special Thanks to Our Top Contributors
+
+- **@Andrew Qu** - For valuable improvements and bug fixes
+- **@Sheikh Mohammad Nazmul H.** - For implementing authentication features and code refactoring
+- **@Malte Ubl** - For providing technical expertise and code improvements
+- **All 30+ contributors** who have made this project what it is today!
+
+*Thank you for making MCP Database Console better with every contribution! 🚀*
 
 ---
 
