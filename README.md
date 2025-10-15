@@ -53,11 +53,11 @@ We're halfway through Hacktoberfest 2025 and the response has been incredible! H
 
 **🎯 Top Contributors (as of mid-October 2025):**
 
-🥇 **@Andrew Qu** - **17 commits** - Contributing valuable improvements and bug fixes
+🥇 [**@Andrew Qu**](https://github.com/quuu) - **17 commits** - Contributing valuable improvements and bug fixes
 
-🥈 **@Sheikh Mohammad Nazmul H.** - **17 commits** - Implementing authentication features and code refactoring
+🥈 [**@Sheikh Mohammad Nazmul H.**](https://github.com/sheikhmohdnazmulhasan) - **17 commits** - Implementing authentication features and code refactoring
 
-🥉 **@Malte Ubl** - **13 commits** - Providing technical expertise and code improvements
+🥉 [**@Malte Ubl**](https://github.com/cramforce) - **13 commits** - Providing technical expertise and code improvements
 
 **📊 Community Impact:**
 - **30+ active contributors** from around the world
