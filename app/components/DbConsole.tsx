@@ -1,9 +1,8 @@
-// @ts-nocheck
 'use client';
 import React, { useRef, useState, useEffect } from "react";
 import { useKeyboardShortcuts } from "../hooks/KeyBoardShortcuts";
 import { createShortcuts } from "../config/shortcuts";
-import { DatabaseTarget, DatabaseQueryResponse, SchemaMetadata } from "@/app/types/database";
+import { DatabaseTarget, DatabaseQueryResponse, SchemaMetadata, TableMetadata, ColumnMetadata, IndexMetadata, RelationshipMetadata } from "@/app/types/database";
 
 import {
   exportToCSV,
@@ -235,11 +234,11 @@ export default function DbConsole() {
 
     const searchLower = schemaSearchTerm.toLowerCase();
     return schema.tables.filter(
-      (table: any) =>
+      (table: TableMetadata) =>
         table.name.toLowerCase().includes(searchLower) ||
         table.schema.toLowerCase().includes(searchLower) ||
         table.description?.toLowerCase().includes(searchLower) ||
-        table.columns.some((col: any) => col.name.toLowerCase().includes(searchLower))
+        table.columns.some((col: ColumnMetadata) => col.name.toLowerCase().includes(searchLower))
     );
   };
 
@@ -576,7 +575,7 @@ export default function DbConsole() {
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-                              {table.columns.map((column: any, colIndex: number) => (
+                              {table.columns.map((column: ColumnMetadata, colIndex: number) => (
                                 <tr
                                   key={colIndex}
                                   className="hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors duration-150"
@@ -621,7 +620,7 @@ export default function DbConsole() {
                                         </span>
                                       )}
                                       {column.constraints.map(
-                                        (constraint: any, constraintIndex: number) => (
+                                        (constraint: string, constraintIndex: number) => (
                                           <span
                                             key={constraintIndex}
                                             className="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 px-2 py-1 rounded-md text-xs font-medium"
@@ -658,7 +657,7 @@ export default function DbConsole() {
                               Indexes ({table.indexes.length})
                             </h5>
                             <div className="space-y-2">
-                              {table.indexes.map((index: any, indexIndex: number) => (
+                              {table.indexes.map((index: IndexMetadata, indexIndex: number) => (
                                 <div
                                   key={indexIndex}
                                   className="bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-700 rounded-lg p-3"
@@ -715,7 +714,7 @@ export default function DbConsole() {
               Database Relationships ({schema.relationships.length})
             </h4>
             <div className="space-y-3">
-              {schema.relationships.map((rel: any, index: number) => (
+              {schema.relationships.map((rel: RelationshipMetadata, index: number) => (
                 <div
                   key={index}
                   className="bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 border border-purple-200 dark:border-purple-700 rounded-xl p-4"
@@ -888,6 +887,7 @@ export default function DbConsole() {
       localStorage.setItem("darkMode", next ? "1" : "0");
     } catch (e) {
       if (process.env.NODE_ENV !== 'production') {
+        // eslint-disable-next-line no-console
         console.warn('Failed to persist darkMode', e);
       }
     }
@@ -903,6 +903,7 @@ export default function DbConsole() {
       document.body.classList.toggle("dark", shouldDark);
     } catch (e) {
       if (process.env.NODE_ENV !== 'production') {
+        // eslint-disable-next-line no-console
         console.warn('Failed to read darkMode', e);
       }
     }
@@ -937,6 +938,7 @@ export default function DbConsole() {
       }
     } catch (e) {
       if (process.env.NODE_ENV !== 'production') {
+        // eslint-disable-next-line no-console
         console.warn('Failed to read darkMode', e);
       }
     }

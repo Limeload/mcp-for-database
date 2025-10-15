@@ -1,24 +1,38 @@
-﻿const http = require('http');
-const server = http.createServer((req, res) => {
+import * as http from 'http';
+import { IncomingMessage, ServerResponse } from 'http';
+
+interface MockRequest {
+  target?: string;
+}
+
+interface MockResponse {
+  success: boolean;
+  message?: string;
+  data?: Array<Record<string, unknown>>;
+  query?: string;
+  executionTime?: number;
+}
+
+const server = http.createServer((req: IncomingMessage, res: ServerResponse) => {
   if (req.method === 'POST' && req.url === '/test-connection') {
     let body = '';
-    req.on('data', c => (body += c));
+    req.on('data', (chunk: Buffer) => (body += chunk.toString()));
     req.on('end', () => {
-      const p = JSON.parse(body || '{}');
+      const p: MockRequest = JSON.parse(body || '{}');
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(
         JSON.stringify({
           success: true,
           message: `Mock OK for ${p.target || 'unknown'}`,
           diagnostics: { ping: 12, details: 'mock', latencyMs: 12 }
-        })
+        } as MockResponse)
       );
     });
     return;
   }
   if (req.method === 'POST' && req.url === '/query') {
     let body = '';
-    req.on('data', c => (body += c));
+    req.on('data', (chunk: Buffer) => (body += chunk.toString()));
     req.on('end', () => {
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(
@@ -46,7 +60,7 @@ const server = http.createServer((req, res) => {
           ],
           query: '-- Mock SQL query',
           executionTime: 45
-        })
+        } as MockResponse)
       );
     });
     return;

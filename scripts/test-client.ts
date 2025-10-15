@@ -1,9 +1,9 @@
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { SSEClientTransport } from '@modelcontextprotocol/sdk/client/sse.js';
 
-const origin = process.argv[2] || 'https://mcp-for-next-js.vercel.app';
+const origin: string = process.argv[2] || 'https://mcp-for-next-js.vercel.app';
 
-async function main() {
+async function main(): Promise<void> {
   const transport = new SSEClientTransport(new URL(`${origin}/sse`));
 
   const client = new Client(
@@ -30,4 +30,7 @@ async function main() {
   client.close();
 }
 
-main();
+main().catch((error: Error) => {
+  console.error('Error:', error);
+  process.exit(1);
+});

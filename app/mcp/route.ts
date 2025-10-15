@@ -1,7 +1,7 @@
 import { createMcpHandler } from 'mcp-handler';
 import { z } from 'zod';
-import { DatabaseTarget } from '@/app/types/database';
 import { isWriteQuery } from '@/app/lib/sql/operation';
+import { TableMetadata, ColumnMetadata, ForeignKeyMetadata, RelationshipMetadata } from '@/app/types/database';
 
 // StreamableHttp server
 const handler = createMcpHandler(
@@ -16,6 +16,7 @@ const handler = createMcpHandler(
         target: z.enum(['sqlalchemy', 'snowflake', 'sqlite'] as const),
         database_id: z.string().optional()
       },
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       async ({ query, target, database_id }) => {
         try {
           // Validate query safety
@@ -142,7 +143,7 @@ const handler = createMcpHandler(
 
           if (table_name) {
             // Filter for specific table
-            const table = schema.tables.find((t: any) => 
+            const table = schema.tables.find((t: TableMetadata) => 
               t.name.toLowerCase() === table_name.toLowerCase()
             );
             
@@ -162,7 +163,7 @@ const handler = createMcpHandler(
             resultText += `Description: ${table.description || 'No description'}\n\n`;
             
             resultText += 'Columns:\n';
-            table.columns.forEach((col: any) => {
+            table.columns.forEach((col: ColumnMetadata) => {
               resultText += `  - ${col.name} (${col.dataType})`;
               if (col.isPrimaryKey) resultText += ' [PRIMARY KEY]';
               if (col.isForeignKey) resultText += ' [FOREIGN KEY]';
@@ -173,14 +174,14 @@ const handler = createMcpHandler(
 
             if (table.foreignKeys && table.foreignKeys.length > 0) {
               resultText += '\nForeign Keys:\n';
-              table.foreignKeys.forEach((fk: any) => {
+              table.foreignKeys.forEach((fk: ForeignKeyMetadata) => {
                 resultText += `  - ${fk.name}: ${fk.columns.join(', ')} -> ${fk.referencedTable}.${fk.referencedColumns.join(', ')}\n`;
               });
             }
           } else {
             // Show all tables summary
             resultText += 'Tables:\n';
-            schema.tables.forEach((table: any) => {
+            schema.tables.forEach((table: TableMetadata) => {
               resultText += `  - ${table.name} (${table.schema}) - ${table.columns.length} columns`;
               if (table.rowCount) resultText += ` - ${table.rowCount} rows`;
               resultText += '\n';
@@ -188,7 +189,7 @@ const handler = createMcpHandler(
 
             if (schema.relationships && schema.relationships.length > 0) {
               resultText += '\nRelationships:\n';
-              schema.relationships.forEach((rel: any) => {
+              schema.relationships.forEach((rel: RelationshipMetadata) => {
                 resultText += `  - ${rel.fromTable} -> ${rel.toTable} (${rel.type})\n`;
               });
             }
@@ -275,9 +276,10 @@ const handler = createMcpHandler(
       {
         table_name: z.string().min(1, 'Table name is required'),
         target: z.enum(['sqlalchemy', 'snowflake', 'sqlite'] as const),
-        data: z.record(z.unknown()).min(1, 'Data object cannot be empty'),
+        data: z.record(z.unknown()).refine(data => Object.keys(data).length > 0, 'Data object cannot be empty'),
         database_id: z.string().optional()
       },
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       async ({ table_name, target, data, database_id }) => {
         try {
           // Validate data object
@@ -358,10 +360,11 @@ const handler = createMcpHandler(
       {
         table_name: z.string().min(1, 'Table name is required'),
         target: z.enum(['sqlalchemy', 'snowflake', 'sqlite'] as const),
-        data: z.record(z.unknown()).min(1, 'Data object cannot be empty'),
+        data: z.record(z.unknown()).refine(data => Object.keys(data).length > 0, 'Data object cannot be empty'),
         where_clause: z.string().min(1, 'WHERE clause is required for safety'),
         database_id: z.string().optional()
       },
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       async ({ table_name, target, data, where_clause, database_id }) => {
         try {
           // Validate data object
@@ -444,6 +447,7 @@ const handler = createMcpHandler(
         where_clause: z.string().min(1, 'WHERE clause is required for safety'),
         database_id: z.string().optional()
       },
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       async ({ table_name, target, where_clause, database_id }) => {
         try {
           // Construct DELETE query

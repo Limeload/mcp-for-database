@@ -1,17 +1,28 @@
 // Basic test for /api/db/test-connection route using fetch
-// Run with: node tests/test-connection.test.js
+// Run with: tsx tests/test-connection.test.ts
 
-const fetch = require('node-fetch');
+import fetch from 'node-fetch';
 
 const BASE_URL = 'http://localhost:3000/api/db/test-connection';
 
-async function testHappyPath() {
+interface TestResponse {
+  success: boolean;
+  error?: string;
+  diagnostics?: {
+    code?: string;
+    details?: string;
+    ping?: number;
+    latencyMs?: number;
+  };
+}
+
+async function testHappyPath(): Promise<void> {
   const res = await fetch.default(BASE_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ target: 'snowflake' })
   });
-  const data = await res.json();
+  const data = await res.json() as TestResponse;
   if (data.success && data.diagnostics) {
     console.log('✅ Happy path: success');
   } else {
@@ -20,13 +31,13 @@ async function testHappyPath() {
   }
 }
 
-async function testInvalidTarget() {
+async function testInvalidTarget(): Promise<void> {
   const res = await fetch.default(BASE_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ target: 'invalid' })
   });
-  const data = await res.json();
+  const data = await res.json() as TestResponse;
   if (!data.success && data.error) {
     console.log('✅ Invalid target: error as expected');
   } else {
@@ -35,21 +46,13 @@ async function testInvalidTarget() {
   }
 }
 
-async function runAll() {
-  await testHappyPath();
-  await testInvalidTarget();
-  await testAuthFail();
-  await testTLSFail();
-  await testSlow();
-  console.log('All tests passed.');
-}
-async function testAuthFail() {
+async function testAuthFail(): Promise<void> {
   const res = await fetch.default(BASE_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ target: 'authfail' })
   });
-  const data = await res.json();
+  const data = await res.json() as TestResponse;
   if (
     res.status === 401 &&
     !data.success &&
@@ -63,13 +66,13 @@ async function testAuthFail() {
   }
 }
 
-async function testTLSFail() {
+async function testTLSFail(): Promise<void> {
   const res = await fetch.default(BASE_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ target: 'tlsfail' })
   });
-  const data = await res.json();
+  const data = await res.json() as TestResponse;
   if (
     res.status === 495 &&
     !data.success &&
@@ -83,14 +86,14 @@ async function testTLSFail() {
   }
 }
 
-async function testSlow() {
+async function testSlow(): Promise<void> {
   const start = Date.now();
   const res = await fetch.default(BASE_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ target: 'slow' })
   });
-  const data = await res.json();
+  const data = await res.json() as TestResponse;
   const elapsed = Date.now() - start;
   if (
     data.success &&
@@ -107,7 +110,16 @@ async function testSlow() {
   }
 }
 
-runAll().catch(e => {
+async function runAll(): Promise<void> {
+  await testHappyPath();
+  await testInvalidTarget();
+  await testAuthFail();
+  await testTLSFail();
+  await testSlow();
+  console.log('All tests passed.');
+}
+
+runAll().catch((e: Error) => {
   console.error(e);
   process.exit(1);
 });
