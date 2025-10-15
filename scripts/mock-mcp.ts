@@ -1,20 +1,41 @@
-const http = require('http');
+import * as http from 'http';
+import { IncomingMessage, ServerResponse } from 'http';
 
-const server = http.createServer((req, res) => {
+interface MockRequest {
+  target?: string;
+}
+
+interface MockResponse {
+  success: boolean;
+  message?: string;
+  error?: string;
+  data?: Array<Record<string, unknown>>;
+  sql?: string;
+  query?: string;
+  executionTime?: number;
+  diagnostics?: {
+    ping?: number;
+    details?: string;
+    latencyMs?: number;
+    code?: string;
+  };
+}
+
+const server = http.createServer((req: IncomingMessage, res: ServerResponse) => {
   // Basic request logging for easier local debugging
   const now = new Date().toISOString();
   console.log(`[${now}] ${req.method} ${req.url}`);
 
   if (req.method === 'POST' && req.url === '/test-connection') {
     let body = '';
-    req.on('data', c => (body += c));
+    req.on('data', (chunk: Buffer) => (body += chunk.toString()));
     req.on('end', () => {
       try {
         console.log(`[${now}] Request body: ${body}`);
       } catch (e) {
         /* ignore logging errors */
       }
-      const p = JSON.parse(body || '{}');
+      const p: MockRequest = JSON.parse(body || '{}');
       // Simulate auth failure
       if (p.target === 'authfail') {
         res.writeHead(401, { 'Content-Type': 'application/json' });
@@ -23,7 +44,7 @@ const server = http.createServer((req, res) => {
             success: false,
             error: 'Authentication failed',
             diagnostics: { code: 'AUTH_FAIL', details: 'Mocked auth error' }
-          })
+          } as MockResponse)
         );
         return;
       }
@@ -35,14 +56,14 @@ const server = http.createServer((req, res) => {
             success: false,
             error: 'TLS handshake failed',
             diagnostics: { code: 'TLS_ERROR', details: 'Mocked TLS error' }
-          })
+          } as MockResponse)
         );
         return;
       }
       // Simulate slow response
       if (p.target === 'slow') {
         setTimeout(() => {
-          const resp = {
+          const resp: MockResponse = {
             success: true,
             message: 'Mock OK for slow',
             diagnostics: { ping: 3000, details: 'mock slow', latencyMs: 3000 }
@@ -53,7 +74,7 @@ const server = http.createServer((req, res) => {
         return;
       }
       // Default: happy path
-      const resp = {
+      const resp: MockResponse = {
         success: true,
         message: `Mock OK for ${p.target || 'unknown'}`,
         diagnostics: { ping: 12, details: 'mock', latencyMs: 12 }
@@ -66,7 +87,7 @@ const server = http.createServer((req, res) => {
 
   if (req.method === 'POST' && req.url === '/query') {
     let body = '';
-    req.on('data', c => (body += c));
+    req.on('data', (chunk: Buffer) => (body += chunk.toString()));
     req.on('end', () => {
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(
@@ -95,7 +116,7 @@ const server = http.createServer((req, res) => {
           sql: '-- Mock SQL query', // Always include 'sql' for UI compatibility
           query: '-- Mock SQL query', // Also include 'query' for legacy compatibility
           executionTime: 45
-        })
+        } as MockResponse)
       );
     });
     return;

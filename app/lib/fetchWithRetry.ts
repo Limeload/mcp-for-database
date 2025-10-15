@@ -77,6 +77,7 @@ export async function fetchWithRetry(
       circuitBreakerState.open = false;
       circuitBreakerState.failureCount = 0;
       circuitBreakerState.lastFailureTime = null;
+      // eslint-disable-next-line no-console
       console.info('[Circuit Breaker] Reset after cooldown');
     } else {
       // Circuit breaker open - reject immediately
@@ -99,6 +100,7 @@ export async function fetchWithRetry(
               retryDelayBaseMs,
               maxRetryDelayMs
             );
+            // eslint-disable-next-line no-console
             console.warn(
               `[fetchWithRetry] Attempt ${attempt + 1} failed with status ${response.status}. Retrying in ${delay.toFixed(0)}ms...`
             );
@@ -110,6 +112,7 @@ export async function fetchWithRetry(
             circuitBreakerState.lastFailureTime = Date.now();
             if (circuitBreakerState.failureCount >= circuitBreakerThreshold) {
               circuitBreakerState.open = true;
+              // eslint-disable-next-line no-console
               console.error(
                 '[Circuit Breaker] Opened due to repeated failures'
               );
@@ -136,6 +139,7 @@ export async function fetchWithRetry(
           retryDelayBaseMs,
           maxRetryDelayMs
         );
+        // eslint-disable-next-line no-console
         console.warn(
           `[fetchWithRetry] Attempt ${attempt + 1} failed with error: ${error instanceof Error ? error.message : error}. Retrying in ${delay.toFixed(0)}ms...`
         );
@@ -147,6 +151,7 @@ export async function fetchWithRetry(
         circuitBreakerState.lastFailureTime = Date.now();
         if (circuitBreakerState.failureCount >= circuitBreakerThreshold) {
           circuitBreakerState.open = true;
+          // eslint-disable-next-line no-console
           console.error('[Circuit Breaker] Opened due to repeated failures');
         }
         throw error;

@@ -47,12 +47,14 @@ async function createRedisClient() {
   if (!url) return null;
   const client = createClient({ url });
   client.on('error', err => {
+    // eslint-disable-next-line no-console
     console.error('Redis error:', err);
   });
   try {
     await client.connect();
     return client;
   } catch {
+    // eslint-disable-next-line no-console
     console.warn('Redis unavailable, using in-memory store');
     return null;
   }

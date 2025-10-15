@@ -16,6 +16,7 @@ import { authorize } from '@/app/lib/auth/authorize';
 /**
  * Suggestion helper: generate user-friendly tips based on error details
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function getSuggestion(details: string): string {
   if (!details) return "Check your query and try again.";
 
