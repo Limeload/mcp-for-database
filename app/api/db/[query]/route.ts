@@ -12,6 +12,10 @@ import {
 } from '@/app/lib/logger';
 import { isWriteQuery } from '@/app/lib/sql/operation';
 import { authorize } from '@/app/lib/auth/authorize';
+import { authenticateRequest } from '@/app/lib/auth/authorize';
+import { getCredentialStore } from '@/app/lib/database/credential-store';
+import { generateConnectionString } from '@/app/lib/database/credentials';
+import { decryptPassword } from '@/app/lib/database/encryption';
 
 /**
  * Suggestion helper: generate user-friendly tips based on error details
@@ -72,6 +76,12 @@ export async function POST(
       );
     }
 
+    // Authenticate user
+    const authResult = await authenticateRequest();
+    if (!authResult.ok) {
+      return authResult.response;
+    }
+
     // Validate required fields
     if (!body.prompt || !body.target) {
       log.warn('query.validation_failed', {
@@ -103,6 +113,34 @@ export async function POST(
       );
     }
 
+    // Handle credential-based queries
+    let credentialId: string | undefined;
+    let connectionString: string | undefined;
+    
+    if (body.credentialId) {
+      credentialId = body.credentialId;
+      const store = await getCredentialStore();
+      const credential = await store.getCredentialById(credentialId, authResult.user.id);
+      
+      if (!credential) {
+        return NextResponse.json(
+          createErrorResponse('Credential not found', 'CREDENTIAL_NOT_FOUND'),
+          { status: 404 }
+        );
+      }
+      
+      // Decrypt password and generate connection string
+      const decryptedPassword = decryptPassword(credential.encryptedPassword);
+      const connInfo = generateConnectionString(credential, decryptedPassword);
+      connectionString = connInfo.connectionString;
+      
+      log.info('query.using_credential', {
+        credentialId,
+        credentialName: credential.name,
+        credentialType: credential.type
+      });
+    }
+
     // Check if MCP server is available, otherwise use mock data for development
     let mcpData;
     let usedMock = false;
@@ -113,15 +151,23 @@ export async function POST(
       prompt: safeTruncate(body.prompt, 1000)
     });
     try {
+      const mcpRequestBody: Record<string, unknown> = {
+        prompt: body.prompt,
+        target: body.target
+      };
+      
+      // Include connection string if using credentials
+      if (connectionString) {
+        mcpRequestBody.connectionString = connectionString;
+        mcpRequestBody.credentialId = credentialId;
+      }
+      
       const mcpResponse = await fetch(MCP_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          prompt: body.prompt,
-          target: body.target
-        })
+        body: JSON.stringify(mcpRequestBody)
       });
 
       // Check if MCP server responded successfully
