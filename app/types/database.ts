@@ -5,6 +5,7 @@ export type DatabaseTarget = 'sqlalchemy' | 'snowflake' | 'sqlite';
 export interface DatabaseQueryRequest {
   prompt: string;
   target: DatabaseTarget;
+  credentialId?: string; // Optional credential ID for user-specific database connections
 }
 
 // API response types (DEPRECATED - use ApiResponse from @/app/lib/api-response)
