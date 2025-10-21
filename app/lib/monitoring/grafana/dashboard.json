@@ -1,0 +1,40 @@
+{
+  "annotations": { "list": [] },
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Query latency (95th percentile)",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(mcp_query_duration_seconds_bucket[5m])) by (le, query_name))",
+          "legendFormat": "{{query_name}}"
+        }
+      ],
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 0 }
+    },
+    {
+      "type": "timeseries",
+      "title": "Pool busy vs idle",
+      "targets": [
+        {
+          "expr": "sum(mcp_pool_total_connections) by(pool_id)",
+          "legendFormat": "total {{pool_id}}"
+        },
+        {
+          "expr": "sum(mcp_pool_idle_connections) by(pool_id)",
+          "legendFormat": "idle {{pool_id}}"
+        }
+      ],
+      "gridPos": { "h": 6, "w": 24, "x": 0, "y": 8 }
+    },
+    {
+      "type": "timeseries",
+      "title": "Event loop lag (ms)",
+      "targets": [
+        { "expr": "mcp_event_loop_lag_ms" }
+      ],
+      "gridPos": { "h": 4, "w": 24, "x": 0, "y": 14 }
+    }
+  ],
+  "title": "MCP Performance Overview"
+}

@@ -1,0 +1,29 @@
+groups:
+  - name: mcp-performance
+    rules:
+      - alert: HighQueryLatency
+        expr: histogram_quantile(0.95, sum(rate(mcp_query_duration_seconds_bucket[5m])) by (le, query_name)) > 1
+        for: 2m
+        labels:
+          severity: page
+        annotations:
+          summary: "95th percentile query latency > 1s ({{ $labels.query_name }})"
+          description: "Query {{ $labels.query_name }} has high latency over the last 5 minutes."
+
+      - alert: PoolConnectionsExhausted
+        expr: sum(mcp_pool_total_connections) by (pool_id) - sum(mcp_pool_idle_connections) by (pool_id) > 90
+        for: 2m
+        labels:
+          severity: page
+        annotations:
+          summary: "Connection pool near exhaustion ({{ $labels.pool_id }})"
+          description: "High number of busy connections in pool {{ $labels.pool_id }}."
+
+      - alert: HighEventLoopLag
+        expr: mcp_event_loop_lag_ms > 200
+        for: 1m
+        labels:
+          severity: ticket
+        annotations:
+          summary: "High event loop lag"
+          description: "Event loop lag exceeded 200ms."
