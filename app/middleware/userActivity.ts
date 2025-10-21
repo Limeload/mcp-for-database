@@ -5,7 +5,9 @@ import metricsCollector from "../lib/monitoring/metrics";
 // Example: mark each HTTP request as a user action 'http_request' with method+path
 export function userActivityMiddleware(req: Request, res: Response, next: NextFunction) {
   const start = Date.now();
-  const userId = (req as any).user?.id || "anonymous";
+  // Avoid `any` by narrowing the request type for user property access
+  const typedReq = req as Request & { user?: { id?: string } };
+  const userId = typedReq.user?.id ?? "anonymous";
   res.on("finish", () => {
     const action = `http_${req.method.toLowerCase()}`;
     metricsCollector.recordUserActivity(String(userId), action);

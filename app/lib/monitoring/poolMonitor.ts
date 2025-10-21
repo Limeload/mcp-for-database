@@ -16,9 +16,9 @@ export function startPoolMonitor(opts: {
           waiting: s.waiting,
         });
       }
-    } catch (err) {
+    } catch {
       // swallow errors to avoid crash; optionally increment an internal error metric
-      // console.error("pool monitor error", err);
+      // console.error("pool monitor error");
     }
   }, interval).unref();
 

@@ -9,8 +9,11 @@ router.get("/metrics", async (req, res) => {
     res.set("Content-Type", metricsCollector.getRegister().contentType);
     const body = await metricsCollector.getRegister().metrics();
     res.send(body);
-  } catch (err) {
-    res.status(500).send(err.message || "Failed to collect metrics");
+  } catch (err: unknown) {
+    // Normalize unknown errors to a string message before sending
+    const message =
+      err instanceof Error ? err.message : typeof err === 'string' ? err : 'Failed to collect metrics';
+    res.status(500).send(message);
   }
 });
 

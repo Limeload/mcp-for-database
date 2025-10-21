@@ -40,5 +40,5 @@ yarn-error.log*
 next-env.d.ts
 
 # lockfile decision
-# If you want to ignore package-lock.json, uncomment the next line:
-# package-lock.json
+# Ignore npm's package-lock in favor of pnpm/yarn
+package-lock.json
